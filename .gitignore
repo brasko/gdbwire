@@ -11,3 +11,12 @@ Makefile.in
 /depcomp
 /install-sh
 /missing
+
+# gdbwire's specific autoconf files
+/m4
+/build-aux
+/COPYING
+/INSTALL
+/NEWS
+/ChangeLog
+/config.h.in
