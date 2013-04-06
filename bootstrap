@@ -30,7 +30,6 @@ echo "-- Running autoheader"
 autoheader
 
 echo "-- Running automake"
-touch AUTHORS
 touch COPYING
 touch INSTALL
 touch NEWS
