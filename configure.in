@@ -19,6 +19,13 @@ AC_PROG_LIBTOOL
 dnl Checks for header files.
 AC_HEADER_STDC
 
+dnl Add support for automated testing.
+dnl
+dnl This uses the google test framework for automation.
+dnl
+dnl It enables the use of the C++ compiler.
+GDBWIRE_ARG_ENABLE_DEFAULT_OFF([tests], [automated testing])
+
 AC_OUTPUT(Makefile \
 lib/Makefile)
 
@@ -39,5 +46,7 @@ $PACKAGE_NAME configuration summary:
     C++ compiler flags .............. : ${CXXFLAGS}
     Linker flags .................... : ${LDFLAGS}
     Extra libraries ................. : ${LIBS}
+
+    Enabled automated testing ....... : ${enable_tests}
 
 EOF
