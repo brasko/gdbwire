@@ -26,6 +26,11 @@ dnl
 dnl It enables the use of the C++ compiler.
 GDBWIRE_ARG_ENABLE_DEFAULT_OFF([tests], [automated testing])
 
+dnl Allow the user to build against a system installed gtest library
+dnl
+dnl The gtest library is used when --enable-tests is yes.
+GDBWIRE_ARG_WITH([gtest])
+
 AC_OUTPUT(Makefile \
 lib/Makefile)
 
@@ -34,19 +39,23 @@ cat <<EOF
 
 $PACKAGE_NAME configuration summary:
 
-    Install prefix .................. : ${prefix}
-    C preprocessor .................. : ${CPP}
-    C compiler ...................... : ${CC}
-    C++ preprocessor ................ : ${CXXCPP}
-    C++ compiler .................... : ${CXX}
-    Linker .......................... : ${LD}
+    Install prefix ........... : ${prefix}
+    C preprocessor ........... : ${CPP}
+    C compiler ............... : ${CC}
+    C++ preprocessor ......... : ${CXXCPP}
+    C++ compiler ............. : ${CXX}
+    Linker ................... : ${LD}
 
-    C preprocessor flags ............ : ${CPPFLAGS}
-    C compiler flags ................ : ${CFLAGS}
-    C++ compiler flags .............. : ${CXXFLAGS}
-    Linker flags .................... : ${LDFLAGS}
-    Extra libraries ................. : ${LIBS}
+    C preprocessor flags ..... : ${CPPFLAGS}
+    C compiler flags ......... : ${CFLAGS}
+    C++ compiler flags ....... : ${CXXFLAGS}
+    Linker flags ............. : ${LDFLAGS}
+    Extra libraries .......... : ${LIBS}
 
-    Enabled automated testing ....... : ${enable_tests}
+    Enabled options:
+    --enable-tests ........... : ${enable_tests}
+
+    Use system installed libraries:
+    --with-gtest ............. : ${with_gtest_help}
 
 EOF
