@@ -31,8 +31,7 @@ dnl
 dnl The gtest library is used when --enable-tests is yes.
 GDBWIRE_ARG_WITH([gtest])
 
-AC_OUTPUT(Makefile \
-lib/Makefile)
+AC_OUTPUT(Makefile)
 
 # Display configuration options.
 cat <<EOF
