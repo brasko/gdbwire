@@ -12,16 +12,14 @@ set -e
 
 rm -rf autom4te.cache/
 
-mkdir -p m4
-
 echo "-- Running aclocal"
-aclocal -I m4
+aclocal -I build/m4
 
 echo "-- Running libtoolize"
 libtoolize -f -c
 
 echo "-- Running aclocal"
-aclocal -I m4
+aclocal -I build/m4
 
 echo "-- Running autoconf"
 autoconf -f
@@ -30,8 +28,4 @@ echo "-- Running autoheader"
 autoheader
 
 echo "-- Running automake"
-touch COPYING
-touch INSTALL
-touch NEWS
-touch ChangeLog
-automake -a -c -f -Wno-portability
+automake -a -c -f -Wno-portability --foreign

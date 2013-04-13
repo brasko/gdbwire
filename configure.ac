@@ -1,8 +1,8 @@
 AC_PREREQ(2.5)
 AC_INIT([gdbwire], [1.0])
-AC_CONFIG_AUX_DIR(build-aux)
-AC_CONFIG_MACRO_DIR(m4)
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_AUX_DIR(build/build-aux)
+AC_CONFIG_MACRO_DIR(build/m4)
+AM_CONFIG_HEADER(build/config.h)
 
 AC_CANONICAL_TARGET
 

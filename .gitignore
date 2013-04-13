@@ -13,10 +13,6 @@ Makefile.in
 /missing
 
 # gdbwire's specific autoconf files
-/m4/l*
-/build-aux
-/COPYING
-/INSTALL
-/NEWS
-/ChangeLog
-/config.h.in
+/build/m4/l*
+/build/build-aux
+/build/config.h.in
