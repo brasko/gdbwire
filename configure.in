@@ -26,6 +26,9 @@ dnl
 dnl It enables the use of the C++ compiler.
 GDBWIRE_ARG_ENABLE_DEFAULT_OFF([tests], [automated testing])
 
+dnl Build the test suite if enable tests is true
+AM_CONDITIONAL([WANT_TESTS], [test x$enable_tests = xyes])
+
 dnl Allow the user to build against a system installed gtest library
 dnl
 dnl The gtest library is used when --enable-tests is yes.
