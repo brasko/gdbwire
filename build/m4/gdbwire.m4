@@ -65,3 +65,54 @@ The installation path (PREFIX) provided to --with-$1 must be a directory])
          esac],
         [with_$1="unset"])
 ])
+
+AC_DEFUN([GDBWIRE_CONFIGURE_GTEST], [
+    # Setup gtest variables.
+    #
+    # If the user provided an installation directory, lets use it.
+    # Otherwise, hope the system has the library installed
+    if test x$with_gtest != "xunset"; then
+      GTEST_CPPFLAGS="-I$with_gtest/include -I$with_gtest"
+      GTEST_LDFLAGS=""
+      GTEST_LIBS="-lpthread"
+    fi
+
+    # Export variables to automake for inclusion in programs and libraries
+    AC_SUBST([GTEST_CPPFLAGS], [$GTEST_CPPFLAGS])
+    AC_SUBST([GTEST_LDFLAGS], [$GTEST_LDFLAGS])
+    AC_SUBST([GTEST_LIBS], [$GTEST_LIBS])
+
+    # Save variables to restore at end of function
+    _save_CPPFLAGS="$CPPFLAGS"
+    _save_LDFLAGS="$LDFLAGS"
+    _save_LIBS="$LIBS"
+
+    # Set temporary variables for autotools compilation test
+    CPPFLAGS="$CPPFLAGS $GTEST_CPPFLAGS"
+    LDFLAGS="$LDFLAGS $GTEST_LDFLAGS"
+    LIBS="$LIBS $GTEST_LIBS"
+
+    # Check for link
+    AC_MSG_CHECKING([for link against gtest])
+    AC_LINK_IFELSE([
+        AC_LANG_PROGRAM([[#include "gtest/gtest.h"
+            #include "src/gtest-all.cc"
+            int argc;
+            char **argv;]],
+            [[::testing::InitGoogleTest(&argc, argv);
+            return RUN_ALL_TESTS();]])],
+        [ac_cv_gtest=yes],
+        [ac_cv_gtest=no])
+    if test "$ac_cv_gtest" = "no"; then
+        AC_MSG_RESULT([no])
+        AC_MSG_FAILURE([gdbwire requires the ability to link to gtest],[1])
+    else
+        AC_MSG_RESULT([yes])
+    fi;
+
+    # Restore variable
+    CPPFLAGS="$_save_CPPFLAGS"
+    LDFLAGS="$_save_LDFLAGS"
+    LIBS="$_save_LIBS"
+])
+

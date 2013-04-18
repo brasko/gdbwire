@@ -1,8 +1,8 @@
-#include <iostream>
+#include "src/gtest-all.cc"
 
 int
-main()
+main(int argc, char **argv)
 {
-    std::cout << "Hello World" << std::endl;
-    return 0;
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

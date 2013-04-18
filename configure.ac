@@ -23,7 +23,9 @@ dnl Add support for automated testing.
 dnl
 dnl This uses the google test framework for automation.
 dnl
-dnl It enables the use of the C++ compiler.
+dnl It enables the use of the C++ compiler and will create
+dnl the extra test_suite program which executes all the
+dnl automated tests.
 GDBWIRE_ARG_ENABLE_DEFAULT_OFF([tests], [automated testing])
 
 dnl Build the test suite if enable tests is true
@@ -33,6 +35,10 @@ dnl Allow the user to build against a system installed gtest library
 dnl
 dnl The gtest library is used when --enable-tests is yes.
 GDBWIRE_ARG_WITH([gtest])
+
+if test x$enable_tests = "xyes"; then
+    GDBWIRE_CONFIGURE_GTEST()
+fi
 
 AC_OUTPUT(Makefile)
 
