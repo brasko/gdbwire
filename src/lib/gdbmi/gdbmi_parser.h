@@ -96,7 +96,7 @@ int gdbmi_parser_destroy(gdbmi_parser_ptr parser);
  * 0 on succes, or -1 on error.
  */
 int gdbmi_parser_parse_string(gdbmi_parser_ptr parser,
-        const char *mi_data, gdbmi_output_ptr * pt, int *parse_failed);
+        const char *mi_data, struct gdbmi_output **pt, int *parse_failed);
 
 /**
  * Tell the MI parser to parse the mi_command from a file.
@@ -122,7 +122,8 @@ int gdbmi_parser_parse_string(gdbmi_parser_ptr parser,
  * 0 on succes, or -1 on error.
  */
 int gdbmi_parser_parse_file(gdbmi_parser_ptr parser_ptr,
-        const char *mi_command_file, gdbmi_output_ptr * pt, int *parse_failed);
+        const char *mi_command_file, struct gdbmi_output **pt,
+        int *parse_failed);
 
 /*@}*/
 

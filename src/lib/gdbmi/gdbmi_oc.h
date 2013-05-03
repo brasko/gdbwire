@@ -108,7 +108,7 @@ struct gdbmi_oc {
 /**
  * This will take in a parse tree and return a list of MI output commands.
  *
- * \param output_ptr
+ * \param output
  * The MI parse tree
  *
  * \param mi_input_cmds
@@ -122,7 +122,7 @@ struct gdbmi_oc {
  * 0 on success, -1 on error.
  */
 int
-gdbmi_get_output_commands(gdbmi_output_ptr output_ptr,
+gdbmi_get_output_commands(struct gdbmi_output *output,
         gdbmi_oc_cstring_ll_ptr mi_input_cmds, gdbmi_oc_ptr * oc_ptr);
 
 /* Creating, Destroying and printing MI output commands  */

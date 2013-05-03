@@ -1,7 +1,6 @@
 #ifndef __GDBMI_PT_H__
 #define __GDBMI_PT_H__
 
-typedef struct gdbmi_output *gdbmi_output_ptr;
 typedef struct gdbmi_oob_record *gdbmi_oob_record_ptr;
 typedef struct gdbmi_result_record *gdbmi_result_record_ptr;
 typedef long gdbmi_token_t;
@@ -15,7 +14,7 @@ typedef struct gdbmi_pdata *gdbmi_pdata_ptr;
 
 struct gdbmi_pdata {
     int parsed_one;
-    gdbmi_output_ptr tree;
+    struct gdbmi_output *tree;
 };
 
 /* A choice of result's that GDB is capable of producing  */
@@ -37,7 +36,7 @@ struct gdbmi_output {
     gdbmi_result_record_ptr result_record;
 
     /* A pointer to the next output  */
-    gdbmi_output_ptr next;
+    struct gdbmi_output *next;
 };
 
 /* A result record represents the result of a command sent to GDB.  */
@@ -192,11 +191,11 @@ gdbmi_pdata_ptr create_gdbmi_pdata(void);
 int destroy_gdbmi_pdata(gdbmi_pdata_ptr param);
 
 /* Creating, Destroying and printing output  */
-gdbmi_output_ptr create_gdbmi_output(void);
-int destroy_gdbmi_output(gdbmi_output_ptr param);
-gdbmi_output_ptr append_gdbmi_output(gdbmi_output_ptr list,
-        gdbmi_output_ptr item);
-int print_gdbmi_output(gdbmi_output_ptr param);
+struct gdbmi_output *create_gdbmi_output(void);
+int destroy_gdbmi_output(struct gdbmi_output *param);
+struct gdbmi_output *append_gdbmi_output(struct gdbmi_output *list,
+        struct gdbmi_output *item);
+int print_gdbmi_output(struct gdbmi_output *param);
 
 /* Creating, Destroying and printing record  */
 gdbmi_result_record_ptr create_gdbmi_result_record(void);

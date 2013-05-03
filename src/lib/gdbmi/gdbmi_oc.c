@@ -266,7 +266,7 @@ static int convert_cstring(const char *orig, char **new)
  * This will take in a single MI output command parse tree and return a 
  * single MI output commands data structure.
  *
- * \param output_ptr
+ * \param output
  * The MI parse tree
  *
  * \param oc_ptr
@@ -277,9 +277,10 @@ static int convert_cstring(const char *orig, char **new)
  * 0 on success, -1 on error.
  */
 static int
-gdbmi_get_output_command(gdbmi_output_ptr output_ptr, gdbmi_oc_ptr * oc_ptr)
+gdbmi_get_output_command(struct gdbmi_output *output,
+        gdbmi_oc_ptr * oc_ptr)
 {
-    if (!output_ptr || !oc_ptr)
+    if (!output || !oc_ptr)
         return -1;
 
     *oc_ptr = create_gdbmi_oc();
@@ -289,12 +290,12 @@ gdbmi_get_output_command(gdbmi_output_ptr output_ptr, gdbmi_oc_ptr * oc_ptr)
     }
 
     /* Check to see if the output command is synchronous or asynchronous */
-    if (!output_ptr->result_record)
+    if (!output->result_record)
         (*oc_ptr)->is_asynchronous = 1;
 
-    /* Walk the output_ptr to get the MI stream record's */
-    if (output_ptr->oob_record) {
-        gdbmi_oob_record_ptr cur = output_ptr->oob_record;
+    /* Walk the output to get the MI stream record's */
+    if (output->oob_record) {
+        gdbmi_oob_record_ptr cur = output->oob_record;
 
         while (cur) {
             if (cur->record == GDBMI_STREAM) {
@@ -320,7 +321,7 @@ gdbmi_get_output_command(gdbmi_output_ptr output_ptr, gdbmi_oc_ptr * oc_ptr)
 }
 
 static int
-gdbmi_get_specific_output_command(gdbmi_output_ptr output_ptr,
+gdbmi_get_specific_output_command(struct gdbmi_output *output,
         gdbmi_oc_ptr oc_ptr, gdbmi_oc_cstring_ll_ptr mi_input_cmds)
 {
     /* If the command is synchronous, then it is a response to an MI input command. */
@@ -339,7 +340,7 @@ gdbmi_get_specific_output_command(gdbmi_output_ptr output_ptr,
     switch (mi_input_cmd_kind) {
         case GDBMI_FILE_LIST_EXEC_SOURCE_FILE:
         {
-            gdbmi_result_ptr result_ptr = output_ptr->result_record->result;
+            gdbmi_result_ptr result_ptr = output->result_record->result;
 
             while (result_ptr) {
                 if (strcmp(result_ptr->variable, "line") == 0) {
@@ -384,7 +385,7 @@ gdbmi_get_specific_output_command(gdbmi_output_ptr output_ptr,
             break;
         case GDBMI_FILE_LIST_EXEC_SOURCE_FILES:
         {
-            gdbmi_result_ptr result_ptr = output_ptr->result_record->result;
+            gdbmi_result_ptr result_ptr = output->result_record->result;
 
             while (result_ptr) {
                 if (strcmp(result_ptr->variable, "files") == 0) {
@@ -450,7 +451,7 @@ gdbmi_get_specific_output_command(gdbmi_output_ptr output_ptr,
             break;
         case GDBMI_BREAK_LIST:
         {
-            gdbmi_result_ptr result_ptr = output_ptr->result_record->result;
+            gdbmi_result_ptr result_ptr = output->result_record->result;
 
             if (strcmp(result_ptr->variable, "BreakpointTable") == 0) {
                 if (result_ptr->value->value_choice == GDBMI_TUPLE) {
@@ -774,14 +775,14 @@ gdbmi_get_specific_output_command(gdbmi_output_ptr output_ptr,
  * to the input command.
  */
 int
-gdbmi_get_output_commands(gdbmi_output_ptr output_ptr,
+gdbmi_get_output_commands(struct gdbmi_output *output,
         gdbmi_oc_cstring_ll_ptr mi_input_cmds, gdbmi_oc_ptr * oc_ptr)
 {
-    gdbmi_output_ptr cur = output_ptr;
+    struct gdbmi_output *cur = output;
     gdbmi_oc_cstring_ll_ptr cur_mi_input_cmds = mi_input_cmds;
     int result;
 
-    if (!output_ptr || !oc_ptr)
+    if (!output || !oc_ptr)
         return -1;
 
     *oc_ptr = NULL;

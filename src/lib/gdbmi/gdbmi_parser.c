@@ -80,7 +80,7 @@ int gdbmi_parser_destroy(gdbmi_parser_ptr parser)
 
 int
 gdbmi_parser_parse_string(gdbmi_parser_ptr parser,
-        const char *mi_command, gdbmi_output_ptr * pt, int *parse_failed)
+        const char *mi_command, struct gdbmi_output **pt, int *parse_failed)
 {
     YY_BUFFER_STATE state;
     int pattern;
@@ -131,7 +131,8 @@ gdbmi_parser_parse_string(gdbmi_parser_ptr parser,
 
 int
 gdbmi_parser_parse_file(gdbmi_parser_ptr parser,
-        const char *mi_command_file, gdbmi_output_ptr * pt, int *parse_failed)
+        const char *mi_command_file, struct gdbmi_output **pt,
+        int *parse_failed)
 {
     int pattern;
     int mi_status;
