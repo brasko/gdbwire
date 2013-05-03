@@ -1,7 +1,6 @@
 #ifndef __GDBMI_PT_H__
 #define __GDBMI_PT_H__
 
-typedef struct gdbmi_oob_record *gdbmi_oob_record_ptr;
 typedef struct gdbmi_result_record *gdbmi_result_record_ptr;
 typedef long gdbmi_token_t;
 typedef struct gdbmi_result *gdbmi_result_ptr;
@@ -30,7 +29,7 @@ enum gdbmi_result_class {
 struct gdbmi_output {
     /* Every output command has a list of optional oob_record's.  This will be 
        the head of the list, otherwise NULL.  */
-    gdbmi_oob_record_ptr oob_record;
+    struct gdbmi_oob_record *oob_record;
 
     /* Every output command has an optional result_record list, or NULL.  */
     gdbmi_result_record_ptr result_record;
@@ -80,7 +79,7 @@ struct gdbmi_oob_record {
     } option;
 
     /* A pointer to the next oob_record  */
-    gdbmi_oob_record_ptr next;
+    struct gdbmi_oob_record *next;
 };
 
 /* This represents each choice of asyncronous record GDB is capable of 
@@ -212,11 +211,11 @@ int print_gdbmi_result(gdbmi_result_ptr param);
 int print_gdbmi_oob_record_choice(enum gdbmi_oob_record_choice param);
 
 /* Creating, Destroying and printing oob_record  */
-gdbmi_oob_record_ptr create_gdbmi_oob_record(void);
-int destroy_gdbmi_oob_record(gdbmi_oob_record_ptr param);
-gdbmi_oob_record_ptr append_gdbmi_oob_record(gdbmi_oob_record_ptr list,
-        gdbmi_oob_record_ptr item);
-int print_gdbmi_oob_record(gdbmi_oob_record_ptr param);
+struct gdbmi_oob_record *create_gdbmi_oob_record(void);
+int destroy_gdbmi_oob_record(struct gdbmi_oob_record *param);
+struct gdbmi_oob_record *append_gdbmi_oob_record(struct gdbmi_oob_record *list,
+        struct gdbmi_oob_record *item);
+int print_gdbmi_oob_record(struct gdbmi_oob_record *param);
 
 int print_gdbmi_async_record_choice(enum gdbmi_async_record_choice param);
 

@@ -122,12 +122,12 @@ int print_gdbmi_output(struct gdbmi_output *param)
 }
 
 /* Creating, Destroying and printing record  */
-gdbmi_result_record_ptr create_gdbmi_result_record(void)
+struct gdbmi_result_record *create_gdbmi_result_record(void)
 {
     return calloc(1, sizeof (struct gdbmi_result_record));
 }
 
-int destroy_gdbmi_result_record(gdbmi_result_record_ptr param)
+int destroy_gdbmi_result_record(struct gdbmi_result_record *param)
 {
     if (!param)
         return 0;
@@ -141,7 +141,7 @@ int destroy_gdbmi_result_record(gdbmi_result_record_ptr param)
     return 0;
 }
 
-int print_gdbmi_result_record(gdbmi_result_record_ptr param)
+int print_gdbmi_result_record(struct gdbmi_result_record *param)
 {
     int result;
 
@@ -247,12 +247,12 @@ int print_gdbmi_oob_record_choice(enum gdbmi_oob_record_choice param)
 }
 
 /* Creating, Destroying and printing oob_record  */
-gdbmi_oob_record_ptr create_gdbmi_oob_record(void)
+struct gdbmi_oob_record *create_gdbmi_oob_record(void)
 {
     return calloc(1, sizeof (struct gdbmi_oob_record));
 }
 
-int destroy_gdbmi_oob_record(gdbmi_oob_record_ptr param)
+int destroy_gdbmi_oob_record(struct gdbmi_oob_record *param)
 {
     if (!param)
         return 0;
@@ -278,8 +278,9 @@ int destroy_gdbmi_oob_record(gdbmi_oob_record_ptr param)
     return 0;
 }
 
-gdbmi_oob_record_ptr
-append_gdbmi_oob_record(gdbmi_oob_record_ptr list, gdbmi_oob_record_ptr item)
+struct gdbmi_oob_record *
+append_gdbmi_oob_record(struct gdbmi_oob_record *list,
+        struct gdbmi_oob_record *item)
 {
     if (!item)
         return NULL;
@@ -287,7 +288,7 @@ append_gdbmi_oob_record(gdbmi_oob_record_ptr list, gdbmi_oob_record_ptr item)
     if (!list)
         list = item;
     else {
-        gdbmi_oob_record_ptr cur = list;
+        struct gdbmi_oob_record *cur = list;
 
         while (cur->next)
             cur = cur->next;
@@ -298,9 +299,9 @@ append_gdbmi_oob_record(gdbmi_oob_record_ptr list, gdbmi_oob_record_ptr item)
     return list;
 }
 
-int print_gdbmi_oob_record(gdbmi_oob_record_ptr param)
+int print_gdbmi_oob_record(struct gdbmi_oob_record *param)
 {
-    gdbmi_oob_record_ptr cur = param;
+    struct gdbmi_oob_record *cur = param;
     int result;
 
     while (cur) {

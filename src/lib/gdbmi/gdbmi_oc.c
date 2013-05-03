@@ -295,7 +295,7 @@ gdbmi_get_output_command(struct gdbmi_output *output,
 
     /* Walk the output to get the MI stream record's */
     if (output->oob_record) {
-        gdbmi_oob_record_ptr cur = output->oob_record;
+        struct gdbmi_oob_record *cur = output->oob_record;
 
         while (cur) {
             if (cur->record == GDBMI_STREAM) {
