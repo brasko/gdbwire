@@ -1,7 +1,6 @@
 #ifndef __GDBMI_PT_H__
 #define __GDBMI_PT_H__
 
-typedef struct gdbmi_result_record *gdbmi_result_record_ptr;
 typedef long gdbmi_token_t;
 typedef struct gdbmi_result *gdbmi_result_ptr;
 typedef struct gdbmi_async_record *gdbmi_async_record_ptr;
@@ -32,7 +31,7 @@ struct gdbmi_output {
     struct gdbmi_oob_record *oob_record;
 
     /* Every output command has an optional result_record list, or NULL.  */
-    gdbmi_result_record_ptr result_record;
+    struct gdbmi_result_record *result_record;
 
     /* A pointer to the next output  */
     struct gdbmi_output *next;
@@ -197,9 +196,9 @@ struct gdbmi_output *append_gdbmi_output(struct gdbmi_output *list,
 int print_gdbmi_output(struct gdbmi_output *param);
 
 /* Creating, Destroying and printing record  */
-gdbmi_result_record_ptr create_gdbmi_result_record(void);
-int destroy_gdbmi_result_record(gdbmi_result_record_ptr param);
-int print_gdbmi_result_record(gdbmi_result_record_ptr param);
+struct gdbmi_result_record *create_gdbmi_result_record(void);
+int destroy_gdbmi_result_record(struct gdbmi_result_record *param);
+int print_gdbmi_result_record(struct gdbmi_result_record *param);
 
 /* Creating, Destroying and printing result  */
 gdbmi_result_ptr create_gdbmi_result(void);
