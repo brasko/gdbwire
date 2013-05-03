@@ -2,7 +2,6 @@
 #define __GDBMI_PT_H__
 
 typedef long gdbmi_token_t;
-typedef struct gdbmi_result *gdbmi_result_ptr;
 typedef struct gdbmi_async_record *gdbmi_async_record_ptr;
 typedef struct gdbmi_stream_record *gdbmi_stream_record_ptr;
 typedef struct gdbmi_value *gdbmi_value_ptr;
@@ -47,7 +46,7 @@ struct gdbmi_result_record {
     enum gdbmi_result_class result_class;
 
     /* The results of the command  */
-    gdbmi_result_ptr result;
+    struct gdbmi_result *result;
 };
 
 /* There are several kinds of output that GDB can send  */
@@ -123,7 +122,7 @@ struct gdbmi_async_record {
 
     enum gdbmi_async_class async_class;
 
-    gdbmi_result_ptr result;
+    struct gdbmi_result *result;
 };
 
 /* The result from GDB. This is a linked list. If the result is a key/value 
@@ -134,7 +133,7 @@ struct gdbmi_result {
     /* Value  */
     gdbmi_value_ptr value;
     /* Pointer to the next result  */
-    gdbmi_result_ptr next;
+    struct gdbmi_result *next;
 };
 
 enum gdbmi_value_choice {
@@ -156,7 +155,7 @@ struct gdbmi_value {
 };
 
 struct gdbmi_tuple {
-    gdbmi_result_ptr result;
+    struct gdbmi_result *result;
     gdbmi_tuple_ptr next;
 };
 
@@ -170,7 +169,7 @@ struct gdbmi_list {
 
     union {
         gdbmi_value_ptr value;
-        gdbmi_result_ptr result;
+        struct gdbmi_result *result;
     } option;
 
     gdbmi_list_ptr next;
@@ -201,11 +200,11 @@ int destroy_gdbmi_result_record(struct gdbmi_result_record *param);
 int print_gdbmi_result_record(struct gdbmi_result_record *param);
 
 /* Creating, Destroying and printing result  */
-gdbmi_result_ptr create_gdbmi_result(void);
-int destroy_gdbmi_result(gdbmi_result_ptr param);
-gdbmi_result_ptr append_gdbmi_result(gdbmi_result_ptr list,
-        gdbmi_result_ptr item);
-int print_gdbmi_result(gdbmi_result_ptr param);
+struct gdbmi_result *create_gdbmi_result(void);
+int destroy_gdbmi_result(struct gdbmi_result *param);
+struct gdbmi_result *append_gdbmi_result(struct gdbmi_result *list,
+        struct gdbmi_result *item);
+int print_gdbmi_result(struct gdbmi_result *param);
 
 int print_gdbmi_oob_record_choice(enum gdbmi_oob_record_choice param);
 

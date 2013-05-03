@@ -340,7 +340,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
     switch (mi_input_cmd_kind) {
         case GDBMI_FILE_LIST_EXEC_SOURCE_FILE:
         {
-            gdbmi_result_ptr result_ptr = output->result_record->result;
+            struct gdbmi_result *result_ptr = output->result_record->result;
 
             while (result_ptr) {
                 if (strcmp(result_ptr->variable, "line") == 0) {
@@ -385,7 +385,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
             break;
         case GDBMI_FILE_LIST_EXEC_SOURCE_FILES:
         {
-            gdbmi_result_ptr result_ptr = output->result_record->result;
+            struct gdbmi_result *result_ptr = output->result_record->result;
 
             while (result_ptr) {
                 if (strcmp(result_ptr->variable, "files") == 0) {
@@ -400,7 +400,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                     if (value_ptr->value_choice == GDBMI_TUPLE) {
                                         gdbmi_oc_file_path_info_ptr ptr =
                                                 create_gdbmi_file_path_info();
-                                        gdbmi_result_ptr result =
+                                        struct gdbmi_result *result =
                                                 value_ptr->option.tuple->result;
                                         while (result) {
                                             if (strcmp(result->variable,
@@ -451,7 +451,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
             break;
         case GDBMI_BREAK_LIST:
         {
-            gdbmi_result_ptr result_ptr = output->result_record->result;
+            struct gdbmi_result *result_ptr = output->result_record->result;
 
             if (strcmp(result_ptr->variable, "BreakpointTable") == 0) {
                 if (result_ptr->value->value_choice == GDBMI_TUPLE) {
@@ -464,7 +464,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                 if (list_ptr
                                         && list_ptr->list_choice ==
                                         GDBMI_RESULT) {
-                                    gdbmi_result_ptr result_ptr =
+                                    struct gdbmi_result *result_ptr =
                                             list_ptr->option.result;
                                     while (result_ptr) {
                                         if (strcmp(result_ptr->variable,
@@ -476,7 +476,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                     result_ptr->value;
                                             if (value_ptr->value_choice ==
                                                     GDBMI_TUPLE) {
-                                                gdbmi_result_ptr result_ptr =
+                                                struct gdbmi_result *result_ptr =
                                                         value_ptr->option.
                                                         tuple->result;
                                                 while (result_ptr) {

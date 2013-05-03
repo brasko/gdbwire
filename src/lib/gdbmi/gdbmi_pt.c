@@ -164,12 +164,12 @@ int print_gdbmi_result_record(struct gdbmi_result_record *param)
 }
 
 /* Creating, Destroying and printing result  */
-gdbmi_result_ptr create_gdbmi_result(void)
+struct gdbmi_result *create_gdbmi_result(void)
 {
     return calloc(1, sizeof (struct gdbmi_result_record));
 }
 
-int destroy_gdbmi_result(gdbmi_result_ptr param)
+int destroy_gdbmi_result(struct gdbmi_result *param)
 {
     if (!param)
         return 0;
@@ -192,8 +192,8 @@ int destroy_gdbmi_result(gdbmi_result_ptr param)
     return 0;
 }
 
-gdbmi_result_ptr
-append_gdbmi_result(gdbmi_result_ptr list, gdbmi_result_ptr item)
+struct gdbmi_result *
+append_gdbmi_result(struct gdbmi_result *list, struct gdbmi_result *item)
 {
     if (!item)
         return NULL;
@@ -201,7 +201,7 @@ append_gdbmi_result(gdbmi_result_ptr list, gdbmi_result_ptr item)
     if (!list)
         list = item;
     else {
-        gdbmi_result_ptr cur = list;
+        struct gdbmi_result *cur = list;
 
         while (cur->next)
             cur = cur->next;
@@ -212,9 +212,9 @@ append_gdbmi_result(gdbmi_result_ptr list, gdbmi_result_ptr item)
     return list;
 }
 
-int print_gdbmi_result(gdbmi_result_ptr param)
+int print_gdbmi_result(struct gdbmi_result *param)
 {
-    gdbmi_result_ptr cur = param;
+    struct gdbmi_result *cur = param;
     int result;
 
     while (cur) {
