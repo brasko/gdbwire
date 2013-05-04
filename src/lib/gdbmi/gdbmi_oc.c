@@ -179,7 +179,7 @@ int print_gdbmi_oc(struct gdbmi_oc *param)
                 break;
             case GDBMI_BREAK_LIST:
             {
-                gdbmi_oc_breakpoint_ptr breakpoint_ptr;
+                struct gdbmi_oc_breakpoint *breakpoint_ptr;
 
                 printf("break-list\n");
                 breakpoint_ptr = cur->input_commands.break_list.breakpoint_ptr;
@@ -471,7 +471,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                     while (result_ptr) {
                                         if (strcmp(result_ptr->variable,
                                                         "bkpt") == 0) {
-                                            gdbmi_oc_breakpoint_ptr ptr =
+                                            struct gdbmi_oc_breakpoint *ptr =
                                                     create_gdbmi_breakpoint();
 
                                             struct gdbmi_value *value_ptr =
@@ -936,12 +936,12 @@ int print_gdbmi_file_path_info(struct gdbmi_oc_file_path_info *param)
     return 0;
 }
 
-gdbmi_oc_breakpoint_ptr create_gdbmi_breakpoint(void)
+struct gdbmi_oc_breakpoint *create_gdbmi_breakpoint(void)
 {
     return calloc(1, sizeof (struct gdbmi_oc_breakpoint));
 }
 
-int destroy_gdbmi_breakpoint(gdbmi_oc_breakpoint_ptr param)
+int destroy_gdbmi_breakpoint(struct gdbmi_oc_breakpoint *param)
 {
     if (!param)
         return 0;
@@ -976,9 +976,9 @@ int destroy_gdbmi_breakpoint(gdbmi_oc_breakpoint_ptr param)
     return 0;
 }
 
-gdbmi_oc_breakpoint_ptr
-append_gdbmi_breakpoint(gdbmi_oc_breakpoint_ptr list,
-        gdbmi_oc_breakpoint_ptr item)
+struct gdbmi_oc_breakpoint *
+append_gdbmi_breakpoint(struct gdbmi_oc_breakpoint *list,
+        struct gdbmi_oc_breakpoint *item)
 {
     if (!item)
         return NULL;
@@ -986,7 +986,7 @@ append_gdbmi_breakpoint(gdbmi_oc_breakpoint_ptr list,
     if (!list)
         list = item;
     else {
-        gdbmi_oc_breakpoint_ptr cur = list;
+        struct gdbmi_oc_breakpoint *cur = list;
 
         while (cur->next)
             cur = cur->next;
@@ -997,9 +997,9 @@ append_gdbmi_breakpoint(gdbmi_oc_breakpoint_ptr list,
     return list;
 }
 
-int print_gdbmi_breakpoint(gdbmi_oc_breakpoint_ptr param)
+int print_gdbmi_breakpoint(struct gdbmi_oc_breakpoint *param)
 {
-    gdbmi_oc_breakpoint_ptr cur = param;
+    struct gdbmi_oc_breakpoint *cur = param;
 
     while (cur) {
         printf("number=%d\n", cur->number);

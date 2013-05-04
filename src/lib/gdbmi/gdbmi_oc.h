@@ -46,8 +46,6 @@ enum breakpoint_disposition {
     GDBMI_NOKEEP
 };
 
-struct gdbmi_oc_breakpoint;
-typedef struct gdbmi_oc_breakpoint *gdbmi_oc_breakpoint_ptr;
 struct gdbmi_oc_breakpoint {
     int number;
     enum breakpoint_type type;
@@ -61,7 +59,7 @@ struct gdbmi_oc_breakpoint {
     int line;
     int times;
 
-    gdbmi_oc_breakpoint_ptr next;
+    struct gdbmi_oc_breakpoint *next;
 };
 
 struct gdbmi_oc {
@@ -90,7 +88,7 @@ struct gdbmi_oc {
 
         /*  24.5 GDB/MI Breakpoint table commands */
         struct {
-            gdbmi_oc_breakpoint_ptr breakpoint_ptr;
+            struct gdbmi_oc_breakpoint *breakpoint_ptr;
         } break_list;
     } input_commands;
 
@@ -140,10 +138,10 @@ append_gdbmi_file_path_info(struct gdbmi_oc_file_path_info *list,
 int print_gdbmi_file_path_info(struct gdbmi_oc_file_path_info *param);
 
 /* Creating, Destroying and printing MI breakpoint_list linked lists */
-gdbmi_oc_breakpoint_ptr create_gdbmi_breakpoint(void);
-int destroy_gdbmi_breakpoint(gdbmi_oc_breakpoint_ptr param);
-gdbmi_oc_breakpoint_ptr append_gdbmi_breakpoint(gdbmi_oc_breakpoint_ptr list,
-        gdbmi_oc_breakpoint_ptr item);
-int print_gdbmi_breakpoint(gdbmi_oc_breakpoint_ptr param);
+struct gdbmi_oc_breakpoint *create_gdbmi_breakpoint(void);
+int destroy_gdbmi_breakpoint(struct gdbmi_oc_breakpoint *param);
+struct gdbmi_oc_breakpoint *append_gdbmi_breakpoint(
+        struct gdbmi_oc_breakpoint *list, struct gdbmi_oc_breakpoint *item);
+int print_gdbmi_breakpoint(struct gdbmi_oc_breakpoint *param);
 
 #endif /* __GDBMI_OC_H__ */
