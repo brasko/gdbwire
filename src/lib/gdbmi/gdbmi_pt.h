@@ -2,12 +2,6 @@
 #define __GDBMI_PT_H__
 
 typedef long gdbmi_token_t;
-typedef struct gdbmi_async_record *gdbmi_async_record_ptr;
-typedef struct gdbmi_stream_record *gdbmi_stream_record_ptr;
-typedef struct gdbmi_value *gdbmi_value_ptr;
-typedef struct gdbmi_tuple *gdbmi_tuple_ptr;
-typedef struct gdbmi_list *gdbmi_list_ptr;
-typedef struct gdbmi_pdata *gdbmi_pdata_ptr;
 
 struct gdbmi_pdata {
     int parsed_one;
@@ -71,9 +65,9 @@ struct gdbmi_oob_record {
     enum gdbmi_oob_record_choice record;
     union {
         /* If it's an GDBMI_ASYNC record  */
-        gdbmi_async_record_ptr async_record;
+        struct gdbmi_async_record *async_record;
         /* If it's an GDBMI_STREAM record  */
-        gdbmi_stream_record_ptr stream_record;
+        struct gdbmi_stream_record *stream_record;
     } option;
 
     /* A pointer to the next oob_record  */
@@ -131,7 +125,7 @@ struct gdbmi_result {
     /* Key  */
     char *variable;
     /* Value  */
-    gdbmi_value_ptr value;
+    struct gdbmi_value *value;
     /* Pointer to the next result  */
     struct gdbmi_result *next;
 };
@@ -147,16 +141,16 @@ struct gdbmi_value {
 
     union {
         char *cstring;
-        gdbmi_tuple_ptr tuple;
-        gdbmi_list_ptr list;
+        struct gdbmi_tuple *tuple;
+        struct gdbmi_list *list;
     } option;
 
-    gdbmi_value_ptr next;
+    struct gdbmi_value *next;
 };
 
 struct gdbmi_tuple {
     struct gdbmi_result *result;
-    gdbmi_tuple_ptr next;
+    struct gdbmi_tuple *next;
 };
 
 enum gdbmi_list_choice {
@@ -168,11 +162,11 @@ struct gdbmi_list {
     enum gdbmi_list_choice list_choice;
 
     union {
-        gdbmi_value_ptr value;
+        struct gdbmi_value *value;
         struct gdbmi_result *result;
     } option;
 
-    gdbmi_list_ptr next;
+    struct gdbmi_list *next;
 };
 
 struct gdbmi_stream_record {
@@ -184,8 +178,8 @@ struct gdbmi_stream_record {
 int print_gdbmi_result_class(enum gdbmi_result_class param);
 
 /* Creating and  Destroying */
-gdbmi_pdata_ptr create_gdbmi_pdata(void);
-int destroy_gdbmi_pdata(gdbmi_pdata_ptr param);
+struct gdbmi_pdata *create_gdbmi_pdata(void);
+int destroy_gdbmi_pdata(struct gdbmi_pdata *param);
 
 /* Creating, Destroying and printing output  */
 struct gdbmi_output *create_gdbmi_output(void);
@@ -220,36 +214,38 @@ int print_gdbmi_async_record_choice(enum gdbmi_async_record_choice param);
 int print_gdbmi_stream_record_choice(enum gdbmi_stream_record_choice param);
 
 /* Creating, Destroying and printing async_record  */
-gdbmi_async_record_ptr create_gdbmi_async_record(void);
-int destroy_gdbmi_async_record(gdbmi_async_record_ptr param);
-int print_gdbmi_async_record(gdbmi_async_record_ptr param);
+struct gdbmi_async_record *create_gdbmi_async_record(void);
+int destroy_gdbmi_async_record(struct gdbmi_async_record *param);
+int print_gdbmi_async_record(struct gdbmi_async_record *param);
 
 int print_gdbmi_async_class(enum gdbmi_async_class param);
 
 int print_gdbmi_value_choice(enum gdbmi_value_choice param);
 
 /* Creating, Destroying and printing value  */
-gdbmi_value_ptr create_gdbmi_value(void);
-int destroy_gdbmi_value(gdbmi_value_ptr param);
-gdbmi_value_ptr append_gdbmi_value(gdbmi_value_ptr list, gdbmi_value_ptr item);
-int print_gdbmi_value(gdbmi_value_ptr param);
+struct gdbmi_value *create_gdbmi_value(void);
+int destroy_gdbmi_value(struct gdbmi_value *param);
+struct gdbmi_value *append_gdbmi_value(struct gdbmi_value *list,
+        struct gdbmi_value *item);
+int print_gdbmi_value(struct gdbmi_value *param);
 
 /* Creating, Destroying and printing tuple  */
-gdbmi_tuple_ptr create_gdbmi_tuple(void);
-int destroy_gdbmi_tuple(gdbmi_tuple_ptr param);
-int print_gdbmi_tuple(gdbmi_tuple_ptr param);
+struct gdbmi_tuple *create_gdbmi_tuple(void);
+int destroy_gdbmi_tuple(struct gdbmi_tuple *param);
+int print_gdbmi_tuple(struct gdbmi_tuple *param);
 
 int print_gdbmi_list_choice(enum gdbmi_list_choice param);
 
 /* Creating, Destroying and printing list  */
-gdbmi_list_ptr create_gdbmi_list(void);
-int destroy_gdbmi_list(gdbmi_list_ptr param);
-gdbmi_list_ptr append_gdbmi_list(gdbmi_list_ptr list, gdbmi_list_ptr item);
-int print_gdbmi_list(gdbmi_list_ptr param);
+struct gdbmi_list *create_gdbmi_list(void);
+int destroy_gdbmi_list(struct gdbmi_list *param);
+struct gdbmi_list *append_gdbmi_list(struct gdbmi_list *list,
+        struct gdbmi_list *item);
+int print_gdbmi_list(struct gdbmi_list *param);
 
 /* Creating, Destroying and printing stream_record  */
-gdbmi_stream_record_ptr create_gdbmi_stream_record(void);
-int destroy_gdbmi_stream_record(gdbmi_stream_record_ptr param);
-int print_gdbmi_stream_record(gdbmi_stream_record_ptr param);
+struct gdbmi_stream_record *create_gdbmi_stream_record(void);
+int destroy_gdbmi_stream_record(struct gdbmi_stream_record *param);
+int print_gdbmi_stream_record(struct gdbmi_stream_record *param);
 
 #endif

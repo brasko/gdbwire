@@ -15,7 +15,7 @@ extern char *gdbmi_text;
 extern int gdbmi_lex (void);
 extern int gdbmi_lineno;
 
-void gdbmi_error (gdbmi_pdata_ptr gdbmi_pdata, const char *s)
+void gdbmi_error (struct gdbmi_pdata *gdbmi_pdata, const char *s)
 { 
   fprintf (stderr, "%s:%d Error %s", __FILE__, __LINE__, s);
   if (strcmp (gdbmi_text, "\n") == 0)

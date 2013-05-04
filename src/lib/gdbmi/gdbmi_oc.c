@@ -390,11 +390,13 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
             while (result_ptr) {
                 if (strcmp(result_ptr->variable, "files") == 0) {
                     if (result_ptr->value->value_choice == GDBMI_LIST) {
-                        gdbmi_list_ptr list = result_ptr->value->option.list;
+                        struct gdbmi_list *list =
+                                result_ptr->value->option.list;
 
                         while (list) {
                             if (list->list_choice == GDBMI_VALUE) {
-                                gdbmi_value_ptr value_ptr = list->option.value;
+                                struct gdbmi_value *value_ptr =
+                                        list->option.value;
 
                                 while (value_ptr) {
                                     if (value_ptr->value_choice == GDBMI_TUPLE) {
@@ -459,7 +461,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                     while (result_ptr) {
                         if (strcmp(result_ptr->variable, "body") == 0) {
                             if (result_ptr->value->value_choice == GDBMI_LIST) {
-                                gdbmi_list_ptr list_ptr =
+                                struct gdbmi_list *list_ptr =
                                         result_ptr->value->option.list;
                                 if (list_ptr
                                         && list_ptr->list_choice ==
@@ -472,7 +474,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                             gdbmi_oc_breakpoint_ptr ptr =
                                                     create_gdbmi_breakpoint();
 
-                                            gdbmi_value_ptr value_ptr =
+                                            struct gdbmi_value *value_ptr =
                                                     result_ptr->value;
                                             if (value_ptr->value_choice ==
                                                     GDBMI_TUPLE) {

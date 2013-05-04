@@ -38,12 +38,12 @@ int print_gdbmi_result_class(enum gdbmi_result_class param)
 }
 
 /* Creating and  Destroying */
-gdbmi_pdata_ptr create_gdbmi_pdata(void)
+struct gdbmi_pdata *create_gdbmi_pdata(void)
 {
     return calloc(1, sizeof (struct gdbmi_pdata));
 }
 
-int destroy_gdbmi_pdata(gdbmi_pdata_ptr param)
+int destroy_gdbmi_pdata(struct gdbmi_pdata *param)
 {
     if (!param)
         return 0;
@@ -365,12 +365,12 @@ int print_gdbmi_stream_record_choice(enum gdbmi_stream_record_choice param)
 }
 
 /* Creating, Destroying and printing async_record  */
-gdbmi_async_record_ptr create_gdbmi_async_record(void)
+struct gdbmi_async_record *create_gdbmi_async_record(void)
 {
     return calloc(1, sizeof (struct gdbmi_async_record));
 }
 
-int destroy_gdbmi_async_record(gdbmi_async_record_ptr param)
+int destroy_gdbmi_async_record(struct gdbmi_async_record *param)
 {
     if (!param)
         return 0;
@@ -384,7 +384,7 @@ int destroy_gdbmi_async_record(gdbmi_async_record_ptr param)
     return 0;
 }
 
-int print_gdbmi_async_record(gdbmi_async_record_ptr param)
+int print_gdbmi_async_record(struct gdbmi_async_record *param)
 {
     int result;
 
@@ -443,12 +443,12 @@ int print_gdbmi_value_choice(enum gdbmi_value_choice param)
 }
 
 /* Creating, Destroying and printing value  */
-gdbmi_value_ptr create_gdbmi_value(void)
+struct gdbmi_value *create_gdbmi_value(void)
 {
     return calloc(1, sizeof (struct gdbmi_value));
 }
 
-int destroy_gdbmi_value(gdbmi_value_ptr param)
+int destroy_gdbmi_value(struct gdbmi_value *param)
 {
     if (!param)
         return 0;
@@ -478,7 +478,8 @@ int destroy_gdbmi_value(gdbmi_value_ptr param)
     return 0;
 }
 
-gdbmi_value_ptr append_gdbmi_value(gdbmi_value_ptr list, gdbmi_value_ptr item)
+struct gdbmi_value *append_gdbmi_value(struct gdbmi_value *list,
+        struct gdbmi_value *item)
 {
     if (!item)
         return NULL;
@@ -486,7 +487,7 @@ gdbmi_value_ptr append_gdbmi_value(gdbmi_value_ptr list, gdbmi_value_ptr item)
     if (!list)
         list = item;
     else {
-        gdbmi_value_ptr cur = list;
+        struct gdbmi_value *cur = list;
 
         while (cur->next)
             cur = cur->next;
@@ -497,9 +498,9 @@ gdbmi_value_ptr append_gdbmi_value(gdbmi_value_ptr list, gdbmi_value_ptr item)
     return list;
 }
 
-int print_gdbmi_value(gdbmi_value_ptr param)
+int print_gdbmi_value(struct gdbmi_value *param)
 {
-    gdbmi_value_ptr cur = param;
+    struct gdbmi_value *cur = param;
     int result;
 
     while (cur) {
@@ -527,12 +528,12 @@ int print_gdbmi_value(gdbmi_value_ptr param)
 }
 
 /* Creating, Destroying and printing tuple  */
-gdbmi_tuple_ptr create_gdbmi_tuple(void)
+struct gdbmi_tuple *create_gdbmi_tuple(void)
 {
     return calloc(1, sizeof (struct gdbmi_tuple));
 }
 
-int destroy_gdbmi_tuple(gdbmi_tuple_ptr param)
+int destroy_gdbmi_tuple(struct gdbmi_tuple *param)
 {
     if (!param)
         return 0;
@@ -550,9 +551,9 @@ int destroy_gdbmi_tuple(gdbmi_tuple_ptr param)
     return 0;
 }
 
-int print_gdbmi_tuple(gdbmi_tuple_ptr param)
+int print_gdbmi_tuple(struct gdbmi_tuple *param)
 {
-    gdbmi_tuple_ptr cur = param;
+    struct gdbmi_tuple *cur = param;
     int result;
 
     while (cur) {
@@ -583,12 +584,12 @@ int print_gdbmi_list_choice(enum gdbmi_list_choice param)
 }
 
 /* Creating, Destroying and printing list  */
-gdbmi_list_ptr create_gdbmi_list(void)
+struct gdbmi_list *create_gdbmi_list(void)
 {
     return calloc(1, sizeof (struct gdbmi_list));
 }
 
-int destroy_gdbmi_list(gdbmi_list_ptr param)
+int destroy_gdbmi_list(struct gdbmi_list *param)
 {
     if (!param)
         return 0;
@@ -613,7 +614,8 @@ int destroy_gdbmi_list(gdbmi_list_ptr param)
     return 0;
 }
 
-gdbmi_list_ptr append_gdbmi_list(gdbmi_list_ptr list, gdbmi_list_ptr item)
+struct gdbmi_list *append_gdbmi_list(struct gdbmi_list *list,
+        struct gdbmi_list *item)
 {
     if (!item)
         return NULL;
@@ -621,7 +623,7 @@ gdbmi_list_ptr append_gdbmi_list(gdbmi_list_ptr list, gdbmi_list_ptr item)
     if (!list)
         list = item;
     else {
-        gdbmi_list_ptr cur = list;
+        struct gdbmi_list *cur = list;
 
         while (cur->next)
             cur = cur->next;
@@ -632,9 +634,9 @@ gdbmi_list_ptr append_gdbmi_list(gdbmi_list_ptr list, gdbmi_list_ptr item)
     return list;
 }
 
-int print_gdbmi_list(gdbmi_list_ptr param)
+int print_gdbmi_list(struct gdbmi_list *param)
 {
-    gdbmi_list_ptr cur = param;
+    struct gdbmi_list *cur = param;
     int result;
 
     while (cur) {
@@ -660,12 +662,12 @@ int print_gdbmi_list(gdbmi_list_ptr param)
 }
 
 /* Creating, Destroying and printing stream_record  */
-gdbmi_stream_record_ptr create_gdbmi_stream_record(void)
+struct gdbmi_stream_record *create_gdbmi_stream_record(void)
 {
     return calloc(1, sizeof (struct gdbmi_stream_record));
 }
 
-int destroy_gdbmi_stream_record(gdbmi_stream_record_ptr param)
+int destroy_gdbmi_stream_record(struct gdbmi_stream_record *param)
 {
     if (!param)
         return 0;
@@ -680,7 +682,7 @@ int destroy_gdbmi_stream_record(gdbmi_stream_record_ptr param)
     return 0;
 }
 
-int print_gdbmi_stream_record(gdbmi_stream_record_ptr param)
+int print_gdbmi_stream_record(struct gdbmi_stream_record *param)
 {
     int result;
 

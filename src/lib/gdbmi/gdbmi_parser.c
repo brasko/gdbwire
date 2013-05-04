@@ -19,7 +19,7 @@ extern int gdbmi_lineno;
 struct gdbmi_parser {
     char *last_error;
     gdbmi_pstate *mips;
-    gdbmi_pdata_ptr pdata_ptr;
+    struct gdbmi_pdata *pdata_ptr;
 };
 
 gdbmi_parser_ptr gdbmi_parser_create(void)
