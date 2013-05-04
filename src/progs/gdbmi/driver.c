@@ -14,7 +14,7 @@ static void usage(char *progname)
 
 int main(int argc, char **argv)
 {
-    gdbmi_parser_ptr parser_ptr;
+    struct gdbmi_parser *parser_ptr;
     struct gdbmi_output *output;
     int result, parse_failed;
 

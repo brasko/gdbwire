@@ -22,11 +22,11 @@ struct gdbmi_parser {
     struct gdbmi_pdata *pdata_ptr;
 };
 
-gdbmi_parser_ptr gdbmi_parser_create(void)
+struct gdbmi_parser *gdbmi_parser_create(void)
 {
-    gdbmi_parser_ptr parser;
+    struct gdbmi_parser *parser;
 
-    parser = (gdbmi_parser_ptr) malloc(sizeof (struct gdbmi_parser));
+    parser = (struct gdbmi_parser *) malloc(sizeof (struct gdbmi_parser));
     parser->last_error = NULL;
 
     if (!parser) {
@@ -51,7 +51,7 @@ gdbmi_parser_ptr gdbmi_parser_create(void)
     return parser;
 }
 
-int gdbmi_parser_destroy(gdbmi_parser_ptr parser)
+int gdbmi_parser_destroy(struct gdbmi_parser *parser)
 {
 
     if (!parser)
@@ -79,7 +79,7 @@ int gdbmi_parser_destroy(gdbmi_parser_ptr parser)
 }
 
 int
-gdbmi_parser_parse_string(gdbmi_parser_ptr parser,
+gdbmi_parser_parse_string(struct gdbmi_parser *parser,
         const char *mi_command, struct gdbmi_output **pt, int *parse_failed)
 {
     YY_BUFFER_STATE state;
@@ -130,7 +130,7 @@ gdbmi_parser_parse_string(gdbmi_parser_ptr parser,
 }
 
 int
-gdbmi_parser_parse_file(gdbmi_parser_ptr parser,
+gdbmi_parser_parse_file(struct gdbmi_parser *parser,
         const char *mi_command_file, struct gdbmi_output **pt,
         int *parse_failed)
 {

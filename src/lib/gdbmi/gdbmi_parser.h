@@ -29,7 +29,6 @@
 /*@{*/
 
 struct gdbmi_parser;
-typedef struct gdbmi_parser *gdbmi_parser_ptr;
 
 /**
  * Create a gdbmi_parser context.
@@ -37,7 +36,7 @@ typedef struct gdbmi_parser *gdbmi_parser_ptr;
  * \return
  * The new instance of a gdbmi_parser, or NULL on error
  */
-gdbmi_parser_ptr gdbmi_parser_create(void);
+struct gdbmi_parser *gdbmi_parser_create(void);
 
 /**
  * Destroy a gdbmi_parser context.
@@ -48,7 +47,7 @@ gdbmi_parser_ptr gdbmi_parser_create(void);
  * \return
  * 0 on succes, or -1 on error.
  */
-int gdbmi_parser_destroy(gdbmi_parser_ptr parser);
+int gdbmi_parser_destroy(struct gdbmi_parser *parser);
 
 /*@}*/
 
@@ -95,7 +94,7 @@ int gdbmi_parser_destroy(gdbmi_parser_ptr parser);
  * \return
  * 0 on succes, or -1 on error.
  */
-int gdbmi_parser_parse_string(gdbmi_parser_ptr parser,
+int gdbmi_parser_parse_string(struct gdbmi_parser *parser,
         const char *mi_data, struct gdbmi_output **pt, int *parse_failed);
 
 /**
@@ -121,7 +120,7 @@ int gdbmi_parser_parse_string(gdbmi_parser_ptr parser,
  * \return
  * 0 on succes, or -1 on error.
  */
-int gdbmi_parser_parse_file(gdbmi_parser_ptr parser_ptr,
+int gdbmi_parser_parse_file(struct gdbmi_parser *parser_ptr,
         const char *mi_command_file, struct gdbmi_output **pt,
         int *parse_failed);
 
