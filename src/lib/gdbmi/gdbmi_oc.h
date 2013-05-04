@@ -25,8 +25,6 @@ struct gdbmi_oc_cstring_ll {
 };
 
 /* A file path linked list, for use by the gdbmi output commands */
-struct gdbmi_oc_file_path_info;
-typedef struct gdbmi_oc_file_path_info *gdbmi_oc_file_path_info_ptr;
 struct gdbmi_oc_file_path_info {
     /* The filename, relative path. */
     char *file;
@@ -35,7 +33,7 @@ struct gdbmi_oc_file_path_info {
     char *fullname;
 
     /* A pointer to the next file path.  */
-    gdbmi_oc_file_path_info_ptr next;
+    struct gdbmi_oc_file_path_info *next;
 };
 
 enum breakpoint_type {
@@ -87,7 +85,7 @@ struct gdbmi_oc {
         } file_list_exec_source_file;
 
         struct {
-            gdbmi_oc_file_path_info_ptr file_name_pair;
+            struct gdbmi_oc_file_path_info *file_name_pair;
         } file_list_exec_source_files;
 
         /*  24.5 GDB/MI Breakpoint table commands */
@@ -134,12 +132,12 @@ struct gdbmi_oc_cstring_ll *append_gdbmi_cstring_ll(
 int print_gdbmi_cstring_ll(struct gdbmi_oc_cstring_ll *param);
 
 /* Creating, Destroying and printing MI file_path linked lists */
-gdbmi_oc_file_path_info_ptr create_gdbmi_file_path_info(void);
-int destroy_gdbmi_file_path_info(gdbmi_oc_file_path_info_ptr param);
-gdbmi_oc_file_path_info_ptr
-append_gdbmi_file_path_info(gdbmi_oc_file_path_info_ptr list,
-        gdbmi_oc_file_path_info_ptr item);
-int print_gdbmi_file_path_info(gdbmi_oc_file_path_info_ptr param);
+struct gdbmi_oc_file_path_info *create_gdbmi_file_path_info(void);
+int destroy_gdbmi_file_path_info(struct gdbmi_oc_file_path_info *param);
+struct gdbmi_oc_file_path_info *
+append_gdbmi_file_path_info(struct gdbmi_oc_file_path_info *list,
+        struct gdbmi_oc_file_path_info *item);
+int print_gdbmi_file_path_info(struct gdbmi_oc_file_path_info *param);
 
 /* Creating, Destroying and printing MI breakpoint_list linked lists */
 gdbmi_oc_breakpoint_ptr create_gdbmi_breakpoint(void);

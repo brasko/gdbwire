@@ -165,7 +165,7 @@ int print_gdbmi_oc(struct gdbmi_oc *param)
                 break;
             case GDBMI_FILE_LIST_EXEC_SOURCE_FILES:
             {
-                gdbmi_oc_file_path_info_ptr file_ptr;
+                struct gdbmi_oc_file_path_info *file_ptr;
 
                 printf("file-list-exec-source-files\n");
                 file_ptr =
@@ -400,7 +400,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
 
                                 while (value_ptr) {
                                     if (value_ptr->value_choice == GDBMI_TUPLE) {
-                                        gdbmi_oc_file_path_info_ptr ptr =
+                                        struct gdbmi_oc_file_path_info *ptr =
                                                 create_gdbmi_file_path_info();
                                         struct gdbmi_result *result =
                                                 value_ptr->option.tuple->result;
@@ -877,12 +877,12 @@ int print_gdbmi_cstring_ll(struct gdbmi_oc_cstring_ll *param)
     return 0;
 }
 
-gdbmi_oc_file_path_info_ptr create_gdbmi_file_path_info(void)
+struct gdbmi_oc_file_path_info *create_gdbmi_file_path_info(void)
 {
     return calloc(1, sizeof (struct gdbmi_oc_file_path_info));
 }
 
-int destroy_gdbmi_file_path_info(gdbmi_oc_file_path_info_ptr param)
+int destroy_gdbmi_file_path_info(struct gdbmi_oc_file_path_info *param)
 {
     if (!param)
         return 0;
@@ -902,9 +902,9 @@ int destroy_gdbmi_file_path_info(gdbmi_oc_file_path_info_ptr param)
     return 0;
 }
 
-gdbmi_oc_file_path_info_ptr
-append_gdbmi_file_path_info(gdbmi_oc_file_path_info_ptr list,
-        gdbmi_oc_file_path_info_ptr item)
+struct gdbmi_oc_file_path_info *
+append_gdbmi_file_path_info(struct gdbmi_oc_file_path_info *list,
+        struct gdbmi_oc_file_path_info *item)
 {
     if (!item)
         return NULL;
@@ -912,7 +912,7 @@ append_gdbmi_file_path_info(gdbmi_oc_file_path_info_ptr list,
     if (!list)
         list = item;
     else {
-        gdbmi_oc_file_path_info_ptr cur = list;
+        struct gdbmi_oc_file_path_info *cur = list;
 
         while (cur->next)
             cur = cur->next;
@@ -923,9 +923,9 @@ append_gdbmi_file_path_info(gdbmi_oc_file_path_info_ptr list,
     return list;
 }
 
-int print_gdbmi_file_path_info(gdbmi_oc_file_path_info_ptr param)
+int print_gdbmi_file_path_info(struct gdbmi_oc_file_path_info *param)
 {
-    gdbmi_oc_file_path_info_ptr cur = param;
+    struct gdbmi_oc_file_path_info *cur = param;
 
     while (cur) {
         printf("file->(%s)\n", cur->file);
