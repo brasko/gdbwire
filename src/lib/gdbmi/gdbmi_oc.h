@@ -3,9 +3,6 @@
 
 #include "gdbmi_pt.h"
 
-struct gdbmi_oc;
-typedef struct gdbmi_oc *gdbmi_oc_ptr;
-
 /* The possible/implemented GDBMI commands */
 enum gdbmi_input_command {
     /*  24.7 GDB/MI Program control */
@@ -102,7 +99,7 @@ struct gdbmi_oc {
     } input_commands;
 
     /* The next MI output command */
-    gdbmi_oc_ptr next;
+    struct gdbmi_oc *next;
 };
 
 /**
@@ -123,13 +120,13 @@ struct gdbmi_oc {
  */
 int
 gdbmi_get_output_commands(struct gdbmi_output *output,
-        gdbmi_oc_cstring_ll_ptr mi_input_cmds, gdbmi_oc_ptr * oc_ptr);
+        gdbmi_oc_cstring_ll_ptr mi_input_cmds, struct gdbmi_oc **oc_ptr);
 
 /* Creating, Destroying and printing MI output commands  */
-gdbmi_oc_ptr create_gdbmi_oc(void);
-int destroy_gdbmi_oc(gdbmi_oc_ptr param);
-gdbmi_oc_ptr append_gdbmi_oc(gdbmi_oc_ptr list, gdbmi_oc_ptr item);
-int print_gdbmi_oc(gdbmi_oc_ptr param);
+struct gdbmi_oc *create_gdbmi_oc(void);
+int destroy_gdbmi_oc(struct gdbmi_oc *param);
+struct gdbmi_oc *append_gdbmi_oc(struct gdbmi_oc *list, struct gdbmi_oc *item);
+int print_gdbmi_oc(struct gdbmi_oc *param);
 
 /* Creating, Destroying and printing MI cstring linked lists */
 gdbmi_oc_cstring_ll_ptr create_gdbmi_cstring_ll(void);

@@ -68,9 +68,9 @@ static enum gdbmi_input_command gdbmi_input_command_lookup(const char *command)
 }
 
 /* Creating, Destroying and printing gdbmi_oc  */
-gdbmi_oc_ptr create_gdbmi_oc(void)
+struct gdbmi_oc *create_gdbmi_oc(void)
 {
-    gdbmi_oc_ptr oc_ptr = calloc(1, sizeof (struct gdbmi_oc));
+    struct gdbmi_oc *oc_ptr = calloc(1, sizeof (struct gdbmi_oc));
 
     if (!oc_ptr)
         return NULL;
@@ -80,7 +80,7 @@ gdbmi_oc_ptr create_gdbmi_oc(void)
     return oc_ptr;
 }
 
-int destroy_gdbmi_oc(gdbmi_oc_ptr param)
+int destroy_gdbmi_oc(struct gdbmi_oc *param)
 {
     if (!param)
         return 0;
@@ -120,7 +120,7 @@ int destroy_gdbmi_oc(gdbmi_oc_ptr param)
     return 0;
 }
 
-gdbmi_oc_ptr append_gdbmi_oc(gdbmi_oc_ptr list, gdbmi_oc_ptr item)
+struct gdbmi_oc *append_gdbmi_oc(struct gdbmi_oc *list, struct gdbmi_oc *item)
 {
     if (!item)
         return NULL;
@@ -128,7 +128,7 @@ gdbmi_oc_ptr append_gdbmi_oc(gdbmi_oc_ptr list, gdbmi_oc_ptr item)
     if (!list)
         list = item;
     else {
-        gdbmi_oc_ptr cur = list;
+        struct gdbmi_oc *cur = list;
 
         while (cur->next)
             cur = cur->next;
@@ -139,9 +139,9 @@ gdbmi_oc_ptr append_gdbmi_oc(gdbmi_oc_ptr list, gdbmi_oc_ptr item)
     return list;
 }
 
-int print_gdbmi_oc(gdbmi_oc_ptr param)
+int print_gdbmi_oc(struct gdbmi_oc *param)
 {
-    gdbmi_oc_ptr cur = param;
+    struct gdbmi_oc *cur = param;
 
     while (cur) {
         if (cur->is_asynchronous)
@@ -278,7 +278,7 @@ static int convert_cstring(const char *orig, char **new)
  */
 static int
 gdbmi_get_output_command(struct gdbmi_output *output,
-        gdbmi_oc_ptr * oc_ptr)
+        struct gdbmi_oc **oc_ptr)
 {
     if (!output || !oc_ptr)
         return -1;
@@ -322,7 +322,7 @@ gdbmi_get_output_command(struct gdbmi_output *output,
 
 static int
 gdbmi_get_specific_output_command(struct gdbmi_output *output,
-        gdbmi_oc_ptr oc_ptr, gdbmi_oc_cstring_ll_ptr mi_input_cmds)
+        struct gdbmi_oc *oc_ptr, gdbmi_oc_cstring_ll_ptr mi_input_cmds)
 {
     /* If the command is synchronous, then it is a response to an MI input command. */
     char *mi_input_cmd;
@@ -778,7 +778,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
  */
 int
 gdbmi_get_output_commands(struct gdbmi_output *output,
-        gdbmi_oc_cstring_ll_ptr mi_input_cmds, gdbmi_oc_ptr * oc_ptr)
+        gdbmi_oc_cstring_ll_ptr mi_input_cmds, struct gdbmi_oc **oc_ptr)
 {
     struct gdbmi_output *cur = output;
     gdbmi_oc_cstring_ll_ptr cur_mi_input_cmds = mi_input_cmds;
@@ -790,7 +790,7 @@ gdbmi_get_output_commands(struct gdbmi_output *output,
     *oc_ptr = NULL;
 
     while (cur) {
-        gdbmi_oc_ptr cur_oc_ptr = NULL;
+        struct gdbmi_oc *cur_oc_ptr = NULL;
 
         result = gdbmi_get_output_command(cur, &cur_oc_ptr);
         if (result == -1) {
