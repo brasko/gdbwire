@@ -301,7 +301,7 @@ gdbmi_get_output_command(struct gdbmi_output *output,
             if (cur->record == GDBMI_STREAM) {
                 if (cur->option.stream_record->stream_record == GDBMI_CONSOLE) {
                     char *orig = cur->option.stream_record->cstring;
-                    gdbmi_oc_cstring_ll_ptr ncstring =
+                    struct gdbmi_oc_cstring_ll *ncstring =
                             create_gdbmi_cstring_ll();
                     if (convert_cstring(orig, &(ncstring->cstring)) == -1) {
                         fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
@@ -322,7 +322,7 @@ gdbmi_get_output_command(struct gdbmi_output *output,
 
 static int
 gdbmi_get_specific_output_command(struct gdbmi_output *output,
-        struct gdbmi_oc *oc_ptr, gdbmi_oc_cstring_ll_ptr mi_input_cmds)
+        struct gdbmi_oc *oc_ptr, struct gdbmi_oc_cstring_ll *mi_input_cmds)
 {
     /* If the command is synchronous, then it is a response to an MI input command. */
     char *mi_input_cmd;
@@ -778,10 +778,10 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
  */
 int
 gdbmi_get_output_commands(struct gdbmi_output *output,
-        gdbmi_oc_cstring_ll_ptr mi_input_cmds, struct gdbmi_oc **oc_ptr)
+        struct gdbmi_oc_cstring_ll *mi_input_cmds, struct gdbmi_oc **oc_ptr)
 {
     struct gdbmi_output *cur = output;
-    gdbmi_oc_cstring_ll_ptr cur_mi_input_cmds = mi_input_cmds;
+    struct gdbmi_oc_cstring_ll *cur_mi_input_cmds = mi_input_cmds;
     int result;
 
     if (!output || !oc_ptr)
@@ -822,12 +822,12 @@ gdbmi_get_output_commands(struct gdbmi_output *output,
     return 0;
 }
 
-gdbmi_oc_cstring_ll_ptr create_gdbmi_cstring_ll(void)
+struct gdbmi_oc_cstring_ll *create_gdbmi_cstring_ll(void)
 {
     return calloc(1, sizeof (struct gdbmi_oc_cstring_ll));
 }
 
-int destroy_gdbmi_cstring_ll(gdbmi_oc_cstring_ll_ptr param)
+int destroy_gdbmi_cstring_ll(struct gdbmi_oc_cstring_ll *param)
 {
     if (!param)
         return 0;
@@ -844,9 +844,9 @@ int destroy_gdbmi_cstring_ll(gdbmi_oc_cstring_ll_ptr param)
     return 0;
 }
 
-gdbmi_oc_cstring_ll_ptr
-append_gdbmi_cstring_ll(gdbmi_oc_cstring_ll_ptr list,
-        gdbmi_oc_cstring_ll_ptr item)
+struct gdbmi_oc_cstring_ll *
+append_gdbmi_cstring_ll(struct gdbmi_oc_cstring_ll *list,
+        struct gdbmi_oc_cstring_ll *item)
 {
     if (!item)
         return NULL;
@@ -854,7 +854,7 @@ append_gdbmi_cstring_ll(gdbmi_oc_cstring_ll_ptr list,
     if (!list)
         list = item;
     else {
-        gdbmi_oc_cstring_ll_ptr cur = list;
+        struct gdbmi_oc_cstring_ll *cur = list;
 
         while (cur->next)
             cur = cur->next;
@@ -865,9 +865,9 @@ append_gdbmi_cstring_ll(gdbmi_oc_cstring_ll_ptr list,
     return list;
 }
 
-int print_gdbmi_cstring_ll(gdbmi_oc_cstring_ll_ptr param)
+int print_gdbmi_cstring_ll(struct gdbmi_oc_cstring_ll *param)
 {
-    gdbmi_oc_cstring_ll_ptr cur = param;
+    struct gdbmi_oc_cstring_ll *cur = param;
 
     while (cur) {
         printf("cstring->(%s)\n", cur->cstring);

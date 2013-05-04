@@ -16,14 +16,12 @@ enum gdbmi_input_command {
 };
 
 /* A cstring linked list for use by the gdbmi output commands */
-struct gdbmi_oc_cstring_ll;
-typedef struct gdbmi_oc_cstring_ll *gdbmi_oc_cstring_ll_ptr;
 struct gdbmi_oc_cstring_ll {
     /* The cstring */
     char *cstring;
 
     /* A pointer to the next output  */
-    gdbmi_oc_cstring_ll_ptr next;
+    struct gdbmi_oc_cstring_ll *next;
 };
 
 /* A file path linked list, for use by the gdbmi output commands */
@@ -73,7 +71,7 @@ struct gdbmi_oc {
     int is_asynchronous;
 
     /* The console output. This is a null terminated list. */
-    gdbmi_oc_cstring_ll_ptr console_output;
+    struct gdbmi_oc_cstring_ll *console_output;
 
     /* The GDBMI output command this represents. If set to GDBMI_LAST,
      * then this is an asynchronous command. */
@@ -120,7 +118,7 @@ struct gdbmi_oc {
  */
 int
 gdbmi_get_output_commands(struct gdbmi_output *output,
-        gdbmi_oc_cstring_ll_ptr mi_input_cmds, struct gdbmi_oc **oc_ptr);
+        struct gdbmi_oc_cstring_ll *mi_input_cmds, struct gdbmi_oc **oc_ptr);
 
 /* Creating, Destroying and printing MI output commands  */
 struct gdbmi_oc *create_gdbmi_oc(void);
@@ -129,11 +127,11 @@ struct gdbmi_oc *append_gdbmi_oc(struct gdbmi_oc *list, struct gdbmi_oc *item);
 int print_gdbmi_oc(struct gdbmi_oc *param);
 
 /* Creating, Destroying and printing MI cstring linked lists */
-gdbmi_oc_cstring_ll_ptr create_gdbmi_cstring_ll(void);
-int destroy_gdbmi_cstring_ll(gdbmi_oc_cstring_ll_ptr param);
-gdbmi_oc_cstring_ll_ptr append_gdbmi_cstring_ll(gdbmi_oc_cstring_ll_ptr list,
-        gdbmi_oc_cstring_ll_ptr item);
-int print_gdbmi_cstring_ll(gdbmi_oc_cstring_ll_ptr param);
+struct gdbmi_oc_cstring_ll *create_gdbmi_cstring_ll(void);
+int destroy_gdbmi_cstring_ll(struct gdbmi_oc_cstring_ll *param);
+struct gdbmi_oc_cstring_ll *append_gdbmi_cstring_ll(
+        struct gdbmi_oc_cstring_ll *list, struct gdbmi_oc_cstring_ll *item);
+int print_gdbmi_cstring_ll(struct gdbmi_oc_cstring_ll *param);
 
 /* Creating, Destroying and printing MI file_path linked lists */
 gdbmi_oc_file_path_info_ptr create_gdbmi_file_path_info(void);
