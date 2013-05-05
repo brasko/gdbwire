@@ -88,7 +88,7 @@ struct gdbmi_oc {
 
         /*  24.5 GDB/MI Breakpoint table commands */
         struct {
-            struct gdbmi_oc_breakpoint *breakpoint_ptr;
+            struct gdbmi_oc_breakpoint *breakpoint;
         } break_list;
     } input_commands;
 
@@ -105,7 +105,7 @@ struct gdbmi_oc {
  * \param mi_input_cmds
  * The next MI input command.
  *
- * \param oc_ptr
+ * \param oc
  * On return, this will be the MI output commands that were derived from the 
  * parse tree.
  * 
@@ -114,7 +114,7 @@ struct gdbmi_oc {
  */
 int
 gdbmi_get_output_commands(struct gdbmi_output *output,
-        struct gdbmi_oc_cstring_ll *mi_input_cmds, struct gdbmi_oc **oc_ptr);
+        struct gdbmi_oc_cstring_ll *mi_input_cmds, struct gdbmi_oc **oc);
 
 /* Creating, Destroying and printing MI output commands  */
 struct gdbmi_oc *create_gdbmi_oc(void);

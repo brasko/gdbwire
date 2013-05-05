@@ -120,7 +120,7 @@ int gdbmi_parser_parse_string(struct gdbmi_parser *parser,
  * \return
  * 0 on succes, or -1 on error.
  */
-int gdbmi_parser_parse_file(struct gdbmi_parser *parser_ptr,
+int gdbmi_parser_parse_file(struct gdbmi_parser *parser,
         const char *mi_command_file, struct gdbmi_output **pt,
         int *parse_failed);
 

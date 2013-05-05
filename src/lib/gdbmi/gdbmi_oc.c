@@ -70,14 +70,14 @@ static enum gdbmi_input_command gdbmi_input_command_lookup(const char *command)
 /* Creating, Destroying and printing gdbmi_oc  */
 struct gdbmi_oc *create_gdbmi_oc(void)
 {
-    struct gdbmi_oc *oc_ptr = calloc(1, sizeof (struct gdbmi_oc));
+    struct gdbmi_oc *oc = calloc(1, sizeof (struct gdbmi_oc));
 
-    if (!oc_ptr)
+    if (!oc)
         return NULL;
 
-    oc_ptr->input_command = GDBMI_LAST;
+    oc->input_command = GDBMI_LAST;
 
-    return oc_ptr;
+    return oc;
 }
 
 int destroy_gdbmi_oc(struct gdbmi_oc *param)
@@ -103,7 +103,7 @@ int destroy_gdbmi_oc(struct gdbmi_oc *param)
             break;
         case GDBMI_BREAK_LIST:
             if (destroy_gdbmi_breakpoint(param->input_commands.break_list.
-                            breakpoint_ptr) == -1)
+                            breakpoint) == -1)
                 return -1;
             break;
         case GDBMI_LAST:
@@ -165,13 +165,12 @@ int print_gdbmi_oc(struct gdbmi_oc *param)
                 break;
             case GDBMI_FILE_LIST_EXEC_SOURCE_FILES:
             {
-                struct gdbmi_oc_file_path_info *file_ptr;
+                struct gdbmi_oc_file_path_info *file;
 
                 printf("file-list-exec-source-files\n");
-                file_ptr =
-                        cur->input_commands.file_list_exec_source_files.
+                file = cur->input_commands.file_list_exec_source_files.
                         file_name_pair;
-                if (print_gdbmi_file_path_info(file_ptr) == -1) {
+                if (print_gdbmi_file_path_info(file) == -1) {
                     fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
                     return -1;
                 }
@@ -179,11 +178,11 @@ int print_gdbmi_oc(struct gdbmi_oc *param)
                 break;
             case GDBMI_BREAK_LIST:
             {
-                struct gdbmi_oc_breakpoint *breakpoint_ptr;
+                struct gdbmi_oc_breakpoint *breakpoint;
 
                 printf("break-list\n");
-                breakpoint_ptr = cur->input_commands.break_list.breakpoint_ptr;
-                if (print_gdbmi_breakpoint(breakpoint_ptr) == -1) {
+                breakpoint = cur->input_commands.break_list.breakpoint;
+                if (print_gdbmi_breakpoint(breakpoint) == -1) {
                     fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
                     return -1;
                 }
@@ -269,7 +268,7 @@ static int convert_cstring(const char *orig, char **new)
  * \param output
  * The MI parse tree
  *
- * \param oc_ptr
+ * \param oc
  * On return, this will be the MI output command that were derived from the 
  * MI output command parse tree.
  *
@@ -278,20 +277,20 @@ static int convert_cstring(const char *orig, char **new)
  */
 static int
 gdbmi_get_output_command(struct gdbmi_output *output,
-        struct gdbmi_oc **oc_ptr)
+        struct gdbmi_oc **oc)
 {
-    if (!output || !oc_ptr)
+    if (!output || !oc)
         return -1;
 
-    *oc_ptr = create_gdbmi_oc();
-    if (!(*oc_ptr)) {
+    *oc = create_gdbmi_oc();
+    if (!(*oc)) {
         fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
         return -1;
     }
 
     /* Check to see if the output command is synchronous or asynchronous */
     if (!output->result_record)
-        (*oc_ptr)->is_asynchronous = 1;
+        (*oc)->is_asynchronous = 1;
 
     /* Walk the output to get the MI stream record's */
     if (output->oob_record) {
@@ -308,8 +307,8 @@ gdbmi_get_output_command(struct gdbmi_output *output,
                         return -1;
                     }
 
-                    (*oc_ptr)->console_output = append_gdbmi_cstring_ll(
-                            (*oc_ptr)->console_output, ncstring);
+                    (*oc)->console_output = append_gdbmi_cstring_ll(
+                            (*oc)->console_output, ncstring);
                 }
             }
             cur = cur->next;
@@ -322,7 +321,7 @@ gdbmi_get_output_command(struct gdbmi_output *output,
 
 static int
 gdbmi_get_specific_output_command(struct gdbmi_output *output,
-        struct gdbmi_oc *oc_ptr, struct gdbmi_oc_cstring_ll *mi_input_cmds)
+        struct gdbmi_oc *oc, struct gdbmi_oc_cstring_ll *mi_input_cmds)
 {
     /* If the command is synchronous, then it is a response to an MI input command. */
     char *mi_input_cmd;
@@ -336,74 +335,72 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
     mi_input_cmd = mi_input_cmds->cstring;
     mi_input_cmd_kind = gdbmi_input_command_lookup(mi_input_cmd);
 
-    oc_ptr->input_command = mi_input_cmd_kind;
+    oc->input_command = mi_input_cmd_kind;
     switch (mi_input_cmd_kind) {
         case GDBMI_FILE_LIST_EXEC_SOURCE_FILE:
         {
-            struct gdbmi_result *result_ptr = output->result_record->result;
+            struct gdbmi_result *result = output->result_record->result;
 
-            while (result_ptr) {
-                if (strcmp(result_ptr->variable, "line") == 0) {
+            while (result) {
+                if (strcmp(result->variable, "line") == 0) {
                     char *nline;
 
-                    if (convert_cstring(result_ptr->value->option.cstring,
+                    if (convert_cstring(result->value->option.cstring,
                                     &nline) == -1) {
                         fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
                         return -1;
                     }
 
-                    oc_ptr->input_commands.file_list_exec_source_file.line =
+                    oc->input_commands.file_list_exec_source_file.line =
                             atoi(nline);
                     free(nline);
                     nline = NULL;
-                } else if (strcmp(result_ptr->variable, "file") == 0) {
+                } else if (strcmp(result->variable, "file") == 0) {
                     char *nline;
 
-                    if (convert_cstring(result_ptr->value->option.cstring,
+                    if (convert_cstring(result->value->option.cstring,
                                     &nline) == -1) {
                         fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
                         return -1;
                     }
 
-                    oc_ptr->input_commands.file_list_exec_source_file.file =
+                    oc->input_commands.file_list_exec_source_file.file =
                             nline;
-                } else if (strcmp(result_ptr->variable, "fullname") == 0) {
+                } else if (strcmp(result->variable, "fullname") == 0) {
                     char *nline;
 
-                    if (convert_cstring(result_ptr->value->option.cstring,
+                    if (convert_cstring(result->value->option.cstring,
                                     &nline) == -1) {
                         fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
                         return -1;
                     }
-                    oc_ptr->input_commands.file_list_exec_source_file.fullname =
+                    oc->input_commands.file_list_exec_source_file.fullname =
                             nline;
                 }
 
-                result_ptr = result_ptr->next;
+                result = result->next;
             }
         }
             break;
         case GDBMI_FILE_LIST_EXEC_SOURCE_FILES:
         {
-            struct gdbmi_result *result_ptr = output->result_record->result;
+            struct gdbmi_result *result = output->result_record->result;
 
-            while (result_ptr) {
-                if (strcmp(result_ptr->variable, "files") == 0) {
-                    if (result_ptr->value->value_choice == GDBMI_LIST) {
-                        struct gdbmi_list *list =
-                                result_ptr->value->option.list;
+            while (result) {
+                if (strcmp(result->variable, "files") == 0) {
+                    if (result->value->value_choice == GDBMI_LIST) {
+                        struct gdbmi_list *list = result->value->option.list;
 
                         while (list) {
                             if (list->list_choice == GDBMI_VALUE) {
-                                struct gdbmi_value *value_ptr =
-                                        list->option.value;
+                                struct gdbmi_value *value = list->option.value;
 
-                                while (value_ptr) {
-                                    if (value_ptr->value_choice == GDBMI_TUPLE) {
+                                while (value) {
+                                    if (value->value_choice == GDBMI_TUPLE) {
                                         struct gdbmi_oc_file_path_info *ptr =
                                                 create_gdbmi_file_path_info();
                                         struct gdbmi_result *result =
-                                                value_ptr->option.tuple->result;
+                                                value->option.tuple->result;
                                         while (result) {
                                             if (strcmp(result->variable,
                                                             "file") == 0) {
@@ -430,15 +427,15 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                             result = result->next;
                                         }
 
-                                        oc_ptr->input_commands.
+                                        oc->input_commands.
                                                 file_list_exec_source_files.
                                                 file_name_pair =
                                                 append_gdbmi_file_path_info
-                                                (oc_ptr->input_commands.
+                                                (oc->input_commands.
                                                 file_list_exec_source_files.
                                                 file_name_pair, ptr);
                                     }
-                                    value_ptr = value_ptr->next;
+                                    value = value->next;
                                 }
                             }
 
@@ -447,52 +444,50 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                     }
                 }
 
-                result_ptr = result_ptr->next;
+                result = result->next;
             }
         }
             break;
         case GDBMI_BREAK_LIST:
         {
-            struct gdbmi_result *result_ptr = output->result_record->result;
+            struct gdbmi_result *result = output->result_record->result;
 
-            if (strcmp(result_ptr->variable, "BreakpointTable") == 0) {
-                if (result_ptr->value->value_choice == GDBMI_TUPLE) {
-                    result_ptr = result_ptr->value->option.tuple->result;
-                    while (result_ptr) {
-                        if (strcmp(result_ptr->variable, "body") == 0) {
-                            if (result_ptr->value->value_choice == GDBMI_LIST) {
-                                struct gdbmi_list *list_ptr =
-                                        result_ptr->value->option.list;
-                                if (list_ptr
-                                        && list_ptr->list_choice ==
-                                        GDBMI_RESULT) {
-                                    struct gdbmi_result *result_ptr =
-                                            list_ptr->option.result;
-                                    while (result_ptr) {
-                                        if (strcmp(result_ptr->variable,
+            if (strcmp(result->variable, "BreakpointTable") == 0) {
+                if (result->value->value_choice == GDBMI_TUPLE) {
+                    result = result->value->option.tuple->result;
+                    while (result) {
+                        if (strcmp(result->variable, "body") == 0) {
+                            if (result->value->value_choice == GDBMI_LIST) {
+                                struct gdbmi_list *list =
+                                        result->value->option.list;
+                                if (list && list->list_choice == GDBMI_RESULT) {
+                                    struct gdbmi_result *result =
+                                            list->option.result;
+                                    while (result) {
+                                        if (strcmp(result->variable,
                                                         "bkpt") == 0) {
                                             struct gdbmi_oc_breakpoint *ptr =
                                                     create_gdbmi_breakpoint();
 
-                                            struct gdbmi_value *value_ptr =
-                                                    result_ptr->value;
-                                            if (value_ptr->value_choice ==
+                                            struct gdbmi_value *value =
+                                                    result->value;
+                                            if (value->value_choice ==
                                                     GDBMI_TUPLE) {
-                                                struct gdbmi_result *result_ptr =
-                                                        value_ptr->option.
+                                                struct gdbmi_result *result =
+                                                        value->option.
                                                         tuple->result;
-                                                while (result_ptr) {
-                                                    if (strcmp(result_ptr->
+                                                while (result) {
+                                                    if (strcmp(result->
                                                                     variable,
                                                                     "number") ==
                                                             0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             char *nstr;
 
                                                             if (convert_cstring
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -511,15 +506,15 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                             nstr = NULL;
                                                         }
                                                     } else if (strcmp
-                                                            (result_ptr->
+                                                            (result->
                                                                     variable,
                                                                     "type") ==
                                                             0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             if (strcmp
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -528,7 +523,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                 ptr->type =
                                                                         GDBMI_BREAKPOINT;
                                                             else if (strcmp
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -538,15 +533,14 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                         GDBMI_WATCHPOINT;
                                                         }
                                                     } else if (strcmp
-                                                            (result_ptr->
-                                                                    variable,
+                                                            (result->variable,
                                                                     "disp") ==
                                                             0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             if (strcmp
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -556,7 +550,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                         =
                                                                         GDBMI_KEEP;
                                                             else if (strcmp
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -567,15 +561,15 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                         GDBMI_NOKEEP;
                                                         }
                                                     } else if (strcmp
-                                                            (result_ptr->
+                                                            (result->
                                                                     variable,
                                                                     "enabled")
                                                             == 0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             if (strcmp
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -588,15 +582,15 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                         0;
                                                         }
                                                     } else if (strcmp
-                                                            (result_ptr->
+                                                            (result->
                                                                     variable,
                                                                     "addr") ==
                                                             0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             if (convert_cstring
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -611,15 +605,15 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                             }
                                                         }
                                                     } else if (strcmp
-                                                            (result_ptr->
+                                                            (result->
                                                                     variable,
                                                                     "func") ==
                                                             0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             if (convert_cstring
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -634,15 +628,15 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                             }
                                                         }
                                                     } else if (strcmp
-                                                            (result_ptr->
+                                                            (result->
                                                                     variable,
                                                                     "file") ==
                                                             0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             if (convert_cstring
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -657,15 +651,15 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                             }
                                                         }
                                                     } else if (strcmp
-                                                            (result_ptr->
+                                                            (result->
                                                                     variable,
                                                                     "fullname")
                                                             == 0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             if (convert_cstring
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -680,17 +674,17 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                             }
                                                         }
                                                     } else if (strcmp
-                                                            (result_ptr->
+                                                            (result->
                                                                     variable,
                                                                     "line") ==
                                                             0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             char *nstr;
 
                                                             if (convert_cstring
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -709,17 +703,17 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                             nstr = NULL;
                                                         }
                                                     } else if (strcmp
-                                                            (result_ptr->
+                                                            (result->
                                                                     variable,
                                                                     "times") ==
                                                             0) {
-                                                        if (result_ptr->value->
+                                                        if (result->value->
                                                                 value_choice ==
                                                                 GDBMI_CSTRING) {
                                                             char *nstr;
 
                                                             if (convert_cstring
-                                                                    (result_ptr->
+                                                                    (result->
                                                                             value->
                                                                             option.
                                                                             cstring,
@@ -739,24 +733,23 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                         }
                                                     }
 
-                                                    result_ptr =
-                                                            result_ptr->next;
+                                                    result = result->next;
                                                 }
                                             }
 
-                                            oc_ptr->input_commands.break_list.
-                                                    breakpoint_ptr =
+                                            oc->input_commands.break_list.
+                                                    breakpoint =
                                                     append_gdbmi_breakpoint
-                                                    (oc_ptr->input_commands.
-                                                    break_list.breakpoint_ptr,
+                                                    (oc->input_commands.
+                                                    break_list.breakpoint,
                                                     ptr);
                                         }
-                                        result_ptr = result_ptr->next;
+                                        result = result->next;
                                     }
                                 }
                             }
                         }
-                        result_ptr = result_ptr->next;
+                        result = result->next;
                     }
                 }
             }
@@ -778,30 +771,30 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
  */
 int
 gdbmi_get_output_commands(struct gdbmi_output *output,
-        struct gdbmi_oc_cstring_ll *mi_input_cmds, struct gdbmi_oc **oc_ptr)
+        struct gdbmi_oc_cstring_ll *mi_input_cmds, struct gdbmi_oc **oc)
 {
     struct gdbmi_output *cur = output;
     struct gdbmi_oc_cstring_ll *cur_mi_input_cmds = mi_input_cmds;
     int result;
 
-    if (!output || !oc_ptr)
+    if (!output || !oc)
         return -1;
 
-    *oc_ptr = NULL;
+    *oc = NULL;
 
     while (cur) {
-        struct gdbmi_oc *cur_oc_ptr = NULL;
+        struct gdbmi_oc *cur_oc = NULL;
 
-        result = gdbmi_get_output_command(cur, &cur_oc_ptr);
+        result = gdbmi_get_output_command(cur, &cur_oc);
         if (result == -1) {
             fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
             return -1;
         }
-        *oc_ptr = append_gdbmi_oc(*oc_ptr, cur_oc_ptr);
+        *oc = append_gdbmi_oc(*oc, cur_oc);
 
         /* If it is not asynchronous, then need to get the specific results */
-        if (!cur_oc_ptr->is_asynchronous) {
-            result = gdbmi_get_specific_output_command(cur, cur_oc_ptr,
+        if (!cur_oc->is_asynchronous) {
+            result = gdbmi_get_specific_output_command(cur, cur_oc,
                     cur_mi_input_cmds);
             if (result == -1) {
                 fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
