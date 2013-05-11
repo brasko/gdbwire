@@ -38,8 +38,14 @@ dnl
 dnl The gtest library is used when --enable-tests is yes.
 GDBWIRE_ARG_WITH([gtest])
 
+dnl Allow the user to build against a system installed boost library
+dnl
+dnl The boost library is used when --enable-tests is yes.
+GDBWIRE_ARG_WITH([boost])
+
 if test x$enable_tests = "xyes"; then
     GDBWIRE_CONFIGURE_GTEST()
+    GDBWIRE_CONFIGURE_BOOST()
 fi
 
 AC_OUTPUT(Makefile)
@@ -67,5 +73,6 @@ $PACKAGE_NAME configuration summary:
 
     Use system installed libraries:
     --with-gtest ............. : ${with_gtest_help}
+    --with-boost ............. : ${with_boost_help}
 
 EOF

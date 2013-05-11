@@ -58,6 +58,7 @@ AC_DEFUN([GDBWIRE_ARG_WITH], [
         [case "${withval}" in
             *)  if test -d "$withval"; then
                     with_$1=$withval
+                    with_$1_help=$withval
                 else
                     AC_MSG_ERROR([\
 The installation path (PREFIX) provided to --with-$1 must be a directory])
@@ -116,3 +117,48 @@ AC_DEFUN([GDBWIRE_CONFIGURE_GTEST], [
     LIBS="$_save_LIBS"
 ])
 
+AC_DEFUN([GDBWIRE_CONFIGURE_BOOST], [
+    # Setup boost variables.
+    #
+    # If the user provided an installation directory, lets use it.
+    # Otherwise, hope the system has the library installed
+    if test x$with_boost != "xunset"; then
+      BOOST_CPPFLAGS="-I$with_boost/include"
+      BOOST_LDFLAGS="-L$with_boost/lib"
+      BOOST_LIBS="-lboost_filesystem -lboost_system"
+    fi
+
+    # Export variables to automake for inclusion in programs and libraries
+    AC_SUBST([BOOST_CPPFLAGS], [$BOOST_CPPFLAGS])
+    AC_SUBST([BOOST_LDFLAGS], [$BOOST_LDFLAGS])
+    AC_SUBST([BOOST_LIBS], [$BOOST_LIBS])
+
+    # Save variables to restore at end of function
+    _save_CPPFLAGS="$CPPFLAGS"
+    _save_LDFLAGS="$LDFLAGS"
+    _save_LIBS="$LIBS"
+
+    # Set temporary variables for autotools compilation test
+    CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+    LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
+    LIBS="$LIBS $BOOST_LIBS"
+
+    # Check for link
+    AC_MSG_CHECKING([for link against boost])
+    AC_LINK_IFELSE([
+        AC_LANG_PROGRAM([[#include "boost/filesystem.hpp"]],
+            [[boost::filesystem::path path_var;]])],
+        [ac_cv_boost=yes],
+        [ac_cv_boost=no])
+    if test "$ac_cv_boost" = "no"; then
+        AC_MSG_RESULT([no])
+        AC_MSG_FAILURE([gdbwire requires the ability to link to boost],[1])
+    else
+        AC_MSG_RESULT([yes])
+    fi;
+
+    # Restore variable
+    CPPFLAGS="$_save_CPPFLAGS"
+    LDFLAGS="$_save_LDFLAGS"
+    LIBS="$_save_LIBS"
+])
