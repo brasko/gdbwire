@@ -48,6 +48,10 @@ if test x$enable_tests = "xyes"; then
     GDBWIRE_CONFIGURE_BOOST()
 fi
 
+dnl Find the absolute srcdir and builddir directories.
+dnl Put those in the Makefile and config.h.
+GDBWIRE_DIRECTORIES()
+
 AC_OUTPUT(Makefile)
 
 # Display configuration options.

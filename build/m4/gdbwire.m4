@@ -1,3 +1,33 @@
+dnl Defines the abs_top_srcdir and abs_top_builddir variables.
+dnl
+dnl Puts GDBWIRE_ABS_TOP_SRCDIR and GDBWIRE_ABS_TOP_BUILDDIR into the
+dnl Makefile with AC_SUBST
+dnl
+dnl Puts GDBWIRE_ABS_TOP_SRCDIR and GDBWIRE_ABS_TOP_BUILDDIR into
+dnl the config.h with AC_DEFINE_UNQUOTED.
+AC_DEFUN([GDBWIRE_DIRECTORIES],
+[
+    case $target in
+        *-*-mingw*)
+            abs_top_srcdir=`cd $srcdir; pwd -W`
+            abs_top_builddir=`pwd -W`
+            ;;
+        *)
+            abs_top_srcdir=`cd $srcdir; pwd`
+            abs_top_builddir=`pwd`
+            ;;
+    esac
+
+    AC_SUBST([GDBWIRE_ABS_TOP_SRCDIR], ["$abs_top_srcdir"], \
+            [The src directory])
+    AC_SUBST([GDBWIRE_ABS_TOP_BUILDDIR], ["$abs_top_builddir"], \
+            [The build directory])
+    AC_DEFINE_UNQUOTED(GDBWIRE_ABS_TOP_SRCDIR, "$abs_top_srcdir", \
+            [The absolute top source directory])
+    AC_DEFINE_UNQUOTED(GDBWIRE_ABS_TOP_BUILDDIR, "$abs_top_builddir", \
+            [The absolute top build directory])
+])
+
 dnl Add a new --enable-NAME option to the configure script.
 dnl
 dnl The first parameter will be the name of the option to add.
