@@ -23,17 +23,14 @@ test_suite_SOURCES = \
     src/progs/test_suite/main.cpp
 
 test_suite_CPPFLAGS = \
-    @GTEST_CPPFLAGS@ \
-    @BOOST_CPPFLAGS@
+    @GTEST_CPPFLAGS@
 
 test_suite_LDFLAGS = \
-    @GTEST_LDFLAGS@ \
-    @BOOST_LDFLAGS@
+    @GTEST_LDFLAGS@
 
 test_suite_LDADD = \
     libgdbwire.la \
-    @GTEST_LIBS@ \
-    @BOOST_LIBS@
+    @GTEST_LIBS@
 
 # The gdbmi_driver configuration
 gdbmi_driver_SOURCES = \

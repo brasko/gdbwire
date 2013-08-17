@@ -2,7 +2,6 @@
 #define __FIXTURE_H__
 
 #include <gtest/gtest.h>
-#include <boost/filesystem.hpp>
 #include <string>
 
 /**
@@ -56,7 +55,7 @@ class Fixture : public ::testing::Test {
          * The absolute path to the source directory this test suite is
          * running against. This may be read-only.
          */
-        boost::filesystem::path src();
+        std::string src();
 
         /**
          * Get the data directory in the source tree containing test files.
@@ -67,7 +66,7 @@ class Fixture : public ::testing::Test {
          * The absolute path to the data directory contained in the source
          * directory this test suite is running against. This may be read-only.
          */
-        boost::filesystem::path data();
+        std::string data();
 
         /** 
          * Get the test specific directory in the source directory.
@@ -80,7 +79,7 @@ class Fixture : public ::testing::Test {
          * source directory this test suite is running against.
          * This may be read-only.
          */
-        boost::filesystem::path sourceTestDir();
+        std::string sourceTestDir();
         
         /**
          * Get the destination directory this test suite is running in.
@@ -94,7 +93,7 @@ class Fixture : public ::testing::Test {
          * The absolute path to the destination directory this test suite is
          * running against. This is intended to be writable.
          */
-        boost::filesystem::path dest();
+        std::string dest();
 
         /** 
          * Get the test specific directory in the destination directory.
@@ -106,7 +105,7 @@ class Fixture : public ::testing::Test {
          * destination directory this test suite is running against.
          * This is intended to be writable.
          */
-        boost::filesystem::path destTestDir();
+        std::string destTestDir();
 
 
         /**
@@ -127,8 +126,7 @@ class Fixture : public ::testing::Test {
          * @param dest
          * The destination directory.
          */
-        void copy(const boost::filesystem::path &src,
-                const boost::filesystem::path &dest,
+        void copy(const std::string &src, const std::string &dest,
                 bool recursive = false);
 
     private:

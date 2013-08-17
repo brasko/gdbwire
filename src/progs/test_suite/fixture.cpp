@@ -1,9 +1,5 @@
 #include "config.h"
-#include <boost/foreach.hpp>
-#include <boost/filesystem.hpp>
 #include "fixture.h"
-
-using namespace boost::filesystem;
 
 Fixture::Fixture()
 {
@@ -30,52 +26,53 @@ Fixture::testName()
     return test_info->name();
 }
 
-path
+std::string
 Fixture::src()
 {
-    path srcdir = GDBWIRE_ABS_TOP_SRCDIR;
-    srcdir /= "progs";
-    srcdir /= "test_suite";
+    std::string srcdir = GDBWIRE_ABS_TOP_SRCDIR;
+    srcdir += "/progs";
+    srcdir += "/test_suite";
     return srcdir;
 }
 
-path
+std::string
 Fixture::data()
 {
-    path datadir = src();
-    datadir /= "data";
+    std::string datadir = src();
+    datadir += "/data";
     return datadir;
 }
 
-path
+std::string
 Fixture::sourceTestDir()
 {
-    path datadir = data();
-    datadir /= testCaseName();
-    datadir /= testName();
+    std::string datadir = data();
+    datadir = datadir + "/" + testCaseName();
+    datadir = datadir + "/" + testName();
     return datadir;
 }
 
-path
+std::string
 Fixture::dest()
 {
-    path builddir = GDBWIRE_ABS_TOP_BUILDDIR;
-    builddir /= "results";
+    std::string builddir = GDBWIRE_ABS_TOP_BUILDDIR;
+    builddir += "/results";
     return builddir;
 }
 
-path
+std::string
 Fixture::destTestDir()
 {
-    path destdir = dest();
-    destdir /= testCaseName();
-    destdir /= testName();
+    std::string destdir = dest();
+    destdir = destdir + "/" + testCaseName();
+    destdir = destdir + "/" + testName();
     return destdir;
 }
 
 void
-Fixture::copy(const path &src, const path &dest, bool recursive)
+Fixture::copy(const std::string &src, const std::string &dest, bool recursive)
 {
+#if 0
     if (!exists(src)) {
         // throw file not found exception src
     } else if (!exists(dest.parent_path())) {
@@ -100,11 +97,13 @@ Fixture::copy(const path &src, const path &dest, bool recursive)
     } else {
         copy(src, target);
     }
+#endif
 }
 
 void
 Fixture::copyTestData()
 {
+#if 0
     path sourceTestDirectory = sourceTestDir();
     path destTestDirectory = destTestDir();
     path destTestCaseDirectory(destTestDirectory.parent_path());
@@ -126,4 +125,5 @@ Fixture::copyTestData()
     if (exists(sourceTestDirectory)) {
         copy(sourceTestDirectory, destTestCaseDirectory);
     }
+#endif
 }
