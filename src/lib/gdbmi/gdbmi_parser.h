@@ -1,6 +1,10 @@
 #ifndef __GDBMI_PARSER_H__
 #define __GDBMI_PARSER_H__
 
+#ifdef __cplusplus 
+extern "C" { 
+#endif 
+
 #include "gdbmi_pt.h"
 
 /* Doxygen headers {{{ */
@@ -127,5 +131,9 @@ int gdbmi_parser_parse_file(struct gdbmi_parser *parser,
 /*@}*/
 
 /* }}} */
+
+#ifdef __cplusplus 
+}
+#endif 
 
 #endif

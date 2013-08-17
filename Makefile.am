@@ -20,9 +20,11 @@ libgdbwire_la_SOURCES= \
 # The test suite configuration
 test_suite_SOURCES = \
     src/progs/test_suite/fixture.cpp \
+    src/progs/test_suite/gdbmi.cpp \
     src/progs/test_suite/main.cpp
 
 test_suite_CPPFLAGS = \
+    -I@GDBWIRE_ABS_TOP_SRCDIR@/src/lib \
     @GTEST_CPPFLAGS@
 
 test_suite_LDFLAGS = \

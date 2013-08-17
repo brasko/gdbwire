@@ -1,6 +1,10 @@
 #ifndef __GDBMI_PT_H__
 #define __GDBMI_PT_H__
 
+#ifdef __cplusplus 
+extern "C" { 
+#endif 
+
 typedef long gdbmi_token_t;
 
 struct gdbmi_pdata {
@@ -247,5 +251,9 @@ int print_gdbmi_list(struct gdbmi_list *param);
 struct gdbmi_stream_record *create_gdbmi_stream_record(void);
 int destroy_gdbmi_stream_record(struct gdbmi_stream_record *param);
 int print_gdbmi_stream_record(struct gdbmi_stream_record *param);
+
+#ifdef __cplusplus 
+}
+#endif 
 
 #endif

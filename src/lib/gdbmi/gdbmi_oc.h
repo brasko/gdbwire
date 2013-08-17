@@ -1,6 +1,10 @@
 #ifndef __GDBMI_OC_H__
 #define __GDBMI_OC_H__
 
+#ifdef __cplusplus 
+extern "C" { 
+#endif 
+
 #include "gdbmi_pt.h"
 
 /* The possible/implemented GDBMI commands */
@@ -143,5 +147,9 @@ int destroy_gdbmi_breakpoint(struct gdbmi_oc_breakpoint *param);
 struct gdbmi_oc_breakpoint *append_gdbmi_breakpoint(
         struct gdbmi_oc_breakpoint *list, struct gdbmi_oc_breakpoint *item);
 int print_gdbmi_breakpoint(struct gdbmi_oc_breakpoint *param);
+
+#ifdef __cplusplus 
+}
+#endif 
 
 #endif /* __GDBMI_OC_H__ */

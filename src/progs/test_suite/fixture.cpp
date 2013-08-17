@@ -30,6 +30,7 @@ std::string
 Fixture::src()
 {
     std::string srcdir = GDBWIRE_ABS_TOP_SRCDIR;
+    srcdir += "/src";
     srcdir += "/progs";
     srcdir += "/test_suite";
     return srcdir;
