@@ -137,10 +137,11 @@ async-class         -> "stopped"
 result-list         -> result-list "," result | epsilon
 result              -> variable "=" value
 variable            -> string
-value-list          -> value | value-list "," value
+value-list          -> value-list "," value | epsilon
 value               -> c-string | tuple | list
 tuple               -> "{}" | "{" result result-list "}"
-list                -> "[]" | "[" value-list "]" | "[" result result-list "]"
+list                -> "[]" |
+                       "[" value value-list "]" | "[" result result-list "]"
 stream-record       -> stream-record-choice c-string
 stream-record-choice-> "~" | "@" | "&"
 nl                  -> CR | CR LF

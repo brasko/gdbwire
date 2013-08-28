@@ -215,8 +215,8 @@ variable: STRING_LITERAL {
   $$ = strdup (gdbmi_text);
 };
 
-value_list: value {
-  $$ = append_gdbmi_value (NULL, $1);	
+value_list: {
+  $$ = NULL;
 };
 
 value_list: value_list COMMA value {
@@ -254,10 +254,10 @@ list: OPEN_BRACKET CLOSED_BRACKET {
   $$ = NULL;
 };
 
-list: OPEN_BRACKET value_list CLOSED_BRACKET {
+list: OPEN_BRACKET value value_list CLOSED_BRACKET {
   $$ = create_gdbmi_list ();
   $$->list_choice = GDBMI_VALUE;
-  $$->option.value = $2;
+  $$->option.value = append_gdbmi_value($2, $3); 
 };
 
 list: OPEN_BRACKET result result_list CLOSED_BRACKET {
