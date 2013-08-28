@@ -21,7 +21,8 @@ result              -> variable "=" value
 variable            -> string
 value               -> const | tuple | list
 const               -> c-string
-tuple               -> "{}" | "{" result ("," result)* "}"
+tuple               -> "{}" |
+                       "{" result ("," result)* "}"
 list                -> "[]" |
                        "[" value ("," value)* "]" |
                        "[" result ("," result)* "]"
@@ -36,29 +37,52 @@ log-stream-output       -> "&" c-string
 nl                      -> CR | CR-LF
 token                   -> any sequence of digits. 
 
+The documented syntax described in the GDB manual can not be
+directly plugged into bison as a LR(1) grammar. For this reason I take
+some steps to document how I've changed the syntax above to be suitable
+for LR(1) parsing with bison.
+
 Transformations
 ---------------
 
-- (out-of-band-record)* transforms to opt-oob-record-list
-  opt-oob-record-list -> epsilon | oob-record-list
-  oob-record-list     -> epsilon | oob-record-list oob-record
-  
-  oob-record-list -> oob-record-list oob-record | epsilon
+I've come across two patterns that bison likes as input for LR(1) grammars.
 
-- [result-record]
-  opt-result-record -> result-record | epsilon
+Zero or more rules like the regular expression (pattern)* look like this:
+  pattern_list -> epsilon
+  pattern_list -> pattern_list pattern
 
-- [token]
-  opt-token -> token | epsilon
+One or more rules like the regular expression (pattern)+ look like this:
+  pattern_list -> pattern
+  pattern_list -> pattern_list pattern
 
-- ("," result)* -> opt-result-list
-  opt-result-list -> epsilon | result-list
-  result-list       -> result | result-list "," result
+Zero or one rules like the regular expression [pattern] look like this:
+  opt_pattern -> epsilon
+  opt_pattern -> pattern
 
-- ("," value)* -> value-list-prime
-  value-list-prime  -> value-list | epsilon
-  value-list        -> value-list "," value | value
+Below are the transformations that I use to get from the documented
+sytax above to the LR(1) grammar I provide to bison.
 
+- (out-of-band-record)* transforms to out-of-band-record-list
+  out-of-band-record-list -> epsilon
+  out-of-band-record-list -> out-of-band-record-list out-of-band-record
+
+- [result-record] transforms to opt-result-record
+  opt-result-record -> epsilon
+  opt-result-record -> result-record
+
+- [token] transforms to opt-token
+  opt-token -> epsilon
+  opt-token -> token
+
+- ("," result)* transforms to result-list
+  result-list -> epsilon
+  result-list -> result-list "," result
+
+- ("," value)* transforms to value-list
+  value-list -> epsilon
+  value-list -> value-list "," value
+
+- Consolidate the following rules to a more consice set of rules
 - From
     async-record        -> exec-async-output |
                            status-async-output |
@@ -66,10 +90,12 @@ Transformations
     exec-async-output   -> [token] "*" async-output 
     status-async-output -> [token] "+" async-output 
     notify-async-output -> [token] "=" async-output 
+
  To
     async-record        -> opt-token async-output-kind async-output
     async-output-kind   -> "*" | "+" | "="
 
+- Consolidate the following rules to a more consice set of rules
 - From
     stream-record       -> console-stream-output |
                            target-stream-output |
@@ -83,30 +109,46 @@ Transformations
     stream-record       -> stream-record-kind c-string
     stream-record-kind  -> "~" | "@" | "&"
 
+Finally, gdbwire must be able to receive many output commands during
+a single session. So the grammar supports accepting an output list.
+
+Please note that the oob-record-list rule,
+  oob-record-list -> oob-record-list oob-record nl
+and the opt-result-record rule,
+  opt-result-record   -> result-record nl
+have a newline at the end of them even though it is not in the GDB syntax.
+
+On the contrary, the syntax has,
+    async-output        -> async-class ("," result)* nl
+but there is no nl after the async output.
+
+These are most likely errors in the GDB syntax.
+
 LR(1) Grammar
 -------------
 
+TODO:
+ - result-list should consume zero or more results in the grammar, cleanup
+
+output-list         -> output-list output | output
 output              -> oob-record-list opt-result-record "(gdb)" nl
-oob-record-list     -> oob-record-list oob-record | epsilon
-opt-result-record   -> result-record | epsilon
+oob-record-list     -> oob-record-list oob-record nl | epsilon
+opt-result-record   -> result-record nl | epsilon
 result-record       -> opt-token "^" result-class
 result-record       -> opt-token "^" result-class "," result-list
 oob-record          -> async-record | stream-record
-async-record        -> opt-token async-output-kind async-output
-async-output-kind   -> "*" | "+" | "="
-async-output        -> async-class result-list nl
+async-record        -> opt-token async-record-kind async-output
+async-record-kind   -> "*" | "+" | "="
+async-output        -> async-class result-list
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
 async-class         -> "stopped"
 result-list         -> result | result-list "," result
 result              -> variable "=" value
 variable            -> string
-value-list-prime    -> value-list | epsilon
-value-list          -> value-list "," value | "," value
+value-list          -> value | value-list "," value
 value               -> c-string | tuple | list
-tuple               -> "{}" | "{" result-list "}"
-list                -> "[]" |
-                       "[" value value-list-prime "]" |
-                       "[" result-list "]"
+tuple               -> "{}" | "{" result result-list "}"
+list                -> "[]" | "[" value-list "]" | "[" result-list "]"
 stream-record       -> stream-record-kind c-string
 stream-record-kind  -> "~" | "@" | "&"
 nl                  -> CR | CR LF

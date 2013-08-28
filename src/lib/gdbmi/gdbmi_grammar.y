@@ -59,6 +59,7 @@ void gdbmi_error (struct gdbmi_pdata *gdbmi_pdata, const char *s)
   struct gdbmi_result *u_result;
   long u_token;
   struct gdbmi_async_record *u_async_record;
+  struct gdbmi_async_output *u_async_output;
   struct gdbmi_stream_record *u_stream_record;
   int u_async_class;
   char *u_variable;
@@ -71,7 +72,7 @@ void gdbmi_error (struct gdbmi_pdata *gdbmi_pdata, const char *s)
 %type <u_output> output_list
 %type <u_output> output
 %type <u_oob_record> oob_record
-%type <u_oob_record> opt_oob_record_list
+%type <u_oob_record> oob_record_list
 %type <u_result_record> opt_result_record
 %type <u_result_record> result_record
 %type <u_result_class> result_class
@@ -81,6 +82,7 @@ void gdbmi_error (struct gdbmi_pdata *gdbmi_pdata, const char *s)
 %type <u_token> opt_token
 %type <u_token> token
 %type <u_async_record> async_record
+%type <u_async_output> async_output
 %type <u_stream_record> stream_record
 %type <u_async_class> async_class
 %type <u_variable> variable
@@ -102,7 +104,7 @@ output_list: output_list output {
   gdbmi_pdata->parsed_one = 1;
 };
 
-output: opt_oob_record_list opt_result_record OPEN_PAREN variable CLOSED_PAREN NEWLINE { 
+output: oob_record_list opt_result_record OPEN_PAREN variable CLOSED_PAREN NEWLINE { 
   $$ = create_gdbmi_output ();
   $$->oob_record = $1;
   $$->result_record = $2;
@@ -113,11 +115,11 @@ output: opt_oob_record_list opt_result_record OPEN_PAREN variable CLOSED_PAREN N
   free ($4);
 } ;
 
-opt_oob_record_list: {
+oob_record_list: {
   $$ = NULL;
 };
 
-opt_oob_record_list: opt_oob_record_list oob_record NEWLINE {
+oob_record_list: oob_record_list oob_record NEWLINE {
   $$ = append_gdbmi_oob_record ($1, $2);
 };
 
@@ -155,20 +157,18 @@ oob_record: stream_record {
   $$->option.stream_record = $1;
 };
 
-async_record: opt_token async_record_class async_class {
+async_record: opt_token async_record_class async_output {
   $$ = create_gdbmi_async_record ();
   $$->token = $1;
   $$->async_record = $2;
-  $$->async_class = $3;
+  $$->async_output = $3;
 };
 
-async_record: opt_token async_record_class async_class COMMA result_list {
-  $$ = create_gdbmi_async_record ();
-  $$->token = $1;
-  $$->async_record = $2;
-  $$->async_class = $3;
-  $$->result = $5;
-};
+async_output: async_class COMMA result_list {
+  $$ = create_gdbmi_async_output();
+  $$->async_class = $1;
+  $$->result = $3;
+}
 
 async_record_class: MULT_OP {
   $$ = GDBMI_EXEC;

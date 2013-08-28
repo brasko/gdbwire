@@ -118,8 +118,12 @@ struct gdbmi_async_record {
     /* The choice of asyncronous record this represents  */
     enum gdbmi_async_record_choice async_record;
 
-    enum gdbmi_async_class async_class;
+    struct gdbmi_async_output *async_output;
 
+};
+
+struct gdbmi_async_output {
+    enum gdbmi_async_class async_class;
     struct gdbmi_result *result;
 };
 
@@ -221,6 +225,11 @@ int print_gdbmi_stream_record_choice(enum gdbmi_stream_record_choice param);
 struct gdbmi_async_record *create_gdbmi_async_record(void);
 int destroy_gdbmi_async_record(struct gdbmi_async_record *param);
 int print_gdbmi_async_record(struct gdbmi_async_record *param);
+
+/* Creating, Destroying and printing async_output  */
+struct gdbmi_async_output *create_gdbmi_async_output(void);
+int destroy_gdbmi_async_output(struct gdbmi_async_output *param);
+int print_gdbmi_async_output(struct gdbmi_async_output *param);
 
 int print_gdbmi_async_class(enum gdbmi_async_class param);
 

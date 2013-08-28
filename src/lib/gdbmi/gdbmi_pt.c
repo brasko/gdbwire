@@ -375,9 +375,9 @@ int destroy_gdbmi_async_record(struct gdbmi_async_record *param)
     if (!param)
         return 0;
 
-    if (destroy_gdbmi_result(param->result) == -1)
+    if (destroy_gdbmi_async_output(param->async_output) == -1)
         return -1;
-    param->result = NULL;
+    param->async_output = NULL;
 
     free(param);
     param = NULL;
@@ -398,6 +398,40 @@ int print_gdbmi_async_record(struct gdbmi_async_record *param)
     result = print_gdbmi_async_record_choice(param->async_record);
     if (result == -1)
         return -1;
+
+    result = print_gdbmi_async_output(param->async_output);
+    if (result == -1)
+        return -1;
+
+    return 0;
+}
+
+/* Creating, Destroying and printing async_output  */
+struct gdbmi_async_output *create_gdbmi_async_output(void)
+{
+    return calloc(1, sizeof (struct gdbmi_async_output));
+}
+
+int destroy_gdbmi_async_output(struct gdbmi_async_output *param)
+{
+    if (!param)
+        return 0;
+
+    if (destroy_gdbmi_result(param->result) == -1)
+        return -1;
+    param->result = NULL;
+
+    free(param);
+    param = NULL;
+    return 0;
+}
+
+int print_gdbmi_async_output(struct gdbmi_async_output *param)
+{
+    int result;
+
+    if (!param)
+        return 0;
 
     result = print_gdbmi_async_class(param->async_class);
     if (result == -1)
