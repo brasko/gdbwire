@@ -6,8 +6,7 @@ Description of GDB/MI from GDB documentation
 output              -> (out-of-band-record)* [result-record] "(gdb)" nl
 result-record       -> [token] "^" result-class ("," result)* nl
 out-of-band-record  -> async-record | stream-record
-async-record        -> exec-async-output |
-                       status-async-output |
+async-record        -> exec-async-output | status-async-output |
                        notify-async-output 
 exec-async-output   -> [token] "*" async-output 
 status-async-output -> [token] "+" async-output 
@@ -17,14 +16,11 @@ async-output        -> async-class ("," result)* nl
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
 async-class         -> "stopped"
 result              -> variable "=" value
-
 variable            -> string
 value               -> const | tuple | list
 const               -> c-string
-tuple               -> "{}" |
-                       "{" result ("," result)* "}"
-list                -> "[]" |
-                       "[" value ("," value)* "]" |
+tuple               -> "{}" | "{" result ("," result)* "}"
+list                -> "[]" | "[" value ("," value)* "]" |
                        "[" result ("," result)* "]"
 
 stream-record       -> console-stream-output |
@@ -92,8 +88,8 @@ sytax above to the LR(1) grammar I provide to bison.
     notify-async-output -> [token] "=" async-output 
 
  To
-    async-record        -> opt-token async-output-kind async-output
-    async-output-kind   -> "*" | "+" | "="
+    async-record        -> opt-token async-output-choice async-output
+    async-output-choice -> "*" | "+" | "="
 
 - Consolidate the following rules to a more consice set of rules
 - From
@@ -106,8 +102,8 @@ sytax above to the LR(1) grammar I provide to bison.
     log-stream-output       -> "&" c-string
 
   To 
-    stream-record       -> stream-record-kind c-string
-    stream-record-kind  -> "~" | "@" | "&"
+    stream-record       -> stream-record-choice c-string
+    stream-record-choice-> "~" | "@" | "&"
 
 Finally, gdbwire must be able to receive many output commands during
 a single session. So the grammar supports accepting an output list.
@@ -133,8 +129,8 @@ oob-record-list     -> oob-record-list oob-record nl | epsilon
 opt-result-record   -> result-record nl | epsilon
 result-record       -> opt-token "^" result-class result-list
 oob-record          -> async-record | stream-record
-async-record        -> opt-token async-record-kind async-output
-async-record-kind   -> "*" | "+" | "="
+async-record        -> opt-token async-record-choice async-output
+async-record-choice -> "*" | "+" | "="
 async-output        -> async-class result-list
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
 async-class         -> "stopped"
@@ -145,8 +141,8 @@ value-list          -> value | value-list "," value
 value               -> c-string | tuple | list
 tuple               -> "{}" | "{" result result-list "}"
 list                -> "[]" | "[" value-list "]" | "[" result result-list "]"
-stream-record       -> stream-record-kind c-string
-stream-record-kind  -> "~" | "@" | "&"
+stream-record       -> stream-record-choice c-string
+stream-record-choice-> "~" | "@" | "&"
 nl                  -> CR | CR LF
 opt_token           -> token | epsilon
 token               -> [0-9]+
