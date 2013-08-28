@@ -10,7 +10,6 @@ lib_LTLIBRARIES=libgdbwire.la
 
 # The gdbwire configuration
 libgdbwire_la_SOURCES= \
-    src/lib/foo.c \
     src/lib/gdbmi/gdbmi_grammar.y \
     src/lib/gdbmi/gdbmi_lexer.l \
     src/lib/gdbmi/gdbmi_oc.c \
