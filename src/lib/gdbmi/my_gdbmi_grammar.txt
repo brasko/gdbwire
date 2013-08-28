@@ -127,28 +127,24 @@ These are most likely errors in the GDB syntax.
 LR(1) Grammar
 -------------
 
-TODO:
- - result-list should consume zero or more results in the grammar, cleanup
-
 output-list         -> output-list output | output
 output              -> oob-record-list opt-result-record "(gdb)" nl
 oob-record-list     -> oob-record-list oob-record nl | epsilon
 opt-result-record   -> result-record nl | epsilon
-result-record       -> opt-token "^" result-class
-result-record       -> opt-token "^" result-class "," result-list
+result-record       -> opt-token "^" result-class result-list
 oob-record          -> async-record | stream-record
 async-record        -> opt-token async-record-kind async-output
 async-record-kind   -> "*" | "+" | "="
 async-output        -> async-class result-list
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
 async-class         -> "stopped"
-result-list         -> result | result-list "," result
+result-list         -> result-list "," result | epsilon
 result              -> variable "=" value
 variable            -> string
 value-list          -> value | value-list "," value
 value               -> c-string | tuple | list
 tuple               -> "{}" | "{" result result-list "}"
-list                -> "[]" | "[" value-list "]" | "[" result-list "]"
+list                -> "[]" | "[" value-list "]" | "[" result result-list "]"
 stream-record       -> stream-record-kind c-string
 stream-record-kind  -> "~" | "@" | "&"
 nl                  -> CR | CR LF

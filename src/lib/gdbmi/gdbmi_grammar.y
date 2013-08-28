@@ -131,18 +131,11 @@ opt_result_record: result_record NEWLINE {
   $$ = $1;
 };
 
-result_record: opt_token CARROT result_class {
+result_record: opt_token CARROT result_class result_list {
   $$ = create_gdbmi_result_record ();
   $$->token = $1;
   $$->result_class = $3;
-  $$->result = NULL;
-};
-
-result_record: opt_token CARROT result_class COMMA result_list {
-  $$ = create_gdbmi_result_record ();
-  $$->token = $1;
-  $$->result_class = $3;
-  $$->result = $5;
+  $$->result = $4;
 };
 
 oob_record: async_record {
@@ -164,10 +157,10 @@ async_record: opt_token async_record_class async_output {
   $$->async_output = $3;
 };
 
-async_output: async_class COMMA result_list {
+async_output: async_class result_list {
   $$ = create_gdbmi_async_output();
   $$->async_class = $1;
-  $$->result = $3;
+  $$->result = $2;
 }
 
 async_record_class: MULT_OP {
@@ -204,8 +197,8 @@ async_class: STRING_LITERAL {
   $$ = GDBMI_STOPPED;
 };
 
-result_list: result {
-  $$ = append_gdbmi_result (NULL, $1);	
+result_list: {
+  $$ = NULL;
 };
 
 result_list: result_list COMMA result {
@@ -252,9 +245,9 @@ tuple: OPEN_BRACE CLOSED_BRACE {
   $$ = NULL;
 };
 
-tuple: OPEN_BRACE result_list CLOSED_BRACE {
+tuple: OPEN_BRACE result result_list CLOSED_BRACE {
   $$ = create_gdbmi_tuple ();
-  $$->result = $2;
+  $$->result = append_gdbmi_result($2, $3);
 };
 
 list: OPEN_BRACKET CLOSED_BRACKET {
@@ -267,10 +260,10 @@ list: OPEN_BRACKET value_list CLOSED_BRACKET {
   $$->option.value = $2;
 };
 
-list: OPEN_BRACKET result_list CLOSED_BRACKET {
+list: OPEN_BRACKET result result_list CLOSED_BRACKET {
   $$ = create_gdbmi_list ();
   $$->list_choice = GDBMI_RESULT;
-  $$->option.result = $2;
+  $$->option.result = append_gdbmi_result($2, $3);
 };
 
 stream_record: stream_record_class CSTRING {
