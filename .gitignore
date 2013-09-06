@@ -1,3 +1,7 @@
+# vim swap files
+*~
+*.swp
+
 # http://www.gnu.org/software/automake
 
 Makefile.in
