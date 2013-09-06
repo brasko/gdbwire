@@ -17,34 +17,26 @@ extern char *gdbmi_text;
 extern int gdbmi_lineno;
 
 struct gdbmi_parser {
-    char *last_error;
+    /* The GDB/MI push parser state */
     gdbmi_pstate *mips;
-    struct gdbmi_pdata *pdata;
+    /* The GDB/MI output command found during parsing */
+    struct gdbmi_output *oc;
 };
 
-struct gdbmi_parser *gdbmi_parser_create(void)
+struct gdbmi_parser *
+gdbmi_parser_create(void)
 {
     struct gdbmi_parser *parser;
 
-    parser = (struct gdbmi_parser *) malloc(sizeof (struct gdbmi_parser));
-    parser->last_error = NULL;
-
+    parser = (struct gdbmi_parser *)calloc(1, sizeof(struct gdbmi_parser));
     if (!parser) {
-        fprintf(stderr, "%s:%d", __FILE__, __LINE__);
         return NULL;
     }
 
-    /* Create a new parser instance */
+    /* Create a new push parser state instance */
     parser->mips = gdbmi_pstate_new();
-    if (!parser) {
-        fprintf(stderr, "%s:%d", __FILE__, __LINE__);
-        return NULL;
-    }
-
-    /* Create the data the parser parses into */
-    parser->pdata = create_gdbmi_pdata();
-    if (!parser->pdata) {
-        fprintf(stderr, "%s:%d", __FILE__, __LINE__);
+    if (!parser->mips) {
+        free(parser);
         return NULL;
     }
 
@@ -53,29 +45,34 @@ struct gdbmi_parser *gdbmi_parser_create(void)
 
 int gdbmi_parser_destroy(struct gdbmi_parser *parser)
 {
-
-    if (!parser)
-        return -1;
-
-    if (parser->last_error) {
-        free(parser->last_error);
-        parser->last_error = NULL;
+    if (!parser) {
+        return 0;
     }
 
+    /* Free the push parser instance */
     if (parser->mips) {
-        /* Free the parser instance */
         gdbmi_pstate_delete(parser->mips);
         parser->mips = NULL;
     }
 
-    if (parser->pdata) {
-        destroy_gdbmi_pdata(parser->pdata);
-        parser->pdata = NULL;
-    }
+    /* The parser output command (parser->oc) should be deleted by the client */
 
     free(parser);
     parser = NULL;
     return 0;
+}
+
+struct gdbmi_output *
+gdbmi_parser_get_output(struct gdbmi_parser *parser)
+{
+    return parser->oc;
+}
+
+void
+gdbmi_parser_set_output(struct gdbmi_parser *parser,
+        struct gdbmi_output *output)
+{
+    parser->oc = output;
 }
 
 int
@@ -99,8 +96,6 @@ gdbmi_parser_parse_string(struct gdbmi_parser *parser,
     *pt = 0;
     *parse_failed = 0;
 
-    parser->pdata->parsed_one = 0;
-
     /* Create a new input buffer for flex. */
     state = gdbmi__scan_string(strdup(mi_command));
 
@@ -110,16 +105,18 @@ gdbmi_parser_parse_string(struct gdbmi_parser *parser,
         pattern = gdbmi_lex();
         if (pattern == 0)
             break;
-        mi_status = gdbmi_push_parse(parser->mips, pattern, NULL,
-                parser->pdata);
+        mi_status = gdbmi_push_parse(parser->mips, pattern, NULL, parser);
     } while (mi_status == YYPUSH_MORE);
 
     /* Parser is done, this should never happen */
     if (mi_status != YYPUSH_MORE && mi_status != 0) {
         *parse_failed = 1;
-    } else if (parser->pdata->parsed_one) {
-        *pt = parser->pdata->tree;
-        parser->pdata->tree = NULL;
+    /* Parser finished but no output command was found */
+    } else if (!parser->oc) {
+        *parse_failed = 1;
+    } else {
+        *pt = parser->oc;
+        parser->oc = NULL;
     }
 
     /* Free the scanners buffer */
@@ -162,16 +159,18 @@ gdbmi_parser_parse_file(struct gdbmi_parser *parser,
         pattern = gdbmi_lex();
         if (pattern == 0)
             break;
-        mi_status = gdbmi_push_parse(parser->mips, pattern, NULL,
-                parser->pdata);
+        mi_status = gdbmi_push_parse(parser->mips, pattern, NULL, parser);
     } while (mi_status == YYPUSH_MORE);
 
     /* Parser is done, this should never happen */
     if (mi_status != YYPUSH_MORE && mi_status != 0) {
         *parse_failed = 1;
+    /* Parser finished but no output command was found */
+    } else if (!parser->oc) {
+        *parse_failed = 1;
     } else {
-        *pt = parser->pdata->tree;
-        parser->pdata->tree = NULL;
+        *pt = parser->oc;
+        parser->oc = NULL;
     }
 
     fclose(gdbmi_in);

@@ -37,22 +37,6 @@ int print_gdbmi_result_class(enum gdbmi_result_class param)
     return 0;
 }
 
-/* Creating and  Destroying */
-struct gdbmi_pdata *create_gdbmi_pdata(void)
-{
-    return calloc(1, sizeof (struct gdbmi_pdata));
-}
-
-int destroy_gdbmi_pdata(struct gdbmi_pdata *param)
-{
-    if (!param)
-        return 0;
-
-    free(param);
-
-    return 0;
-}
-
 /* Creating, Destroying and printing gdbmi_output  */
 struct gdbmi_output *create_gdbmi_output(void)
 {

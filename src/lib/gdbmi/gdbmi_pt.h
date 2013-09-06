@@ -7,11 +7,6 @@ extern "C" {
 
 typedef long gdbmi_token_t;
 
-struct gdbmi_pdata {
-    int parsed_one;
-    struct gdbmi_output *tree;
-};
-
 /* A choice of result's that GDB is capable of producing  */
 enum gdbmi_result_class {
     GDBMI_DONE,
@@ -184,10 +179,6 @@ struct gdbmi_stream_record {
 
 /* Print result class  */
 int print_gdbmi_result_class(enum gdbmi_result_class param);
-
-/* Creating and  Destroying */
-struct gdbmi_pdata *create_gdbmi_pdata(void);
-int destroy_gdbmi_pdata(struct gdbmi_pdata *param);
 
 /* Creating, Destroying and printing output  */
 struct gdbmi_output *create_gdbmi_output(void);

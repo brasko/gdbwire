@@ -7,61 +7,30 @@ extern "C" {
 
 #include "gdbmi_pt.h"
 
-/* Doxygen headers {{{ */
-/*!
- * \file
- * gdbmi_parser.h
- *
- * \brief
- * This interface is intended to be the abstraction layer that is capable of
- * parsing MI commands that are sent by GDB and determining if they are valid
- * or not. The input to this interface is a single MI command. This consists 
- * of one or more lines. That output is an MI parse tree, which represents 
- * the MI command in memory. The application should only use this parse 
- * tree to understand the command.
- */
-/* }}} */
-
-/* struct gdbmi_parser {{{ */
-
-/**
- * @name Creating and destroying a gdbmi_parser context
- *
- * The GDBMI parser context can be created and destroyed here.
- */
-
-/*@{*/
-
+/// The opaque GDB/MI parser context
 struct gdbmi_parser;
 
 /**
- * Create a gdbmi_parser context.
+ * Create a GDB/MI parser context.
  *
- * \return
- * The new instance of a gdbmi_parser, or NULL on error
+ * @return
+ * A new GDB/MI parser instance or NULL on error.
  */
 struct gdbmi_parser *gdbmi_parser_create(void);
 
 /**
  * Destroy a gdbmi_parser context.
  *
- * \param parser
+ * If a NULL pointer is passed to this function it will ignore it
+ * and successfully return.
+ *
+ * @param parser
  * The instance the parser to destroy
  *
- * \return
+ * @return
  * 0 on succes, or -1 on error.
  */
 int gdbmi_parser_destroy(struct gdbmi_parser *parser);
-
-/*@}*/
-
-/**
- * @name parsing functions
- *
- * These functions tell the context what to parse.
- */
-
-/*@{*/
 
 /**
  * Tell the MI parser to parse the data.
@@ -127,10 +96,6 @@ int gdbmi_parser_parse_string(struct gdbmi_parser *parser,
 int gdbmi_parser_parse_file(struct gdbmi_parser *parser,
         const char *mi_command_file, struct gdbmi_output **pt,
         int *parse_failed);
-
-/*@}*/
-
-/* }}} */
 
 #ifdef __cplusplus 
 }

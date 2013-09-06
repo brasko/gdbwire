@@ -2,20 +2,29 @@
 %define api.pure
 %define api.push_pull "push"
 %defines
-%code requires { struct gdbmi_pdata; }
-%parse-param { struct gdbmi_pdata *gdbmi_pdata }
+%code requires { struct gdbmi_parser; }
+%parse-param { struct gdbmi_parser *gdbmi_parser }
 
 %{
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "src/lib/gdbmi/gdbmi_parser.h"
 #include "src/lib/gdbmi/gdbmi_pt.h"
 
 extern char *gdbmi_text;
 extern int gdbmi_lex (void);
 extern int gdbmi_lineno;
 
-void gdbmi_error (struct gdbmi_pdata *gdbmi_pdata, const char *s)
+/* The below functions are defined in gdbmi_parser.c. It is not desirable
+   to move them into the header file because general users of the parser
+   should not be accessing the output command directory. */
+extern struct gdbmi_output *
+    gdbmi_parser_get_output(struct gdbmi_parser *parser);
+extern void gdbmi_parser_set_output(struct gdbmi_parser *parser,
+        struct gdbmi_output *output);
+
+void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
 { 
   fprintf (stderr, "%s:%d Error %s", __FILE__, __LINE__, s);
   if (strcmp (gdbmi_text, "\n") == 0)
@@ -95,13 +104,15 @@ void gdbmi_error (struct gdbmi_pdata *gdbmi_pdata, const char *s)
 %start output_list
 %%
 
-output_list: output {
-  gdbmi_pdata->tree = $1;
+output_list: {
+  $$ = NULL;
 };
 
 output_list: output_list output {
-  gdbmi_pdata->tree = append_gdbmi_output (gdbmi_pdata->tree, $2);
-  gdbmi_pdata->parsed_one = 1;
+  struct gdbmi_output *parser_output = gdbmi_parser_get_output(gdbmi_parser);
+  struct gdbmi_output *rule_output = append_gdbmi_output($1, $2);
+  struct gdbmi_output *output = append_gdbmi_output(parser_output, rule_output);
+  gdbmi_parser_set_output(gdbmi_parser, output);
 };
 
 output: oob_record_list opt_result_record OPEN_PAREN variable CLOSED_PAREN NEWLINE { 
@@ -110,7 +121,7 @@ output: oob_record_list opt_result_record OPEN_PAREN variable CLOSED_PAREN NEWLI
   $$->result_record = $2;
 
   if (strcmp ("gdb", $4) != 0)
-    gdbmi_error (gdbmi_pdata, "Syntax error, expected 'gdb'");
+    gdbmi_error (gdbmi_parser, "Syntax error, expected 'gdb'");
 
   free ($4);
 } ;
@@ -187,12 +198,12 @@ result_class: STRING_LITERAL {
   else if (strcmp ("exit", gdbmi_text) == 0)
     $$ = GDBMI_EXIT;
   else
-    gdbmi_error (gdbmi_pdata, "Syntax error, expected 'done|running|connected|error|exit");
+    gdbmi_error (gdbmi_parser, "Syntax error, expected 'done|running|connected|error|exit");
 };
 
 async_class: STRING_LITERAL {
   if (strcmp ("stopped", gdbmi_text) != 0)
-    gdbmi_error (gdbmi_pdata,  "Syntax error, expected 'stopped'" );
+    gdbmi_error (gdbmi_parser,  "Syntax error, expected 'stopped'" );
 
   $$ = GDBMI_STOPPED;
 };

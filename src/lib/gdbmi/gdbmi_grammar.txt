@@ -123,7 +123,7 @@ These are most likely errors in the GDB syntax.
 LR(1) Grammar
 -------------
 
-output-list         -> output-list output | output
+output-list         -> output-list output | epsilon
 output              -> oob-record-list opt-result-record "(gdb)" nl
 oob-record-list     -> oob-record-list oob-record nl | epsilon
 opt-result-record   -> result-record nl | epsilon
