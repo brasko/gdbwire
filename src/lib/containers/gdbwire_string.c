@@ -144,3 +144,27 @@ gdbwire_string_capacity(struct gdbwire_string *string)
 {
     return string->capacity;
 }
+
+size_t
+gdbwire_string_find_first_of(struct gdbwire_string *string, const char *chars)
+{
+    size_t data_pos, data_size = 0;
+    char *data_cur;
+    const char *chars_cur;
+
+    if (string && chars) {
+        data_size = gdbwire_string_size(string);
+        data_cur = gdbwire_string_data(string);
+
+        for (data_pos = 0; data_pos < data_size; ++data_pos) {
+            char data_c = data_cur[data_pos];
+            for (chars_cur = chars; *chars_cur; ++chars_cur) {
+                if (data_c == *chars_cur) {
+                    return data_pos;
+                }
+            }
+        }
+    }
+
+    return data_size;
+}

@@ -142,6 +142,24 @@ size_t gdbwire_string_size(struct gdbwire_string *string);
  */
 size_t gdbwire_string_capacity(struct gdbwire_string *string);
 
+/**
+ * Search for the first character in chars occuring in this string.
+ *
+ * @param string
+ * The string to search for the characters in chars in.
+ *
+ * @param chars
+ * A null terminated string of characters. This string is not searched
+ * for directly but instead each individually character in the string
+ * is searched for.
+ *
+ * @return
+ * The index position of the first matched character in chars.
+ * Will return gdbwire_string_size() if not found.
+ */
+size_t gdbwire_string_find_first_of(struct gdbwire_string *string,
+        const char *chars);
+
 #ifdef __cplusplus 
 }
 #endif 

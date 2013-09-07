@@ -229,3 +229,48 @@ TEST_F(GdbwireStringTest, capacity)
         }
     }
 }
+
+TEST_F(GdbwireStringTest, find_first_of_null_instance)
+{
+    ASSERT_EQ((size_t)0, gdbwire_string_find_first_of(NULL, NULL));
+}
+
+TEST_F(GdbwireStringTest, find_first_of_empty_string_instance)
+{
+    // empty string instance always returns position 0 which is
+    // gdbwire_string_size().
+    ASSERT_EQ((size_t)0, gdbwire_string_find_first_of(string, NULL));
+    ASSERT_EQ((size_t)0, gdbwire_string_find_first_of(string, ""));
+    ASSERT_EQ((size_t)0, gdbwire_string_find_first_of(string, "a"));
+    ASSERT_EQ((size_t)0, gdbwire_string_find_first_of(string, "abc"));
+}
+
+TEST_F(GdbwireStringTest, find_first_of)
+{
+    size_t size = 17;
+    std::string expected("abcdeabcde\0abcdef", size);
+    ASSERT_EQ(size, expected.size());
+
+    // Set up the string instance to be searched
+    ASSERT_EQ(0, gdbwire_string_append_data(
+            string, expected.data(), expected.size()));
+    validate(string, expected.size(), 128, expected);
+
+    // An empty string fails to match
+    ASSERT_EQ(size, gdbwire_string_find_first_of(string, ""));
+
+    // Searching for 'a' finds the first position of a.
+    ASSERT_EQ((size_t)0, gdbwire_string_find_first_of(string, "a"));
+
+    // Searching for 'e' finds the first position of e.
+    ASSERT_EQ((size_t)4, gdbwire_string_find_first_of(string, "e"));
+
+    // Searching for 'a' or 'e' finds the first position of a.
+    ASSERT_EQ((size_t)0, gdbwire_string_find_first_of(string, "ae"));
+
+    // Searching for 'e' or 'a' finds the first position of a.
+    ASSERT_EQ((size_t)0, gdbwire_string_find_first_of(string, "ea"));
+
+    // Searching for 'f' finds the first position of f (after NUL char).
+    ASSERT_EQ(size - 1, gdbwire_string_find_first_of(string, "f"));
+}
