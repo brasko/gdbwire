@@ -274,3 +274,103 @@ TEST_F(GdbwireStringTest, find_first_of)
     // Searching for 'f' finds the first position of f (after NUL char).
     ASSERT_EQ(size - 1, gdbwire_string_find_first_of(string, "f"));
 }
+
+TEST_F(GdbwireStringTest, erase_null_instance)
+{
+    ASSERT_EQ(-1, gdbwire_string_erase(NULL, 0, 0));
+}
+
+TEST_F(GdbwireStringTest, erase_empty_string_instance)
+{
+    ASSERT_EQ(-1, gdbwire_string_erase(string, 0, 0));
+    validate(string, 0, 128, ""); 
+
+    ASSERT_EQ(-1, gdbwire_string_erase(string, 0, 2));
+    validate(string, 0, 128, ""); 
+
+    ASSERT_EQ(-1, gdbwire_string_erase(string, 2, 0));
+    validate(string, 0, 128, ""); 
+
+    ASSERT_EQ(-1, gdbwire_string_erase(string, 2, 2));
+    validate(string, 0, 128, ""); 
+}
+
+TEST_F(GdbwireStringTest, erase_entire_string_instance)
+{
+    ASSERT_EQ(0, gdbwire_string_append_cstr(string, "hello"));
+    validate(string, 5, 128, "hello");
+
+    ASSERT_EQ(0, gdbwire_string_erase(string, 0, 5));
+    validate(string, 0, 128, ""); 
+}
+
+TEST_F(GdbwireStringTest, erase_count_past_size)
+{
+    // Setup string
+    ASSERT_EQ(0, gdbwire_string_append_cstr(string, "hello"));
+    validate(string, 5, 128, "hello");
+
+    // entire string
+    ASSERT_EQ(0, gdbwire_string_erase(string, 0, 10));
+    validate(string, 0, 128, ""); 
+
+    // Setup string
+    ASSERT_EQ(0, gdbwire_string_append_cstr(string, "hello"));
+    validate(string, 5, 128, "hello");
+
+    // erase starting at position 1
+    ASSERT_EQ(0, gdbwire_string_erase(string, 1, 10));
+    validate(string, 1, 128, "h"); 
+
+    // Setup string
+    gdbwire_string_clear(string);
+    ASSERT_EQ(0, gdbwire_string_append_cstr(string, "hello"));
+    validate(string, 5, 128, "hello");
+
+    // erase starting at last position
+    ASSERT_EQ(0, gdbwire_string_erase(string, 4, 10));
+    validate(string, 4, 128, "hell"); 
+}
+
+TEST_F(GdbwireStringTest, erase_pos_past_size)
+{
+    // Setup string
+    ASSERT_EQ(0, gdbwire_string_append_cstr(string, "hello"));
+    validate(string, 5, 128, "hello");
+
+    // entire string
+    ASSERT_EQ(-1, gdbwire_string_erase(string, 5, 0));
+    validate(string, 5, 128, "hello");
+}
+
+TEST_F(GdbwireStringTest, erase_string_instance)
+{
+    size_t pos, count;
+
+    ASSERT_EQ(0, gdbwire_string_append_cstr(string, "abc"));
+    validate(string, 3, 128, "abc");
+
+    for (pos = 0; pos < 3; ++pos) {
+        for (count = 0; count < 4; ++count) {
+            gdbwire_string_clear(string);
+            ASSERT_EQ(0, gdbwire_string_append_cstr(string, "abc"));
+            validate(string, 3, 128, "abc");
+
+            if (pos == 0) {
+                static const char *result[] = { "abc", "bc", "c", "" };
+                ASSERT_EQ(0, gdbwire_string_erase(string, pos, count));
+                validate(string, strlen(result[count]), 128, result[count]);
+            } else if (pos == 1) {
+                static const char *result[] = { "abc", "ac", "a", "a" };
+                ASSERT_EQ(0, gdbwire_string_erase(string, pos, count));
+                validate(string, strlen(result[count]), 128, result[count]);
+            } else if (pos == 2) {
+                static const char *result[] = { "abc", "ab", "ab", "ab" };
+                ASSERT_EQ(0, gdbwire_string_erase(string, pos, count));
+                validate(string, strlen(result[count]), 128, result[count]);
+            } else {
+                ASSERT_EQ(-1, gdbwire_string_erase(string, pos, count));
+            }
+        }
+    }
+}

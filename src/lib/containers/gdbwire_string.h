@@ -160,6 +160,30 @@ size_t gdbwire_string_capacity(struct gdbwire_string *string);
 size_t gdbwire_string_find_first_of(struct gdbwire_string *string,
         const char *chars);
 
+/**
+ * Erase characters from this string, reducing it's size.
+ *
+ * @param string
+ * The string to erase characters from.
+ *
+ * @param pos
+ * The index position of the first character to be erased.
+ *
+ * @param count
+ * The number of characters to erase starting at position pos.
+ * If count goes past the end of the string it is adjusted to erase
+ * until the end of the string. This allows the caller to pass in
+ * gdbwire_string_size() to erase the end of the string with out
+ * doing index arithmetic.
+ * 
+ * @return
+ * On success 0 will be returned otherwise -1. The string will remain
+ * unmodified when an error occurs. Success can only occur if the entire
+ * requested range can be erased.
+ */
+int gdbwire_string_erase(struct gdbwire_string *string, size_t pos,
+        size_t count);
+
 #ifdef __cplusplus 
 }
 #endif 
