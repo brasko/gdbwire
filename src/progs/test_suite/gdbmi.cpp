@@ -25,6 +25,8 @@ TEST_F(GdbmiTest, basic)
     ASSERT_NE(result, -1);
     ASSERT_EQ(parse_failed, 0);
 
+    //ASSERT_EQ(0, print_gdbmi_output(output));
+
     result = destroy_gdbmi_output(output);
     ASSERT_NE(result, -1);
 
