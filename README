@@ -1,0 +1,59 @@
+Welcome to gdbwire.
+
+Dependencies
+------------
+
+You must have the following packages installed.
+  sh
+  autoconf
+  automake
+  aclocal
+  autoheader
+  flex
+  bison
+  gcc/g++
+
+Preparing the configure
+-----------------------
+
+Run ./autogen.sh in the current working directory to generate the configure
+script.
+
+Running configure, make and make install
+----------------------------------------
+
+You can run ./configure from within the source tree, however I usually run
+configure from outside the source tree like so,
+  mkdir ../build
+  cd ../build
+  CFLAGS="-g -Werror" ../gdbwire/configure  --prefix=$PWD/../prefix
+  make -srj4
+  make install
+
+The make install rule is optional. You can simply run make and the executables
+will be in there respective build directories. 
+
+If you like to have a silent build, and the libtool link lines are
+bothering you, you can set this environment variable to suppress
+libtools printing of the link line,
+  LIBTOOLFLAGS=--silent
+
+Running the testsuite
+---------------------
+
+If you want to run the test suite you have to tell the build system
+to build it. This is done by passing --enable-tests on the configure line.
+
+After you have built the test suite, you can run all the unit tests with
+the command,
+  ./test_suite
+
+An overview of the source code
+------------------------------
+
+src/                    # All source code is in here
+src/progs               # All programs go here
+src/progs/test_suite    # The unit test executable
+src/lib                 # All libraries go here
+src/lib/containers      # All containers go here (string, list, etc)
+src/lib/gdbmi           # The gdbmi interface
