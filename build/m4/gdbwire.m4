@@ -64,20 +64,20 @@ dnl Add a new --with-NAME option to the configure script.
 dnl
 dnl The first parameter will be the name of the option to add.
 dnl For instance, a call to
-dnl   GDBWIRE_ARG_WITH([gtest])
+dnl   GDBWIRE_ARG_WITH([foo])
 dnl would create the configure option
-dnl   --with-gtest            Use system installed gtest library
+dnl   --with-foo            Use system installed foo library
 dnl
 dnl The default value for this option is empty or set to the directory
 dnl path provided by the user.
 dnl default          unset
 dnl --with-$1=dir    dir
 dnl
-dnl The variable with_$1 (ie. $with_gtest) will be set to the
+dnl The variable with_$1 (ie. $with_foo) will be set to the
 dnl installation directory provided by the user or to unset if the
 dnl option was not used by the user.
 dnl
-dnl The variable with_$1_help (ie. $with_gtest_help) will be set to 
+dnl The variable with_$1_help (ie. $with_foo_help) will be set to 
 dnl the installation directory provided by the user or to
 dnl   search system libraries (default)
 dnl if the option was not used by the user.
@@ -95,54 +95,4 @@ The installation path (PREFIX) provided to --with-$1 must be a directory])
                 fi ;;
          esac],
         [with_$1="unset"])
-])
-
-AC_DEFUN([GDBWIRE_CONFIGURE_GTEST], [
-    # Setup gtest variables.
-    #
-    # If the user provided an installation directory, lets use it.
-    # Otherwise, hope the system has the library installed
-    if test x$with_gtest != "xunset"; then
-      GTEST_CPPFLAGS="-I$with_gtest/include -I$with_gtest"
-      GTEST_LDFLAGS=""
-      GTEST_LIBS="-lpthread"
-    fi
-
-    # Export variables to automake for inclusion in programs and libraries
-    AC_SUBST([GTEST_CPPFLAGS], [$GTEST_CPPFLAGS])
-    AC_SUBST([GTEST_LDFLAGS], [$GTEST_LDFLAGS])
-    AC_SUBST([GTEST_LIBS], [$GTEST_LIBS])
-
-    # Save variables to restore at end of function
-    _save_CPPFLAGS="$CPPFLAGS"
-    _save_LDFLAGS="$LDFLAGS"
-    _save_LIBS="$LIBS"
-
-    # Set temporary variables for autotools compilation test
-    CPPFLAGS="$CPPFLAGS $GTEST_CPPFLAGS"
-    LDFLAGS="$LDFLAGS $GTEST_LDFLAGS"
-    LIBS="$LIBS $GTEST_LIBS"
-
-    # Check for link
-    AC_MSG_CHECKING([for link against gtest])
-    AC_LINK_IFELSE([
-        AC_LANG_PROGRAM([[#include "gtest/gtest.h"
-            #include "src/gtest-all.cc"
-            int argc;
-            char **argv;]],
-            [[::testing::InitGoogleTest(&argc, argv);
-            return RUN_ALL_TESTS();]])],
-        [ac_cv_gtest=yes],
-        [ac_cv_gtest=no])
-    if test "$ac_cv_gtest" = "no"; then
-        AC_MSG_RESULT([no])
-        AC_MSG_FAILURE([gdbwire requires the ability to link to gtest],[1])
-    else
-        AC_MSG_RESULT([yes])
-    fi;
-
-    # Restore variable
-    CPPFLAGS="$_save_CPPFLAGS"
-    LDFLAGS="$_save_LDFLAGS"
-    LIBS="$_save_LIBS"
 ])

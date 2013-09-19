@@ -33,15 +33,6 @@ GDBWIRE_ARG_ENABLE_DEFAULT_OFF([tests], [automated testing])
 dnl Build the test suite if enable tests is true
 AM_CONDITIONAL([WANT_TESTS], [test x$enable_tests = xyes])
 
-dnl Allow the user to build against a system installed gtest library
-dnl
-dnl The gtest library is used when --enable-tests is yes.
-GDBWIRE_ARG_WITH([gtest])
-
-if test x$enable_tests = "xyes"; then
-    GDBWIRE_CONFIGURE_GTEST()
-fi
-
 dnl Find the absolute srcdir and builddir directories.
 dnl Put those in the Makefile and config.h.
 GDBWIRE_DIRECTORIES()
@@ -68,8 +59,5 @@ $PACKAGE_NAME configuration summary:
 
     Enabled options:
     --enable-tests ........... : ${enable_tests}
-
-    Use system installed libraries:
-    --with-gtest ............. : ${with_gtest_help}
 
 EOF

@@ -26,15 +26,12 @@ test_suite_SOURCES = \
 
 test_suite_CPPFLAGS = \
     -I@GDBWIRE_ABS_TOP_SRCDIR@/src/progs/test_suite \
-    -I@GDBWIRE_ABS_TOP_SRCDIR@/src/lib \
-    @GTEST_CPPFLAGS@
+    -I@GDBWIRE_ABS_TOP_SRCDIR@/src/lib
 
-test_suite_LDFLAGS = \
-    @GTEST_LDFLAGS@
+test_suite_LDFLAGS =
 
 test_suite_LDADD = \
-    libgdbwire.la \
-    @GTEST_LIBS@
+    libgdbwire.la
 
 # The gdbmi_driver configuration
 gdbmi_driver_SOURCES = \
