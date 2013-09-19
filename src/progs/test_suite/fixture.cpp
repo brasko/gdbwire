@@ -1,4 +1,5 @@
 #include "config.h"
+#include "catch.hpp"
 #include "fixture.h"
 
 Fixture::Fixture()
@@ -11,19 +12,9 @@ Fixture::~Fixture()
 }
 
 std::string
-Fixture::testCaseName()
-{
-    const ::testing::TestInfo* const test_info =
-      ::testing::UnitTest::GetInstance()->current_test_info();
-    return test_info->test_case_name();
-}
-
-std::string
 Fixture::testName()
 {
-    const ::testing::TestInfo* const test_info =
-      ::testing::UnitTest::GetInstance()->current_test_info();
-    return test_info->name();
+    return Catch::getCurrentContext().getResultCapture().getCurrentTestName();
 }
 
 std::string
@@ -48,7 +39,6 @@ std::string
 Fixture::sourceTestDir()
 {
     std::string datadir = data();
-    datadir = datadir + "/" + testCaseName();
     datadir = datadir + "/" + testName();
     return datadir;
 }
@@ -65,7 +55,6 @@ std::string
 Fixture::destTestDir()
 {
     std::string destdir = dest();
-    destdir = destdir + "/" + testCaseName();
     destdir = destdir + "/" + testName();
     return destdir;
 }

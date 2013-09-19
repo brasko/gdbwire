@@ -1,7 +1,6 @@
 #ifndef __FIXTURE_H__
 #define __FIXTURE_H__
 
-#include <gtest/gtest.h>
 #include <string>
 
 /**
@@ -20,29 +19,35 @@
  * to the destination directory in the constructor of this class.
  *
  * The source directory for the test case comes from,
- *   $abs_top_srcdir/progs/test_suite/data/TestCaseName/TestName
+ *   $abs_top_srcdir/progs/test_suite/data/TestName
  * The destination directory for the test case will be,
- *   $abs_top_builddir/test_suite/TestCaseName/TestName
+ *   $abs_top_builddir/test_suite/TestName
+ *
+ * Please note that TestName is a hierarchical name. See testName()
+ * for more information on this.
  */
-class Fixture : public ::testing::Test {
+class Fixture {
     public:
 
         Fixture();
         virtual ~Fixture();
 
         /**
-         * Get the name of the test case.
+         * Get the name of the test currently running.
+         *
+         * The name of the test is hierarchical. The format is
+         * root/node1/node2/.../leaf. The slash separator is convient as
+         * it allows you to split up the test case into a hierarchy and
+         * it also can be used as a unique directory name.
+         *
+         * An example would be,
+         *   GdbmiTest/basic
+         * or
+         *   append_cstr/null_value 
+         *   append_cstr/null_instance 
          *
          * @return
-         * The name of the test case, TestCaseName in TestCaseName/TestName)
-         */
-        std::string testCaseName();
-
-        /**
-         * Get the name of the test in the test case.
-         *
-         * @return
-         * The name of the test, TestName in TestCaseName/TestName)
+         * The test name of the test currently running.
          */
         std::string testName();
 
@@ -142,5 +147,8 @@ class Fixture : public ::testing::Test {
          */
         void copyTestData();
 };
+
+// A convience macro for creating unit tests.
+#define TEST_F(Fixture, name) TEST_CASE_METHOD(Fixture, #Fixture "/" #name)
 
 #endif /* __FIXTURE_H__ */
