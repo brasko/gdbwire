@@ -26,7 +26,8 @@ You can run ./configure from within the source tree, however I usually run
 configure from outside the source tree like so,
   mkdir ../build
   cd ../build
-  CFLAGS="-g -Werror" ../gdbwire/configure  --prefix=$PWD/../prefix
+  CFLAGS="-g -Werror" CXXFLAGS="-g -Werror" ../gdbwire/configure \
+      --prefix=$PWD/../prefix --enable-tests
   make -srj4
   make install
 

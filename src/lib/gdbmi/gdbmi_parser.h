@@ -33,69 +33,23 @@ struct gdbmi_parser *gdbmi_parser_create(void);
 int gdbmi_parser_destroy(struct gdbmi_parser *parser);
 
 /**
- * Tell the MI parser to parse the data.
+ * Push some parse data onto the parser.
  *
- * The data must be either a full line or multiple full lines. (ending in \n)
- * The normal usage of this function is to call it over and over again with
- * more data and wait for it to return an mi output command.
+ * @param parser
+ * The gdbmi parser context to operate on.
  *
- * It would be more convienent to allow the parser to parse any random
- * data but that would require flex to be a push flexer. It may even have
- * this feature but since I already changed bison, I don't want to think
- * anymore right now about how to improve this interface. It's good enough
- * for a first shot.
+ * @param data
+ * The parse data to push onto the parser.
  *
- * \param parser
- * The gdbmi_parser context to operate on.
+ * @param pt
+ * A gdbmi output command if available or NULL if none discovered yet.
+ * This data is now owned by the caller and thus should be freed by the caller.
  *
- * \param mi_data
- * The null terminated mi data. This consists of one or more lines.
- *
- * \param pt
- * If this function is successful (returns 0), then pt may be set.
- * If the mi_data parameter completes an mi output command, than pt will
- * be non-null and represent the command parsed. Otherwise, if it is waiting
- * for more intput, it will be returned as NULL.
- *
- * The user is responsible for freeing this data structure on there own.
- *
- * \param parse_failed
- * 1 if the parser failed to parse the command, otherwise 0
- * If there was an error, it was written to the global logger.
- * Also, pt is invalid if there is an error, it should not be displayed or freed
- *
- * \return
- * 0 on succes, or -1 on error.
+ * @return
+ * 0 on success or -1 on error.
  */
-int gdbmi_parser_parse_string(struct gdbmi_parser *parser,
-        const char *mi_data, struct gdbmi_output **pt, int *parse_failed);
-
-/**
- * Tell the MI parser to parse the mi_command from a file.
- *
- * \param parser
- * The gdbmi_parser context to operate on.
- *
- * \param mi_command_file
- * The command file containing the mi command to parse.
- *
- * \param pt
- * If this function is successful (returns 0), then pt will be
- * the parse tree representing the mi_command.
- *
- * The user is responsible for freeing this data structure on there own.
- *
- * \param parse_failed
- * 1 if the parser failed to parse the command, otherwise 0
- * If there was an error, it was written to the global logger.
- * Also, pt is invalid if there is an error, it should not be displayed or freed
- *
- * \return
- * 0 on succes, or -1 on error.
- */
-int gdbmi_parser_parse_file(struct gdbmi_parser *parser,
-        const char *mi_command_file, struct gdbmi_output **pt,
-        int *parse_failed);
+int gdbmi_parser_push(struct gdbmi_parser *parser,
+        char *data, struct gdbmi_output **pt);
 
 #ifdef __cplusplus 
 }
