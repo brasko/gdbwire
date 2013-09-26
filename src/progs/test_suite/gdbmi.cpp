@@ -5,9 +5,34 @@
 #include "gdbmi/gdbmi_parser.h"
 
 namespace {
+    struct GdbmiParserCallback {
+        GdbmiParserCallback() : m_output(0) {
+            callbacks.context = (void*)this;
+            callbacks.gdbmi_output_callback =
+                    GdbmiParserCallback::gdbmi_output_callback;
+        }
+
+        ~GdbmiParserCallback() {
+            int result = destroy_gdbmi_output(m_output);
+            REQUIRE(result != -1);
+        }
+
+        static void gdbmi_output_callback(void *context, gdbmi_output *output) {
+            GdbmiParserCallback *callback = (GdbmiParserCallback *)context;
+            callback->gdbmi_output_callback(output);
+        }
+
+        void gdbmi_output_callback(gdbmi_output *output) {
+            m_output = append_gdbmi_output(m_output, output);
+        }
+
+        gdbmi_parser_callbacks callbacks;
+        gdbmi_output *m_output;
+    };
+
     struct GdbmiTest : public Fixture {
         GdbmiTest() {
-            parser = gdbmi_parser_create();
+            parser = gdbmi_parser_create(parserCallback.callbacks);
             REQUIRE(parser);
         }
         
@@ -29,7 +54,6 @@ namespace {
          * You are responsible for destroying this memory.
          */
         gdbmi_output *parse(gdbmi_parser *parser, const std::string &input) {
-            gdbmi_output *output = 0, *pt = 0;
             FILE *fd;
             int c;
 
@@ -38,32 +62,23 @@ namespace {
 
             while ((c = fgetc(fd)) != EOF) {
                 char data[2] = { c, 0 };
-                pt = 0;
-                REQUIRE(gdbmi_parser_push(parser, data, &pt) == 0);
-                if (pt) {
-                    output = append_gdbmi_output(output, pt);
-                }
+                REQUIRE(gdbmi_parser_push(parser, data) == 0);
             }
             fclose(fd);
 
-            return output;
+            return parserCallback.m_output;
         }
 
+        GdbmiParserCallback parserCallback;
         gdbmi_parser *parser;
-   };
+    };
 }
 
 TEST_F(GdbmiTest, basic)
 {
-    gdbmi_output *output = 0;
-    int result;
     std::string input = sourceTestDir() + "/input.mi";
-
-    output = parse(parser, input);
+    gdbmi_output *output = parse(parser, input);
     REQUIRE(output);
 
     //REQUIRE(print_gdbmi_output(output) == 0);
-
-    result = destroy_gdbmi_output(output);
-    REQUIRE(result != -1);
 }

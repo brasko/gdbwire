@@ -11,12 +11,41 @@ extern "C" {
 struct gdbmi_parser;
 
 /**
+ * The primary mechanism to alert users of GDB/MI notifications.
+ */
+struct gdbmi_parser_callbacks {
+    /**
+     * An arbitrary pointer to associate with the callbacks.
+     *
+     * If the calling api is C++ it is useful to make this an instance
+     * of an object you want to bind to the callback functions below.
+     */
+    void *context;
+    
+    /**
+     * A GDB/MI output command is available.
+     *
+     * @param context
+     * When called, the callbacks context pointer will be passed here.
+     *
+     * @param output
+     * The gdbmi output command. This output command is now owned by the
+     * function being invoked and should be destroyed when necessary.
+     */
+    void (*gdbmi_output_callback)(void *context, struct gdbmi_output *output);
+};
+
+/**
  * Create a GDB/MI parser context.
+ *
+ * @param callbacks
+ * The callback functions to invoke upon discovery of parse data.
  *
  * @return
  * A new GDB/MI parser instance or NULL on error.
  */
-struct gdbmi_parser *gdbmi_parser_create(void);
+struct gdbmi_parser *gdbmi_parser_create(
+        struct gdbmi_parser_callbacks callbacks);
 
 /**
  * Destroy a gdbmi_parser context.
@@ -35,21 +64,20 @@ int gdbmi_parser_destroy(struct gdbmi_parser *parser);
 /**
  * Push some parse data onto the parser.
  *
+ * During this function, if a gdbmi output command is discovered by
+ * the parser (or any other useful GDB/MI notification), it will invoke
+ * the appropriate callbacks assigned during parser creation.
+ *
  * @param parser
  * The gdbmi parser context to operate on.
  *
  * @param data
  * The parse data to push onto the parser.
  *
- * @param pt
- * A gdbmi output command if available or NULL if none discovered yet.
- * This data is now owned by the caller and thus should be freed by the caller.
- *
  * @return
  * 0 on success or -1 on error.
  */
-int gdbmi_parser_push(struct gdbmi_parser *parser,
-        char *data, struct gdbmi_output **pt);
+int gdbmi_parser_push(struct gdbmi_parser *parser, char *data);
 
 #ifdef __cplusplus 
 }

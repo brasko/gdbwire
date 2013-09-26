@@ -16,12 +16,12 @@ struct gdbmi_parser {
     struct gdbwire_string *buffer;
     /* The GDB/MI push parser state */
     gdbmi_pstate *mips;
-    /* The GDB/MI output command found during parsing */
-    struct gdbmi_output *oc;
+    /* The client parser callbacks */
+    struct gdbmi_parser_callbacks callbacks;
 };
 
 struct gdbmi_parser *
-gdbmi_parser_create(void)
+gdbmi_parser_create(struct gdbmi_parser_callbacks callbacks)
 {
     struct gdbmi_parser *parser;
 
@@ -45,6 +45,8 @@ gdbmi_parser_create(void)
         return NULL;
     }
 
+    parser->callbacks = callbacks;
+
     return parser;
 }
 
@@ -66,8 +68,6 @@ int gdbmi_parser_destroy(struct gdbmi_parser *parser)
         parser->mips = NULL;
     }
 
-    /* The parser output command (parser->oc) should be deleted by the client */
-
     free(parser);
     parser = NULL;
     return 0;
@@ -86,36 +86,26 @@ int gdbmi_parser_destroy(struct gdbmi_parser *parser)
  * @param line
  * A line of output in GDB/MI format.
  *
- * @param pt
- * If this function is successful (returns 0), then pt may be set.
- * If the line parameter completes an mi output command, than pt will
- * be non-null and represent the command parsed. Otherwise, if it is waiting
- * for more intput, it will be returned as NULL.
- *
- * The user is responsible for freeing this data structure on there own.
- *
  * \param parse_failed
  * 1 if the parser failed to parse the command, otherwise 0
  * If there was an error, it was written to the global logger.
- * Also, pt is invalid if there is an error, it should not be displayed or freed
  *
  * \return
  * 0 on succes, or -1 on error.
  */
 static int
 gdbmi_parser_parse_line(struct gdbmi_parser *parser,
-        const char *line, struct gdbmi_output **pt, int *parse_failed)
+        const char *line, int *parse_failed)
 {
     YY_BUFFER_STATE state;
     int pattern;
     int mi_status;
 
-    if (!parser || !line || !pt || !parse_failed) {
+    if (!parser || !line || !parse_failed) {
         return -1;
     }
 
     /* Initialize output parameters */
-    *pt = 0;
     *parse_failed = 0;
 
     /* Create a new input buffer for flex. */
@@ -133,12 +123,6 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser,
     /* Parser is done, this should never happen */
     if (mi_status != YYPUSH_MORE && mi_status != 0) {
         *parse_failed = 1;
-    /* Parser finished but no output command was found */
-    } else if (!parser->oc) {
-        *parse_failed = 1;
-    } else {
-        *pt = parser->oc;
-        parser->oc = NULL;
     }
 
     /* Free the scanners buffer */
@@ -148,12 +132,11 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser,
 }
 
 int
-gdbmi_parser_push(struct gdbmi_parser *parser, char *data,
-        struct gdbmi_output **pt)
+gdbmi_parser_push(struct gdbmi_parser *parser, char *data)
 {
     int result = 0;
 
-    if (!parser || !data || !pt) {
+    if (!parser || !data) {
         return -1;
     }
 
@@ -186,7 +169,7 @@ gdbmi_parser_push(struct gdbmi_parser *parser, char *data,
             result = gdbwire_string_erase(parser->buffer, 0, end_pos);
             if (result == 0) {
                 result = gdbmi_parser_parse_line(parser,
-                        gdbwire_string_data(command), pt, &status);
+                        gdbwire_string_data(command), &status);
             }
             gdbwire_string_destroy(command);
         }
@@ -195,15 +178,8 @@ gdbmi_parser_push(struct gdbmi_parser *parser, char *data,
     return result;
 }
 
-struct gdbmi_output *
-gdbmi_parser_get_output(struct gdbmi_parser *parser)
+struct gdbmi_parser_callbacks
+gdbmi_parser_get_callbacks(struct gdbmi_parser *parser)
 {
-    return parser->oc;
-}
-
-void
-gdbmi_parser_set_output(struct gdbmi_parser *parser,
-        struct gdbmi_output *output)
-{
-    parser->oc = output;
+    return parser->callbacks;
 }

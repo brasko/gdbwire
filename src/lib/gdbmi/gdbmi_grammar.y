@@ -19,10 +19,8 @@ extern int gdbmi_lineno;
 /* The below functions are defined in gdbmi_parser.c. It is not desirable
    to move them into the header file because general users of the parser
    should not be accessing the output command directory. */
-extern struct gdbmi_output *
-    gdbmi_parser_get_output(struct gdbmi_parser *parser);
-extern void gdbmi_parser_set_output(struct gdbmi_parser *parser,
-        struct gdbmi_output *output);
+extern struct gdbmi_parser_callbacks
+    gdbmi_parser_get_callbacks(struct gdbmi_parser *parser);
 
 void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
 { 
@@ -78,7 +76,6 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
   int u_stream_record_choice;
 }
 
-%type <u_output> output_list
 %type <u_output> output
 %type <u_oob_record> oob_record
 %type <u_oob_record> oob_record_list
@@ -105,17 +102,15 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
 %%
 
 output_list: {
-  $$ = NULL;
 };
 
 output_list: output_list output {
-  struct gdbmi_output *parser_output = gdbmi_parser_get_output(gdbmi_parser);
-  struct gdbmi_output *rule_output = append_gdbmi_output($1, $2);
-  struct gdbmi_output *output = append_gdbmi_output(parser_output, rule_output);
-  gdbmi_parser_set_output(gdbmi_parser, output);
 };
 
 output: oob_record_list opt_result_record OPEN_PAREN variable CLOSED_PAREN NEWLINE { 
+  struct gdbmi_parser_callbacks callbacks =
+      gdbmi_parser_get_callbacks(gdbmi_parser);
+
   $$ = create_gdbmi_output ();
   $$->oob_record = $1;
   $$->result_record = $2;
@@ -124,6 +119,8 @@ output: oob_record_list opt_result_record OPEN_PAREN variable CLOSED_PAREN NEWLI
     gdbmi_error (gdbmi_parser, "Syntax error, expected 'gdb'");
 
   free ($4);
+
+  callbacks.gdbmi_output_callback(callbacks.context, $$);
 } ;
 
 oob_record_list: {
