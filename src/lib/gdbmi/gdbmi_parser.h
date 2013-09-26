@@ -12,6 +12,13 @@ struct gdbmi_parser;
 
 /**
  * The primary mechanism to alert users of GDB/MI notifications.
+ *
+ * The flow is like this:
+ * - create a parser context (gdbmi_parser_create)
+ * - push onto the parser arbitrary amounts of data (gdbmi_parser_push)
+ *   - receive callbacks from inside gdbmi_parser_push when
+ *     it discovers callbacks the user will find interesting
+ * - destroy the parser (gdbmi_parser_destroy)
  */
 struct gdbmi_parser_callbacks {
     /**
@@ -26,7 +33,7 @@ struct gdbmi_parser_callbacks {
      * A GDB/MI output command is available.
      *
      * @param context
-     * When called, the callbacks context pointer will be passed here.
+     * The context pointer above.
      *
      * @param output
      * The gdbmi output command. This output command is now owned by the

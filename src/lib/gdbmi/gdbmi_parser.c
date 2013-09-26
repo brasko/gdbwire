@@ -86,27 +86,20 @@ int gdbmi_parser_destroy(struct gdbmi_parser *parser)
  * @param line
  * A line of output in GDB/MI format.
  *
- * \param parse_failed
- * 1 if the parser failed to parse the command, otherwise 0
- * If there was an error, it was written to the global logger.
- *
  * \return
  * 0 on succes, or -1 on error.
  */
 static int
-gdbmi_parser_parse_line(struct gdbmi_parser *parser,
-        const char *line, int *parse_failed)
+gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
 {
     YY_BUFFER_STATE state;
+    int result = 0;
     int pattern;
     int mi_status;
 
-    if (!parser || !line || !parse_failed) {
+    if (!parser || !line) {
         return -1;
     }
-
-    /* Initialize output parameters */
-    *parse_failed = 0;
 
     /* Create a new input buffer for flex. */
     state = gdbmi__scan_string(line);
@@ -120,15 +113,19 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser,
         mi_status = gdbmi_push_parse(parser->mips, pattern, NULL, parser);
     } while (mi_status == YYPUSH_MORE);
 
-    /* Parser is done, this should never happen */
+    /**
+     * The parser suggests that it is done. This should be impossible.
+     * The grammar is designed to accept an infinate list of gdb/mi
+     * output commands.
+     */
     if (mi_status != YYPUSH_MORE && mi_status != 0) {
-        *parse_failed = 1;
+        result = -1;
     }
 
     /* Free the scanners buffer */
     gdbmi__delete_buffer(state);
 
-    return 0;
+    return result;
 }
 
 int
@@ -145,7 +142,6 @@ gdbmi_parser_push(struct gdbmi_parser *parser, char *data)
         char *data = gdbwire_string_data(parser->buffer);
         size_t size = gdbwire_string_size(parser->buffer);
         size_t pos = gdbwire_string_find_first_of(parser->buffer, "\r\n");
-        int status;
 
         // Search to see if a newline has been reached in gdb/mi.
         // If a line of data has been recieved, process it.
@@ -169,7 +165,7 @@ gdbmi_parser_push(struct gdbmi_parser *parser, char *data)
             result = gdbwire_string_erase(parser->buffer, 0, end_pos);
             if (result == 0) {
                 result = gdbmi_parser_parse_line(parser,
-                        gdbwire_string_data(command), &status);
+                        gdbwire_string_data(command));
             }
             gdbwire_string_destroy(command);
         }
