@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "gdbmi_grammar.h"
 #include "gdbmi_parser.h"
@@ -169,7 +168,9 @@ gdbmi_parser_push(struct gdbmi_parser *parser, char *data,
         // If a line of data has been recieved, process it.
         if (pos != size) {
             size_t end_pos = pos + 1;
-            char *command;
+            struct gdbwire_string *command;
+
+            command = gdbwire_string_create();
 
             // OK, found a newline. A newline can be \r, \n or \r\n.
             // Figure out which one it is, and pull it out of the buffer
@@ -179,13 +180,15 @@ gdbmi_parser_push(struct gdbmi_parser *parser, char *data,
                 end_pos++;
             }
             
-            command = strndup(data, end_pos);
+            gdbwire_string_append_data(command, data, end_pos);
+            gdbwire_string_append_data(command, "\0", 1);
+
             result = gdbwire_string_erase(parser->buffer, 0, end_pos);
             if (result == 0) {
-                result = gdbmi_parser_parse_line(
-                        parser, command, pt, &status);
+                result = gdbmi_parser_parse_line(parser,
+                        gdbwire_string_data(command), pt, &status);
             }
-            free(command);
+            gdbwire_string_destroy(command);
         }
     }
 
