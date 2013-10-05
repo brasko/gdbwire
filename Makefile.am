@@ -14,7 +14,8 @@ libgdbwire_la_SOURCES= \
     src/lib/gdbmi/gdbmi_oc.c \
     src/lib/gdbmi/gdbmi_parser.c \
     src/lib/gdbmi/gdbmi_pt.c \
-    src/lib/containers/gdbwire_string.c
+    src/lib/containers/gdbwire_string.c \
+    src/lib/logging/gdbwire_logger.c
 
 libgdbwire_la_CFLAGS= \
     -I@GDBWIRE_ABS_TOP_SRCDIR@/src/lib
