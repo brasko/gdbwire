@@ -32,14 +32,30 @@ int
 gdbwire_logger_open(const char *path)
 {
     int result = -1;
-    int fd = open(path, O_CREAT | O_WRONLY | O_TRUNC,
-            S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int fd;
+    mode_t mode = 0;
+
+#if defined(S_IRUSR)
+    mode |= S_IRUSR;
+#endif
+#if defined(S_IWUSR)
+    mode |= S_IWUSR;
+#endif
+#if defined(S_IRGRP)
+    mode |= S_IRGRP;
+#endif
+#if defined(S_IROTH)
+    mode |= S_IROTH;
+#endif
+
+    fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
     if (fd != -1) {
         result = clog_init_fd(GDBWIRE_LOGGER, fd);
         if (result != 0) {
             result = -1;
         }
     }
+
     return result;
 }
 
