@@ -57,4 +57,41 @@ src/progs               # All programs go here
 src/progs/test_suite    # The unit test executable
 src/lib                 # All libraries go here
 src/lib/containers      # All containers go here (string, list, etc)
+src/lib/logging         # A logging library based on clog
 src/lib/gdbmi           # The gdbmi interface
+
+Developer Conventions
+---------------------
+
+Proper Error handling is an important part of gdbwire. This library
+is intended to be used by other applications and it is important to provide
+appropriate error messages to the end users when necessary.
+
+Result codes have been chosen as the primary means of returning status
+from a function. The result codes are an enumeration called gdbwire_result,
+which is defined in the file gdbwire_result.h. GDBWIRE_OK is a successful
+result status and all others indicate a particular error condition.
+
+Not all functions need to return a result code. A function may return
+void if it can not fail. A function can return a NULL pointer when it makes
+sense to do so. Common sense should be applied.
+
+As a rule of thumb, error conditions should be handled if possible.
+Otherwise they should bubble up. This should repeat at each level until
+the gdbwire user receives the proper error result.
+
+It is encouraged that all function interfaces are documented and that
+the preconditions of the functions are clearly stated. The function body
+is encouraged to assert those preconditions to catch errors as soon as
+possible. Some macros have been added to help with this matter.
+GDBWIRE_ASSERT and GDBWIRE_ASSERT_ERRNO in gdbwire_assert.h are intended
+to help the developer both assert, log and return an appropriate
+error status on assertion failure. Other macros may be added to help
+facilitate automatic error checking, logging and error propagation.
+
+Finally, the gdbwire users will most likely hit issues in the field
+that the source code in gdbwire does not expect. In these situations
+it is appropriate to use the gdbwire_logger interface to log all
+information that might be useful to help reproduce or fix an issue
+that the user has encountered. The least amount of useful information
+would be optimal.

@@ -1,7 +1,9 @@
+#define CLOG_SILENT
 #define CLOG_MAIN
 #include "logging/clog.h"
 
 #include "logging/gdbwire_logger.h"
+#include "logging/gdbwire_assert.h"
 
 static const int GDBWIRE_LOGGER = 0;
 
@@ -28,10 +30,10 @@ convert_to_clog_level(enum gdbwire_logger_level level)
     return clevel;
 }
 
-int
+enum gdbwire_result
 gdbwire_logger_open(const char *path)
 {
-    int result = -1;
+    enum gdbwire_result result = GDBWIRE_OK;
     int fd;
     mode_t mode = 0;
 
@@ -49,11 +51,11 @@ gdbwire_logger_open(const char *path)
 #endif
 
     fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
-    if (fd != -1) {
-        result = clog_init_fd(GDBWIRE_LOGGER, fd);
-        if (result != 0) {
-            result = -1;
-        }
+    GDBWIRE_ASSERT_ERRNO(fd != -1);
+
+    if (clog_init_fd(GDBWIRE_LOGGER, fd) != 0) {
+        close(fd);
+        result = GDBWIRE_LOGIC;
     }
 
     return result;
@@ -65,14 +67,12 @@ gdbwire_logger_close()
     clog_free(GDBWIRE_LOGGER);
 }
 
-int
+enum gdbwire_result
 gdbwire_logger_set_level(enum gdbwire_logger_level level)
 {
     int result = clog_set_level(GDBWIRE_LOGGER, convert_to_clog_level(level));
-    if (result != 0) {
-        result = -1;
-    }
-    return result;
+    GDBWIRE_ASSERT(result != 0);
+    return GDBWIRE_OK;
 }
 
 void

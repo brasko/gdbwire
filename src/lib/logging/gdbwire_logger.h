@@ -1,6 +1,8 @@
 #ifndef __GDBWIRE_LOGGER_H__
 #define __GDBWIRE_LOGGER_H__
 
+#include "logging/gdbwire_result.h"
+
 /**
  * Open, close and write to a log file.
  *
@@ -28,9 +30,9 @@ enum gdbwire_logger_level {
  * The path to write the logging information to.
  *
  * @return
- * 0 on success or -1 on error.
+ * GDBWIRE_OK on success, otherwise the appropriate error result.
  */
-int gdbwire_logger_open(const char *path);
+enum gdbwire_result gdbwire_logger_open(const char *path);
 
 /**
  * Shut down the logging.
@@ -51,9 +53,9 @@ void gdbwire_logger_close();
  * The new minimum log level.
  *
  * @return
- * 0 on success or -1 on failure.
+ * GDBWIRE_OK on success, otherwise the appropriate error result.
  */
-int gdbwire_logger_set_level(enum gdbwire_logger_level level);
+enum gdbwire_result gdbwire_logger_set_level(enum gdbwire_logger_level level);
 
 /**
  * Log a statement to the logger.
