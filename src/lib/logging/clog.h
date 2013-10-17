@@ -279,23 +279,7 @@ const char *const CLOG_LEVEL_NAMES[] = {
 int
 clog_init_path(int id, const char *const path)
 {
-    mode_t mode = 0;
-    int fd;
-
-#if defined(S_IRUSR)
-    mode |= S_IRUSR;
-#endif
-#if defined(S_IWUSR)
-    mode |= S_IWUSR;
-#endif
-#if defined(S_IRGRP)
-    mode |= S_IRGRP;
-#endif
-#if defined(S_IROTH)
-    mode |= S_IROTH;
-#endif
-
-    fd = open(path, O_CREAT | O_WRONLY | O_APPEND, mode);
+    int fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0666);
     if (fd == -1) {
         _clog_err("Unable to open %s: %s\n", path, strerror(errno));
         return 1;
