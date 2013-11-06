@@ -1,6 +1,7 @@
 #ifndef GDBWIRE_ERROR_H
 #define GDBWIRE_ERROR_H
 
+#include "logging/gdbwire_result.h"
 #include "logging/gdbwire_logger.h"
 
 /**
@@ -17,8 +18,36 @@
 #define GDBWIRE_ASSERT(expr) \
     do { \
         if (!(expr)) { \
-            gdbwire_error("Assertion failure, expr[%s]," #expr); \
+            gdbwire_error("Assertion failure, expr[%s]", #expr); \
             return GDBWIRE_ASSERT; \
+        } \
+    } while (0)
+
+/**
+ * Validate that the expression evaluates to true.
+ *
+ * If the expression does not evaluate to true, log the error,
+ * set the variable provided to GDBWIRE_ASSERT and goto the label
+ * provided.
+ *
+ * Otherwise, if the expression does evaluate to true, do nothing.
+ *
+ * @param expr
+ * The expression to evaluate.
+ *
+ * @param variable
+ * The result variable to assign the value GDBWIRE_ASSERT to.
+ *
+ * @param label
+ * The label to jump to if the expression evaluates to False.
+ */
+#define GDBWIRE_ASSERT_GOTO(expr, variable, label) \
+    do { \
+        if (!(expr)) { \
+            gdbwire_error("Assertion failure, expr[%s], " \
+                "label[%s]", #expr, #label); \
+            variable = GDBWIRE_ASSERT; \
+            goto label; \
         } \
     } while (0)
 

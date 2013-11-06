@@ -62,7 +62,7 @@ namespace {
 
             while ((c = fgetc(fd)) != EOF) {
                 char data[2] = { c, 0 };
-                REQUIRE(gdbmi_parser_push(parser, data) == 0);
+                REQUIRE(gdbmi_parser_push(parser, data) == GDBWIRE_OK);
             }
             fclose(fd);
 

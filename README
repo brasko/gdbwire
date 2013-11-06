@@ -86,8 +86,11 @@ is encouraged to assert those preconditions to catch errors as soon as
 possible. Some macros have been added to help with this matter.
 GDBWIRE_ASSERT and GDBWIRE_ASSERT_ERRNO in gdbwire_assert.h are intended
 to help the developer both assert, log and return an appropriate
-error status on assertion failure. Other macros may be added to help
-facilitate automatic error checking, logging and error propagation.
+error status on assertion failure. GDBWIRE_ASSERT_GOTO has been added
+to avoid duplicating error handling code in a function. The common
+error handling code can be written in a label that similar error
+states can jump to. Other macros may be added to help facilitate
+automatic error checking, logging and error propagation.
 
 Finally, the gdbwire users will most likely hit issues in the field
 that the source code in gdbwire does not expect. In these situations

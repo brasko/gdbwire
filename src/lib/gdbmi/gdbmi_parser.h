@@ -5,6 +5,7 @@
 extern "C" { 
 #endif 
 
+#include "logging/gdbwire_result.h"
 #include "gdbmi_pt.h"
 
 /// The opaque GDB/MI parser context
@@ -57,16 +58,12 @@ struct gdbmi_parser *gdbmi_parser_create(
 /**
  * Destroy a gdbmi_parser context.
  *
- * If a NULL pointer is passed to this function it will ignore it
- * and successfully return.
+ * This function will do nothing if parser is NULL.
  *
  * @param parser
  * The instance the parser to destroy
- *
- * @return
- * 0 on succes, or -1 on error.
  */
-int gdbmi_parser_destroy(struct gdbmi_parser *parser);
+void gdbmi_parser_destroy(struct gdbmi_parser *parser);
 
 /**
  * Push some parse data onto the parser.
@@ -82,9 +79,9 @@ int gdbmi_parser_destroy(struct gdbmi_parser *parser);
  * The parse data to push onto the parser.
  *
  * @return
- * 0 on success or -1 on error.
+ * GDBWIRE_OK on success or appropriate error result on failure.
  */
-int gdbmi_parser_push(struct gdbmi_parser *parser, char *data);
+enum gdbwire_result gdbmi_parser_push(struct gdbmi_parser *parser, char *data);
 
 #ifdef __cplusplus 
 }

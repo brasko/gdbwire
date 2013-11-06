@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "logging/gdbwire_assert.h"
 #include "gdbmi_grammar.h"
 #include "gdbmi_parser.h"
 #include "containers/gdbwire_string.h"
@@ -40,8 +41,8 @@ gdbmi_parser_create(struct gdbmi_parser_callbacks callbacks)
     /* Create a new push parser state instance */
     parser->mips = gdbmi_pstate_new();
     if (!parser->mips) {
-        free(parser);
         free(parser->buffer);
+        free(parser);
         return NULL;
     }
 
@@ -50,27 +51,24 @@ gdbmi_parser_create(struct gdbmi_parser_callbacks callbacks)
     return parser;
 }
 
-int gdbmi_parser_destroy(struct gdbmi_parser *parser)
+void gdbmi_parser_destroy(struct gdbmi_parser *parser)
 {
-    if (!parser) {
-        return 0;
-    }
+    if (parser) {
+        /* Free the parse buffer */
+        if (parser->buffer) {
+            gdbwire_string_destroy(parser->buffer);
+            parser->buffer = NULL;
+        }
 
-    /* Free the parse buffer */
-    if (parser->buffer) {
-        gdbwire_string_destroy(parser->buffer);
-        parser->buffer = NULL;
-    }
+        /* Free the push parser instance */
+        if (parser->mips) {
+            gdbmi_pstate_delete(parser->mips);
+            parser->mips = NULL;
+        }
 
-    /* Free the push parser instance */
-    if (parser->mips) {
-        gdbmi_pstate_delete(parser->mips);
-        parser->mips = NULL;
+        free(parser);
+        parser = NULL;
     }
-
-    free(parser);
-    parser = NULL;
-    return 0;
 }
 
 /**
@@ -87,25 +85,21 @@ int gdbmi_parser_destroy(struct gdbmi_parser *parser)
  * A line of output in GDB/MI format.
  *
  * \return
- * 0 on succes, or -1 on error.
+ * GDBWIRE_OK on success or appropriate error result on failure.
  */
-static int
+static enum gdbwire_result
 gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
 {
-    YY_BUFFER_STATE state;
-    int result = 0;
-    int pattern;
-    int mi_status;
+    YY_BUFFER_STATE state = 0;
+    int pattern, mi_status;
 
-    if (!parser || !line) {
-        return -1;
-    }
+    GDBWIRE_ASSERT(parser && line);
 
     /* Create a new input buffer for flex. */
     state = gdbmi__scan_string(line);
+    GDBWIRE_ASSERT(state);
 
-    /* Create a new input buffer for flex and
-     * iterate over all the tokens. */
+    /* Iterate over all the tokens found in the scanner buffer */
     do {
         pattern = gdbmi_lex();
         if (pattern == 0)
@@ -113,64 +107,122 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
         mi_status = gdbmi_push_parse(parser->mips, pattern, NULL, parser);
     } while (mi_status == YYPUSH_MORE);
 
-    /**
-     * The parser suggests that it is done. This should be impossible.
-     * The grammar is designed to accept an infinate list of gdb/mi
-     * output commands.
-     */
-    if (mi_status != YYPUSH_MORE && mi_status != 0) {
-        result = -1;
-    }
-
     /* Free the scanners buffer */
     gdbmi__delete_buffer(state);
+    
+    /**
+     * The push parser should either be returning
+     * - YYPUSH_MORE for more input to be passed to it or
+     * - 0 for a successful parse of the last token.
+     * Anything besides this would be unexpected. The grammar is designed
+     * to accept an infinate list of GDB/MI output commands.
+     *
+     * This assertion needs to go to a cleanup state.
+     */
+    GDBWIRE_ASSERT(mi_status == YYPUSH_MORE || mi_status == 0);
 
-    return result;
+    return GDBWIRE_OK;
 }
 
-int
-gdbmi_parser_push(struct gdbmi_parser *parser, char *data)
+/**
+ * Get the next line available in the buffer.
+ *
+ * @param buffer
+ * The entire buffer the user has pushed onto the gdbmi parser
+ * through gdbmi_parser_push. If a line is found, the returned line
+ * will be removed from this buffer.
+ *
+ * @param line
+ * Will return as an allocated line if a line is available or NULL
+ * otherwise. If this function does not return GDBWIRE_OK then ignore
+ * the output of this parameter. It is the callers responsibility to
+ * free the memory.
+ *
+ * @return
+ * GDBWIRE_OK on success or appropriate error result on failure.
+ */
+static enum gdbwire_result
+gdbmi_parser_get_next_line(struct gdbwire_string *buffer,
+        struct gdbwire_string **line)
 {
-    int result = 0;
+    enum gdbwire_result result = GDBWIRE_OK;
 
-    if (!parser || !data) {
-        return -1;
+    GDBWIRE_ASSERT(buffer && line);
+
+    char *data = gdbwire_string_data(buffer);
+    size_t size = gdbwire_string_size(buffer);
+    size_t pos = gdbwire_string_find_first_of(buffer, "\r\n");
+
+    // Search to see if a newline has been reached in gdb/mi.
+    // If a line of data has been recieved, process it.
+    if (pos != size) {
+        int status;
+
+        /**
+         * We have the position of the newline character from
+         * gdbwire_string_find_first_of. However, the length must be
+         * calculated to make a copy of the line.
+         *
+         * This is either pos + 1 (for \r or \n) or pos + 1 + 1 for (\r\n).
+         * Check for\r\n for the special case.
+         */
+        size_t line_length = (data[pos] == '\r' && (pos + 1 < size) &&
+                data[pos + 1] == '\n') ? pos + 2 : pos + 1;
+
+        /**
+         * - allocate the buffer
+         * - append the new line
+         * - append a null terminating character
+         * - if successful, delete the new line found from buffer
+         * - any failures cleanup and return an error
+         */
+        *line = gdbwire_string_create();
+        GDBWIRE_ASSERT(*line);
+
+        status = gdbwire_string_append_data(*line, data, line_length);
+        GDBWIRE_ASSERT_GOTO(status == 0, result, cleanup);
+
+        status = gdbwire_string_append_data(*line, "\0", 1);
+        GDBWIRE_ASSERT_GOTO(status == 0, result, cleanup);
+
+        status = gdbwire_string_erase(buffer, 0, line_length);
+        GDBWIRE_ASSERT_GOTO(status == 0, result, cleanup);
     }
 
-    result = gdbwire_string_append_cstr(parser->buffer, data);
-    if (result == 0) {
-        char *data = gdbwire_string_data(parser->buffer);
-        size_t size = gdbwire_string_size(parser->buffer);
-        size_t pos = gdbwire_string_find_first_of(parser->buffer, "\r\n");
+    return result;
 
-        // Search to see if a newline has been reached in gdb/mi.
-        // If a line of data has been recieved, process it.
-        if (pos != size) {
-            size_t end_pos = pos + 1;
-            struct gdbwire_string *command;
+cleanup:
+    gdbwire_string_destroy(*line);
+    *line = 0;
+    return result;
 
-            command = gdbwire_string_create();
+}
 
-            // OK, found a newline. A newline can be \r, \n or \r\n.
-            // Figure out which one it is, and pull it out of the buffer
-            // Check specifically for \r\n and incrase the end pos
-            if (data[pos] == '\r' && end_pos < size &&
-                data[end_pos] == '\n') {
-                end_pos++;
-            }
-            
-            gdbwire_string_append_data(command, data, end_pos);
-            gdbwire_string_append_data(command, "\0", 1);
+enum gdbwire_result
+gdbmi_parser_push(struct gdbmi_parser *parser, char *data)
+{
+    struct gdbwire_string *line = 0;
+    enum gdbwire_result result = GDBWIRE_OK;
 
-            result = gdbwire_string_erase(parser->buffer, 0, end_pos);
-            if (result == 0) {
-                result = gdbmi_parser_parse_line(parser,
-                        gdbwire_string_data(command));
-            }
-            gdbwire_string_destroy(command);
+    GDBWIRE_ASSERT(parser && data);
+    GDBWIRE_ASSERT(gdbwire_string_append_cstr(parser->buffer, data) == 0);
+
+    // Loop until no more lines available
+    for (;;) {
+        result = gdbmi_parser_get_next_line(parser->buffer, &line);
+        GDBWIRE_ASSERT_GOTO(result == GDBWIRE_OK, result, cleanup);
+
+        if (line) {
+            result = gdbmi_parser_parse_line(parser, gdbwire_string_data(line));
+            gdbwire_string_destroy(line);
+            line = 0;
+            GDBWIRE_ASSERT_GOTO(result == GDBWIRE_OK, result, cleanup);
+        } else {
+            break;
         }
     }
 
+cleanup:
     return result;
 }
 
