@@ -297,9 +297,11 @@ gdbmi_get_output_command(struct gdbmi_output *output,
         struct gdbmi_oob_record *cur = output->oob_record;
 
         while (cur) {
-            if (cur->record == GDBMI_STREAM) {
-                if (cur->option.stream_record->stream_record == GDBMI_CONSOLE) {
-                    char *orig = cur->option.stream_record->cstring;
+            if (cur->kind == GDBMI_STREAM) {
+                struct gdbmi_stream_record *stream_record;
+                stream_record = cur->variant.stream_record;
+                if (stream_record->kind == GDBMI_CONSOLE) {
+                    char *orig = cur->variant.stream_record->cstring;
                     struct gdbmi_oc_cstring_ll *ncstring =
                             create_gdbmi_cstring_ll();
                     if (convert_cstring(orig, &(ncstring->cstring)) == -1) {
@@ -345,7 +347,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                 if (strcmp(result->variable, "line") == 0) {
                     char *nline;
 
-                    if (convert_cstring(result->value->option.cstring,
+                    if (convert_cstring(result->value->variant.cstring,
                                     &nline) == -1) {
                         fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
                         return -1;
@@ -358,7 +360,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                 } else if (strcmp(result->variable, "file") == 0) {
                     char *nline;
 
-                    if (convert_cstring(result->value->option.cstring,
+                    if (convert_cstring(result->value->variant.cstring,
                                     &nline) == -1) {
                         fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
                         return -1;
@@ -369,7 +371,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                 } else if (strcmp(result->variable, "fullname") == 0) {
                     char *nline;
 
-                    if (convert_cstring(result->value->option.cstring,
+                    if (convert_cstring(result->value->variant.cstring,
                                     &nline) == -1) {
                         fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
                         return -1;
@@ -388,24 +390,24 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
 
             while (result) {
                 if (strcmp(result->variable, "files") == 0) {
-                    if (result->value->value_choice == GDBMI_LIST) {
-                        struct gdbmi_list *list = result->value->option.list;
+                    if (result->value->kind == GDBMI_LIST) {
+                        struct gdbmi_list *list = result->value->variant.list;
 
                         while (list) {
-                            if (list->list_choice == GDBMI_VALUE) {
-                                struct gdbmi_value *value = list->option.value;
+                            if (list->kind == GDBMI_VALUE) {
+                                struct gdbmi_value *value = list->variant.value;
 
                                 while (value) {
-                                    if (value->value_choice == GDBMI_TUPLE) {
+                                    if (value->kind == GDBMI_TUPLE) {
                                         struct gdbmi_oc_file_path_info *ptr =
                                                 create_gdbmi_file_path_info();
                                         struct gdbmi_result *result =
-                                                value->option.tuple->result;
+                                                value->variant.tuple->result;
                                         while (result) {
                                             if (strcmp(result->variable,
                                                             "file") == 0) {
                                                 if (convert_cstring(result->
-                                                                value->option.
+                                                                value->variant.
                                                                 cstring,
                                                                 &(ptr->file)) ==
                                                         -1) {
@@ -416,7 +418,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                             } else if (strcmp(result->variable,
                                                             "fullname") == 0) {
                                                 if (convert_cstring(result->
-                                                                value->option.
+                                                                value->variant.
                                                                 cstring,
                                                                 &(ptr->fullname)) == -1) {
                                                     fprintf(stderr, "%s:%d\n",
@@ -453,16 +455,16 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
             struct gdbmi_result *result = output->result_record->result;
 
             if (strcmp(result->variable, "BreakpointTable") == 0) {
-                if (result->value->value_choice == GDBMI_TUPLE) {
-                    result = result->value->option.tuple->result;
+                if (result->value->kind == GDBMI_TUPLE) {
+                    result = result->value->variant.tuple->result;
                     while (result) {
                         if (strcmp(result->variable, "body") == 0) {
-                            if (result->value->value_choice == GDBMI_LIST) {
+                            if (result->value->kind == GDBMI_LIST) {
                                 struct gdbmi_list *list =
-                                        result->value->option.list;
-                                if (list && list->list_choice == GDBMI_RESULT) {
+                                        result->value->variant.list;
+                                if (list && list->kind == GDBMI_RESULT) {
                                     struct gdbmi_result *result =
-                                            list->option.result;
+                                            list->variant.result;
                                     while (result) {
                                         if (strcmp(result->variable,
                                                         "bkpt") == 0) {
@@ -471,10 +473,10 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
 
                                             struct gdbmi_value *value =
                                                     result->value;
-                                            if (value->value_choice ==
+                                            if (value->kind ==
                                                     GDBMI_TUPLE) {
                                                 struct gdbmi_result *result =
-                                                        value->option.
+                                                        value->variant.
                                                         tuple->result;
                                                 while (result) {
                                                     if (strcmp(result->
@@ -482,14 +484,14 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "number") ==
                                                             0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             char *nstr;
 
                                                             if (convert_cstring
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             &nstr)
                                                                     == -1) {
@@ -511,12 +513,12 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "type") ==
                                                             0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             if (strcmp
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             "\"breakpoint\"")
                                                                     == 0)
@@ -525,7 +527,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                             else if (strcmp
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             "\"watchpoint\"")
                                                                     == 0)
@@ -537,12 +539,12 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "disp") ==
                                                             0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             if (strcmp
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             "\"keep\"")
                                                                     == 0)
@@ -552,7 +554,7 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                             else if (strcmp
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             "\"nokeep\"")
                                                                     == 0)
@@ -566,12 +568,12 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "enabled")
                                                             == 0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             if (strcmp
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             "\"y\"")
                                                                     == 0)
@@ -587,12 +589,12 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "addr") ==
                                                             0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             if (convert_cstring
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             &ptr->
                                                                             address)
@@ -610,12 +612,12 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "func") ==
                                                             0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             if (convert_cstring
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             &ptr->
                                                                             func)
@@ -633,12 +635,12 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "file") ==
                                                             0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             if (convert_cstring
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             &ptr->
                                                                             file)
@@ -656,12 +658,12 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "fullname")
                                                             == 0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             if (convert_cstring
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             &ptr->
                                                                             fullname)
@@ -679,14 +681,14 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "line") ==
                                                             0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             char *nstr;
 
                                                             if (convert_cstring
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             &nstr)
                                                                     == -1) {
@@ -708,14 +710,14 @@ gdbmi_get_specific_output_command(struct gdbmi_output *output,
                                                                     "times") ==
                                                             0) {
                                                         if (result->value->
-                                                                value_choice ==
+                                                                kind ==
                                                                 GDBMI_CSTRING) {
                                                             char *nstr;
 
                                                             if (convert_cstring
                                                                     (result->
                                                                             value->
-                                                                            option.
+                                                                            variant.
                                                                             cstring,
                                                                             &nstr)
                                                                     == -1) {

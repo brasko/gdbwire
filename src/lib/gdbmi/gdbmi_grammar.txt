@@ -88,8 +88,8 @@ sytax above to the LR(1) grammar I provide to bison.
     notify-async-output -> [token] "=" async-output 
 
  To
-    async-record        -> opt-token async-output-choice async-output
-    async-output-choice -> "*" | "+" | "="
+    async-record        -> opt-token async-output-kind async-output
+    async-output-kind   -> "*" | "+" | "="
 
 - Consolidate the following rules to a more consice set of rules
 - From
@@ -102,8 +102,8 @@ sytax above to the LR(1) grammar I provide to bison.
     log-stream-output       -> "&" c-string
 
   To 
-    stream-record       -> stream-record-choice c-string
-    stream-record-choice-> "~" | "@" | "&"
+    stream-record       -> stream-record-kind c-string
+    stream-record-kind  -> "~" | "@" | "&"
 
 Finally, gdbwire must be able to receive many output commands during
 a single session. So the grammar supports accepting an output list.
@@ -129,8 +129,8 @@ oob-record-list     -> oob-record-list oob-record nl | epsilon
 opt-result-record   -> result-record nl | epsilon
 result-record       -> opt-token "^" result-class result-list
 oob-record          -> async-record | stream-record
-async-record        -> opt-token async-record-choice async-output
-async-record-choice -> "*" | "+" | "="
+async-record        -> opt-token async-record-kind async-output
+async-record-kind   -> "*" | "+" | "="
 async-output        -> async-class result-list
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
 async-class         -> "stopped"
@@ -142,8 +142,8 @@ value               -> c-string | tuple | list
 tuple               -> "{}" | "{" result result-list "}"
 list                -> "[]" |
                        "[" value value-list "]" | "[" result result-list "]"
-stream-record       -> stream-record-choice c-string
-stream-record-choice-> "~" | "@" | "&"
+stream-record       -> stream-record-kind c-string
+stream-record-kind  -> "~" | "@" | "&"
 nl                  -> CR | CR LF
 opt_token           -> token | epsilon
 token               -> [0-9]+

@@ -62,7 +62,7 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
   struct gdbmi_oob_record *u_oob_record;
   struct gdbmi_result_record *u_result_record;
   int u_result_class;
-  int u_async_record_choice;
+  int u_async_record_kind;
   struct gdbmi_result *u_result;
   long u_token;
   struct gdbmi_async_record *u_async_record;
@@ -73,7 +73,7 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
   struct gdbmi_value *u_value;
   struct gdbmi_tuple *u_tuple;
   struct gdbmi_list *u_list;
-  int u_stream_record_choice;
+  int u_stream_record_kind;
 }
 
 %type <u_output> output
@@ -82,7 +82,7 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
 %type <u_result_record> opt_result_record
 %type <u_result_record> result_record
 %type <u_result_class> result_class
-%type <u_async_record_choice> async_record_class
+%type <u_async_record_kind> async_record_class
 %type <u_result> result_list
 %type <u_result> result
 %type <u_token> opt_token
@@ -96,7 +96,7 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
 %type <u_value> value_list
 %type <u_tuple> tuple
 %type <u_list> list
-%type <u_stream_record_choice> stream_record_class
+%type <u_stream_record_kind> stream_record_class
 
 %start output_list
 %%
@@ -148,20 +148,20 @@ result_record: opt_token CARROT result_class result_list {
 
 oob_record: async_record {
   $$ = create_gdbmi_oob_record();
-  $$->record = GDBMI_ASYNC;
-  $$->option.async_record = $1;
+  $$->kind = GDBMI_ASYNC;
+  $$->variant.async_record = $1;
 };
 
 oob_record: stream_record {
   $$ = create_gdbmi_oob_record();
-  $$->record = GDBMI_STREAM;
-  $$->option.stream_record = $1;
+  $$->kind = GDBMI_STREAM;
+  $$->variant.stream_record = $1;
 };
 
 async_record: opt_token async_record_class async_output {
   $$ = create_gdbmi_async_record ();
   $$->token = $1;
-  $$->async_record = $2;
+  $$->kind = $2;
   $$->async_output = $3;
 };
 
@@ -233,20 +233,20 @@ value_list: value_list COMMA value {
 
 value: CSTRING {
   $$ = create_gdbmi_value ();
-  $$->value_choice = GDBMI_CSTRING;
-  $$->option.cstring = strdup (gdbmi_text); 
+  $$->kind = GDBMI_CSTRING;
+  $$->variant.cstring = strdup (gdbmi_text); 
 };
 
 value: tuple {
   $$ = create_gdbmi_value ();
-  $$->value_choice = GDBMI_TUPLE;
-  $$->option.tuple = $1;
+  $$->kind = GDBMI_TUPLE;
+  $$->variant.tuple = $1;
 };
 
 value: list {
   $$ = create_gdbmi_value ();
-  $$->value_choice = GDBMI_LIST;
-  $$->option.list = $1;
+  $$->kind = GDBMI_LIST;
+  $$->variant.list = $1;
 };
 
 tuple: OPEN_BRACE CLOSED_BRACE {
@@ -264,19 +264,19 @@ list: OPEN_BRACKET CLOSED_BRACKET {
 
 list: OPEN_BRACKET value value_list CLOSED_BRACKET {
   $$ = create_gdbmi_list ();
-  $$->list_choice = GDBMI_VALUE;
-  $$->option.value = append_gdbmi_value($2, $3); 
+  $$->kind = GDBMI_VALUE;
+  $$->variant.value = append_gdbmi_value($2, $3); 
 };
 
 list: OPEN_BRACKET result result_list CLOSED_BRACKET {
   $$ = create_gdbmi_list ();
-  $$->list_choice = GDBMI_RESULT;
-  $$->option.result = append_gdbmi_result($2, $3);
+  $$->kind = GDBMI_RESULT;
+  $$->variant.result = append_gdbmi_result($2, $3);
 };
 
 stream_record: stream_record_class CSTRING {
   $$ = create_gdbmi_stream_record ();
-  $$->stream_record = $1;
+  $$->kind = $1;
   $$->cstring = strdup ( gdbmi_text );
 };
 

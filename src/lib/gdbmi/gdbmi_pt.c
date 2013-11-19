@@ -214,7 +214,7 @@ int print_gdbmi_result(struct gdbmi_result *param)
     return 0;
 }
 
-int print_gdbmi_oob_record_choice(enum gdbmi_oob_record_choice param)
+int print_gdbmi_oob_record_kind(enum gdbmi_oob_record_kind param)
 {
     switch (param) {
         case GDBMI_ASYNC:
@@ -241,14 +241,14 @@ int destroy_gdbmi_oob_record(struct gdbmi_oob_record *param)
     if (!param)
         return 0;
 
-    if (param->record == GDBMI_ASYNC) {
-        if (destroy_gdbmi_async_record(param->option.async_record) == -1)
+    if (param->kind == GDBMI_ASYNC) {
+        if (destroy_gdbmi_async_record(param->variant.async_record) == -1)
             return -1;
-        param->option.async_record = NULL;
-    } else if (param->record == GDBMI_STREAM) {
-        if (destroy_gdbmi_stream_record(param->option.stream_record) == -1)
+        param->variant.async_record = NULL;
+    } else if (param->kind == GDBMI_STREAM) {
+        if (destroy_gdbmi_stream_record(param->variant.stream_record) == -1)
             return -1;
-        param->option.stream_record = NULL;
+        param->variant.stream_record = NULL;
     } else {
         return -1;
     }
@@ -289,16 +289,16 @@ int print_gdbmi_oob_record(struct gdbmi_oob_record *param)
     int result;
 
     while (cur) {
-        result = print_gdbmi_oob_record_choice(cur->record);
+        result = print_gdbmi_oob_record_kind(cur->kind);
         if (result == -1)
             return -1;
 
-        if (cur->record == GDBMI_ASYNC) {
-            result = print_gdbmi_async_record(cur->option.async_record);
+        if (cur->kind == GDBMI_ASYNC) {
+            result = print_gdbmi_async_record(cur->variant.async_record);
             if (result == -1)
                 return -1;
-        } else if (cur->record == GDBMI_STREAM) {
-            result = print_gdbmi_stream_record(cur->option.stream_record);
+        } else if (cur->kind == GDBMI_STREAM) {
+            result = print_gdbmi_stream_record(cur->variant.stream_record);
             if (result == -1)
                 return -1;
         } else
@@ -310,7 +310,7 @@ int print_gdbmi_oob_record(struct gdbmi_oob_record *param)
     return 0;
 }
 
-int print_gdbmi_async_record_choice(enum gdbmi_async_record_choice param)
+int print_gdbmi_async_record_kind(enum gdbmi_async_record_kind param)
 {
     switch (param) {
         case GDBMI_STATUS:
@@ -329,7 +329,7 @@ int print_gdbmi_async_record_choice(enum gdbmi_async_record_choice param)
     return 0;
 }
 
-int print_gdbmi_stream_record_choice(enum gdbmi_stream_record_choice param)
+int print_gdbmi_stream_record_kind(enum gdbmi_stream_record_kind param)
 {
     switch (param) {
         case GDBMI_CONSOLE:
@@ -379,7 +379,7 @@ int print_gdbmi_async_record(struct gdbmi_async_record *param)
     if (result == -1)
         return -1;
 
-    result = print_gdbmi_async_record_choice(param->async_record);
+    result = print_gdbmi_async_record_kind(param->kind);
     if (result == -1)
         return -1;
 
@@ -441,7 +441,7 @@ int print_gdbmi_async_class(enum gdbmi_async_class param)
     return 0;
 }
 
-int print_gdbmi_value_choice(enum gdbmi_value_choice param)
+int print_gdbmi_value_kind(enum gdbmi_value_kind param)
 {
     switch (param) {
         case GDBMI_CSTRING:
@@ -471,19 +471,19 @@ int destroy_gdbmi_value(struct gdbmi_value *param)
     if (!param)
         return 0;
 
-    if (param->value_choice == GDBMI_CSTRING) {
-        if (param->option.cstring) {
-            free(param->option.cstring);
-            param->option.cstring = NULL;
+    if (param->kind == GDBMI_CSTRING) {
+        if (param->variant.cstring) {
+            free(param->variant.cstring);
+            param->variant.cstring = NULL;
         }
-    } else if (param->value_choice == GDBMI_TUPLE) {
-        if (destroy_gdbmi_tuple(param->option.tuple) == -1)
+    } else if (param->kind == GDBMI_TUPLE) {
+        if (destroy_gdbmi_tuple(param->variant.tuple) == -1)
             return -1;
-        param->option.tuple = NULL;
-    } else if (param->value_choice == GDBMI_LIST) {
-        if (destroy_gdbmi_list(param->option.list) == -1)
+        param->variant.tuple = NULL;
+    } else if (param->kind == GDBMI_LIST) {
+        if (destroy_gdbmi_list(param->variant.list) == -1)
             return -1;
-        param->option.list = NULL;
+        param->variant.list = NULL;
     } else
         return -1;
 
@@ -522,18 +522,18 @@ int print_gdbmi_value(struct gdbmi_value *param)
     int result;
 
     while (cur) {
-        result = print_gdbmi_value_choice(cur->value_choice);
+        result = print_gdbmi_value_kind(cur->kind);
         if (result == -1)
             return -1;
 
-        if (cur->value_choice == GDBMI_CSTRING) {
-            printf("cstring->(%s)\n", cur->option.cstring);
-        } else if (cur->value_choice == GDBMI_TUPLE) {
-            result = print_gdbmi_tuple(cur->option.tuple);
+        if (cur->kind == GDBMI_CSTRING) {
+            printf("cstring->(%s)\n", cur->variant.cstring);
+        } else if (cur->kind == GDBMI_TUPLE) {
+            result = print_gdbmi_tuple(cur->variant.tuple);
             if (result == -1)
                 return -1;
-        } else if (cur->value_choice == GDBMI_LIST) {
-            result = print_gdbmi_list(cur->option.list);
+        } else if (cur->kind == GDBMI_LIST) {
+            result = print_gdbmi_list(cur->variant.list);
             if (result == -1)
                 return -1;
         } else
@@ -560,10 +560,6 @@ int destroy_gdbmi_tuple(struct gdbmi_tuple *param)
         return -1;
     param->result = NULL;
 
-    if (destroy_gdbmi_tuple(param->next) == -1)
-        return -1;
-    param->next = NULL;
-
     free(param);
     param = NULL;
     return 0;
@@ -571,21 +567,16 @@ int destroy_gdbmi_tuple(struct gdbmi_tuple *param)
 
 int print_gdbmi_tuple(struct gdbmi_tuple *param)
 {
-    struct gdbmi_tuple *cur = param;
     int result;
 
-    while (cur) {
-        result = print_gdbmi_result(cur->result);
-        if (result == -1)
-            return -1;
-
-        cur = cur->next;
-    }
+    result = print_gdbmi_result(param->result);
+    if (result == -1)
+        return -1;
 
     return 0;
 }
 
-int print_gdbmi_list_choice(enum gdbmi_list_choice param)
+int print_gdbmi_list_kind(enum gdbmi_list_kind param)
 {
     switch (param) {
         case GDBMI_VALUE:
@@ -612,14 +603,14 @@ int destroy_gdbmi_list(struct gdbmi_list *param)
     if (!param)
         return 0;
 
-    if (param->list_choice == GDBMI_VALUE) {
-        if (destroy_gdbmi_value(param->option.value) == -1)
+    if (param->kind == GDBMI_VALUE) {
+        if (destroy_gdbmi_value(param->variant.value) == -1)
             return -1;
-        param->option.value = NULL;
-    } else if (param->list_choice == GDBMI_RESULT) {
-        if (destroy_gdbmi_result(param->option.result) == -1)
+        param->variant.value = NULL;
+    } else if (param->kind == GDBMI_RESULT) {
+        if (destroy_gdbmi_result(param->variant.result) == -1)
             return -1;
-        param->option.result = NULL;
+        param->variant.result = NULL;
     } else
         return -1;
 
@@ -658,16 +649,16 @@ int print_gdbmi_list(struct gdbmi_list *param)
     int result;
 
     while (cur) {
-        result = print_gdbmi_list_choice(cur->list_choice);
+        result = print_gdbmi_list_kind(cur->kind);
         if (result == -1)
             return -1;
 
-        if (cur->list_choice == GDBMI_VALUE) {
-            result = print_gdbmi_value(cur->option.value);
+        if (cur->kind == GDBMI_VALUE) {
+            result = print_gdbmi_value(cur->variant.value);
             if (result == -1)
                 return -1;
-        } else if (cur->list_choice == GDBMI_RESULT) {
-            result = print_gdbmi_result(cur->option.result);
+        } else if (cur->kind == GDBMI_RESULT) {
+            result = print_gdbmi_result(cur->variant.result);
             if (result == -1)
                 return -1;
         } else
@@ -704,7 +695,7 @@ int print_gdbmi_stream_record(struct gdbmi_stream_record *param)
 {
     int result;
 
-    result = print_gdbmi_stream_record_choice(param->stream_record);
+    result = print_gdbmi_stream_record_kind(param->kind);
     if (result == -1)
         return -1;
     printf("cstring->(%s)\n", param->cstring);
