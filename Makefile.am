@@ -11,7 +11,6 @@ lib_LTLIBRARIES=libgdbwire.la
 libgdbwire_la_SOURCES= \
     src/lib/gdbmi/gdbmi_grammar.y \
     src/lib/gdbmi/gdbmi_lexer.l \
-    src/lib/gdbmi/gdbmi_oc.c \
     src/lib/gdbmi/gdbmi_parser.c \
     src/lib/gdbmi/gdbmi_pt.c \
     src/lib/containers/gdbwire_string.c \
