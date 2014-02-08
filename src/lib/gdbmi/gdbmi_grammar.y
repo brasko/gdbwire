@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include "src/lib/gdbmi/gdbmi_parser.h"
 #include "src/lib/gdbmi/gdbmi_pt.h"
+#include "src/lib/gdbmi/gdbmi_pt_alloc.h"
 
 extern char *gdbmi_text;
 extern int gdbmi_lex (void);
@@ -111,7 +112,7 @@ output: oob_record_list opt_result_record OPEN_PAREN variable CLOSED_PAREN NEWLI
   struct gdbmi_parser_callbacks callbacks =
       gdbmi_parser_get_callbacks(gdbmi_parser);
 
-  $$ = create_gdbmi_output ();
+  $$ = gdbmi_output_alloc();
   $$->oob_record = $1;
   $$->result_record = $2;
 
@@ -140,33 +141,33 @@ opt_result_record: result_record NEWLINE {
 };
 
 result_record: opt_token CARROT result_class result_list {
-  $$ = create_gdbmi_result_record ();
+  $$ = gdbmi_result_record_alloc();
   $$->token = $1;
   $$->result_class = $3;
   $$->result = $4;
 };
 
 oob_record: async_record {
-  $$ = create_gdbmi_oob_record();
+  $$ = gdbmi_oob_record_alloc();
   $$->kind = GDBMI_ASYNC;
   $$->variant.async_record = $1;
 };
 
 oob_record: stream_record {
-  $$ = create_gdbmi_oob_record();
+  $$ = gdbmi_oob_record_alloc();
   $$->kind = GDBMI_STREAM;
   $$->variant.stream_record = $1;
 };
 
 async_record: opt_token async_record_class async_output {
-  $$ = create_gdbmi_async_record ();
+  $$ = gdbmi_async_record_alloc();
   $$->token = $1;
   $$->kind = $2;
   $$->async_output = $3;
 };
 
 async_output: async_class result_list {
-  $$ = create_gdbmi_async_output();
+  $$ = gdbmi_async_output_alloc();
   $$->async_class = $1;
   $$->result = $2;
 }
@@ -214,7 +215,7 @@ result_list: result_list COMMA result {
 };
 
 result: variable EQUAL_SIGN value {
-  $$ = create_gdbmi_result ();
+  $$ = gdbmi_result_alloc();
   $$->variable = $1;
   $$->value = $3;
 };
@@ -232,19 +233,19 @@ value_list: value_list COMMA value {
 };
 
 value: CSTRING {
-  $$ = create_gdbmi_value ();
+  $$ = gdbmi_value_alloc();
   $$->kind = GDBMI_CSTRING;
   $$->variant.cstring = strdup (gdbmi_text); 
 };
 
 value: tuple {
-  $$ = create_gdbmi_value ();
+  $$ = gdbmi_value_alloc();
   $$->kind = GDBMI_TUPLE;
   $$->variant.tuple = $1;
 };
 
 value: list {
-  $$ = create_gdbmi_value ();
+  $$ = gdbmi_value_alloc();
   $$->kind = GDBMI_LIST;
   $$->variant.list = $1;
 };
@@ -254,7 +255,7 @@ tuple: OPEN_BRACE CLOSED_BRACE {
 };
 
 tuple: OPEN_BRACE result result_list CLOSED_BRACE {
-  $$ = create_gdbmi_tuple ();
+  $$ = gdbmi_tuple_alloc();
   $$->result = append_gdbmi_result($2, $3);
 };
 
@@ -263,19 +264,19 @@ list: OPEN_BRACKET CLOSED_BRACKET {
 };
 
 list: OPEN_BRACKET value value_list CLOSED_BRACKET {
-  $$ = create_gdbmi_list ();
+  $$ = gdbmi_list_alloc();
   $$->kind = GDBMI_VALUE;
   $$->variant.value = append_gdbmi_value($2, $3); 
 };
 
 list: OPEN_BRACKET result result_list CLOSED_BRACKET {
-  $$ = create_gdbmi_list ();
+  $$ = gdbmi_list_alloc();
   $$->kind = GDBMI_RESULT;
   $$->variant.result = append_gdbmi_result($2, $3);
 };
 
 stream_record: stream_record_class CSTRING {
-  $$ = create_gdbmi_stream_record ();
+  $$ = gdbmi_stream_record_alloc();
   $$->kind = $1;
   $$->cstring = strdup ( gdbmi_text );
 };

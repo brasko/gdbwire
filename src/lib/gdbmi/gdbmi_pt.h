@@ -352,80 +352,22 @@ struct gdbmi_stream_record {
     char *cstring;
 };
 
-/* Print result class  */
-int print_gdbmi_result_class(enum gdbmi_result_class param);
+void gdbmi_output_free(struct gdbmi_output *param);
 
-/* Creating, Destroying and printing output  */
-struct gdbmi_output *create_gdbmi_output(void);
-int destroy_gdbmi_output(struct gdbmi_output *param);
 struct gdbmi_output *append_gdbmi_output(struct gdbmi_output *list,
         struct gdbmi_output *item);
-int print_gdbmi_output(struct gdbmi_output *param);
 
-/* Creating, Destroying and printing record  */
-struct gdbmi_result_record *create_gdbmi_result_record(void);
-int destroy_gdbmi_result_record(struct gdbmi_result_record *param);
-int print_gdbmi_result_record(struct gdbmi_result_record *param);
-
-/* Creating, Destroying and printing result  */
-struct gdbmi_result *create_gdbmi_result(void);
-int destroy_gdbmi_result(struct gdbmi_result *param);
 struct gdbmi_result *append_gdbmi_result(struct gdbmi_result *list,
         struct gdbmi_result *item);
-int print_gdbmi_result(struct gdbmi_result *param);
 
-int print_gdbmi_oob_record_kind(enum gdbmi_oob_record_kind param);
-
-/* Creating, Destroying and printing oob_record  */
-struct gdbmi_oob_record *create_gdbmi_oob_record(void);
-int destroy_gdbmi_oob_record(struct gdbmi_oob_record *param);
 struct gdbmi_oob_record *append_gdbmi_oob_record(struct gdbmi_oob_record *list,
         struct gdbmi_oob_record *item);
-int print_gdbmi_oob_record(struct gdbmi_oob_record *param);
 
-int print_gdbmi_async_record_kind(enum gdbmi_async_record_kind param);
-
-int print_gdbmi_stream_record_kind(enum gdbmi_stream_record_kind param);
-
-/* Creating, Destroying and printing async_record  */
-struct gdbmi_async_record *create_gdbmi_async_record(void);
-int destroy_gdbmi_async_record(struct gdbmi_async_record *param);
-int print_gdbmi_async_record(struct gdbmi_async_record *param);
-
-/* Creating, Destroying and printing async_output  */
-struct gdbmi_async_output *create_gdbmi_async_output(void);
-int destroy_gdbmi_async_output(struct gdbmi_async_output *param);
-int print_gdbmi_async_output(struct gdbmi_async_output *param);
-
-int print_gdbmi_async_class(enum gdbmi_async_class param);
-
-int print_gdbmi_value_kind(enum gdbmi_value_kind param);
-
-/* Creating, Destroying and printing value  */
-struct gdbmi_value *create_gdbmi_value(void);
-int destroy_gdbmi_value(struct gdbmi_value *param);
 struct gdbmi_value *append_gdbmi_value(struct gdbmi_value *list,
         struct gdbmi_value *item);
-int print_gdbmi_value(struct gdbmi_value *param);
 
-/* Creating, Destroying and printing tuple  */
-struct gdbmi_tuple *create_gdbmi_tuple(void);
-int destroy_gdbmi_tuple(struct gdbmi_tuple *param);
-int print_gdbmi_tuple(struct gdbmi_tuple *param);
-
-int print_gdbmi_list_kind(enum gdbmi_list_kind param);
-
-/* Creating, Destroying and printing list  */
-struct gdbmi_list *create_gdbmi_list(void);
-int destroy_gdbmi_list(struct gdbmi_list *param);
 struct gdbmi_list *append_gdbmi_list(struct gdbmi_list *list,
         struct gdbmi_list *item);
-int print_gdbmi_list(struct gdbmi_list *param);
-
-/* Creating, Destroying and printing stream_record  */
-struct gdbmi_stream_record *create_gdbmi_stream_record(void);
-int destroy_gdbmi_stream_record(struct gdbmi_stream_record *param);
-int print_gdbmi_stream_record(struct gdbmi_stream_record *param);
 
 #ifdef __cplusplus 
 }

@@ -13,6 +13,8 @@ libgdbwire_la_SOURCES= \
     src/lib/gdbmi/gdbmi_lexer.l \
     src/lib/gdbmi/gdbmi_parser.c \
     src/lib/gdbmi/gdbmi_pt.c \
+    src/lib/gdbmi/gdbmi_pt_alloc.c \
+    src/lib/gdbmi/gdbmi_pt_print.c \
     src/lib/containers/gdbwire_string.c \
     src/lib/logging/gdbwire_logger.c
 

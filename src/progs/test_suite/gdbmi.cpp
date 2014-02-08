@@ -2,6 +2,7 @@
 #include "catch.hpp"
 #include "fixture.h"
 #include "gdbmi/gdbmi_pt.h"
+#include "gdbmi/gdbmi_pt_print.h"
 #include "gdbmi/gdbmi_parser.h"
 
 namespace {
@@ -13,8 +14,7 @@ namespace {
         }
 
         ~GdbmiParserCallback() {
-            int result = destroy_gdbmi_output(m_output);
-            REQUIRE(result != -1);
+            gdbmi_output_free(m_output);
         }
 
         static void gdbmi_output_callback(void *context, gdbmi_output *output) {
