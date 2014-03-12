@@ -101,9 +101,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, basic)
 }
 
 /**
- * A simple console parse tree.
+ * A simple console output parse tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, console/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic)
 {
     REQUIRE(output->oob_record);
         struct gdbmi_oob_record *oob = output->oob_record;
@@ -112,7 +112,45 @@ TEST_CASE_METHOD_N(GdbmiPtTest, console/basic)
             REQUIRE(stream);
             REQUIRE(stream->kind == GDBMI_CONSOLE);
             std::string expected =
-                "\"GNU gdb (Ubuntu/Linaro) 7.4-2012.04\\n\"";
+                "\"Hello World console output\"";
+            REQUIRE(expected == stream->cstring);
+        REQUIRE(!oob->next);
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
+
+/**
+ * A simple target output parse tree.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic)
+{
+    REQUIRE(output->oob_record);
+        struct gdbmi_oob_record *oob = output->oob_record;
+        REQUIRE(oob->kind == GDBMI_STREAM);
+            struct gdbmi_stream_record *stream = oob->variant.stream_record;
+            REQUIRE(stream);
+            REQUIRE(stream->kind == GDBMI_TARGET);
+            std::string expected =
+                "\"Hello World target output\"";
+            REQUIRE(expected == stream->cstring);
+        REQUIRE(!oob->next);
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
+
+/**
+ * A simple log output parse tree.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic)
+{
+    REQUIRE(output->oob_record);
+        struct gdbmi_oob_record *oob = output->oob_record;
+        REQUIRE(oob->kind == GDBMI_STREAM);
+            struct gdbmi_stream_record *stream = oob->variant.stream_record;
+            REQUIRE(stream);
+            REQUIRE(stream->kind == GDBMI_LOG);
+            std::string expected =
+                "\"Hello World log output\"";
             REQUIRE(expected == stream->cstring);
         REQUIRE(!oob->next);
     REQUIRE(!output->result_record);

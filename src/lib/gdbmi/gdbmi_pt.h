@@ -172,6 +172,8 @@ enum gdbmi_stream_record_kind {
      *
      * Output that should be displayed as is in the console.
      * It is the textual response to a CLI command.
+     *
+     * This output is prepended by the ~ character.
      */
     GDBMI_CONSOLE,
 
@@ -179,6 +181,8 @@ enum gdbmi_stream_record_kind {
      * The target output.
      *
      * Output produced by the target program.
+     *
+     * This output is prepended by the @ character.
      */
     GDBMI_TARGET,
 
@@ -187,6 +191,8 @@ enum gdbmi_stream_record_kind {
      *
      * Output text coming from GDB's internals. For instance messages 
      * that should be displayed as part of an error log.
+     *
+     * This output is prepended by the & character.
      */
     GDBMI_LOG
 };
