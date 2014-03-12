@@ -28,27 +28,27 @@ namespace {
     };
 }
 
-TEST_F(GdbwireStringTest, destroy/null_instance)
+TEST_CASE_METHOD_N(GdbwireStringTest, destroy/null_instance)
 {
     gdbwire_string_destroy(NULL);
 }
 
-TEST_F(GdbwireStringTest, validateInitialState)
+TEST_CASE_METHOD_N(GdbwireStringTest, validateInitialState)
 {
     validate(string, 0, 128, "");
 }
 
-TEST_F(GdbwireStringTest, append_cstr/null_value)
+TEST_CASE_METHOD_N(GdbwireStringTest, append_cstr/null_value)
 {
     REQUIRE(gdbwire_string_append_cstr(string, NULL) == -1);
 }
 
-TEST_F(GdbwireStringTest, append_cstr/null_instance)
+TEST_CASE_METHOD_N(GdbwireStringTest, append_cstr/null_instance)
 {
     REQUIRE(gdbwire_string_append_cstr(NULL, "hi") == -1);
 }
 
-TEST_F(GdbwireStringTest, append_cstr/standard)
+TEST_CASE_METHOD_N(GdbwireStringTest, append_cstr/standard)
 {
     // Append empty string to emptry string and check the state
     REQUIRE(gdbwire_string_append_cstr(string, "") == 0);
@@ -84,17 +84,17 @@ TEST_F(GdbwireStringTest, append_cstr/standard)
     validate(string, 128, 256, expected);
 }
 
-TEST_F(GdbwireStringTest, append_data/null_value)
+TEST_CASE_METHOD_N(GdbwireStringTest, append_data/null_value)
 {
     REQUIRE(gdbwire_string_append_data(string, NULL, 0) == -1);
 }
 
-TEST_F(GdbwireStringTest, append_data/null_instance)
+TEST_CASE_METHOD_N(GdbwireStringTest, append_data/null_instance)
 {
     REQUIRE(gdbwire_string_append_data(NULL, "a", 1) == -1);
 }
 
-TEST_F(GdbwireStringTest, append_data/standard)
+TEST_CASE_METHOD_N(GdbwireStringTest, append_data/standard)
 {
     std::string expected;
 
@@ -139,7 +139,7 @@ TEST_F(GdbwireStringTest, append_data/standard)
     validate(string, 129, 256, expected);
 }
 
-TEST_F(GdbwireStringTest, append_cstr/mixed)
+TEST_CASE_METHOD_N(GdbwireStringTest, append_cstr/mixed)
 {
     std::string expected;
 
@@ -168,12 +168,12 @@ TEST_F(GdbwireStringTest, append_cstr/mixed)
     validate(string, 3, 128, expected);
 }
 
-TEST_F(GdbwireStringTest, clear/null_instance)
+TEST_CASE_METHOD_N(GdbwireStringTest, clear/null_instance)
 {
     gdbwire_string_clear(NULL);
 }
 
-TEST_F(GdbwireStringTest, clear/standard)
+TEST_CASE_METHOD_N(GdbwireStringTest, clear/standard)
 {
     size_t non_default_capacity = 8192;
 
@@ -189,7 +189,7 @@ TEST_F(GdbwireStringTest, clear/standard)
     validate(string, 0, non_default_capacity, "");
 }
 
-TEST_F(GdbwireStringTest, capacity)
+TEST_CASE_METHOD_N(GdbwireStringTest, capacity)
 {
     // The algorithm is documented internally as follows:
     // The algorithm chosen to increase the capacity is arbitrary.
@@ -230,12 +230,12 @@ TEST_F(GdbwireStringTest, capacity)
     }
 }
 
-TEST_F(GdbwireStringTest, find_first_of/null_instance)
+TEST_CASE_METHOD_N(GdbwireStringTest, find_first_of/null_instance)
 {
     REQUIRE(gdbwire_string_find_first_of(NULL, NULL) == 0);
 }
 
-TEST_F(GdbwireStringTest, find_first_of/empty_string_instance)
+TEST_CASE_METHOD_N(GdbwireStringTest, find_first_of/empty_string_instance)
 {
     // empty string instance always returns position 0 which is
     // gdbwire_string_size().
@@ -245,7 +245,7 @@ TEST_F(GdbwireStringTest, find_first_of/empty_string_instance)
     REQUIRE(gdbwire_string_find_first_of(string, "abc") == 0);
 }
 
-TEST_F(GdbwireStringTest, find_first_of/standard)
+TEST_CASE_METHOD_N(GdbwireStringTest, find_first_of/standard)
 {
     size_t size = 17;
     std::string expected("abcdeabcde\0abcdef", size);
@@ -275,12 +275,12 @@ TEST_F(GdbwireStringTest, find_first_of/standard)
     REQUIRE(gdbwire_string_find_first_of(string, "f") == size - 1);
 }
 
-TEST_F(GdbwireStringTest, erase/null_instance)
+TEST_CASE_METHOD_N(GdbwireStringTest, erase/null_instance)
 {
     REQUIRE(gdbwire_string_erase(NULL, 0, 0) == -1);
 }
 
-TEST_F(GdbwireStringTest, erase/empty_string_instance)
+TEST_CASE_METHOD_N(GdbwireStringTest, erase/empty_string_instance)
 {
     REQUIRE(gdbwire_string_erase(string, 0, 0) == -1);
     validate(string, 0, 128, ""); 
@@ -295,7 +295,7 @@ TEST_F(GdbwireStringTest, erase/empty_string_instance)
     validate(string, 0, 128, ""); 
 }
 
-TEST_F(GdbwireStringTest, erase/entire_string_instance)
+TEST_CASE_METHOD_N(GdbwireStringTest, erase/entire_string_instance)
 {
     REQUIRE(gdbwire_string_append_cstr(string, "hello") == 0);
     validate(string, 5, 128, "hello");
@@ -304,7 +304,7 @@ TEST_F(GdbwireStringTest, erase/entire_string_instance)
     validate(string, 0, 128, ""); 
 }
 
-TEST_F(GdbwireStringTest, erase/count_past_size)
+TEST_CASE_METHOD_N(GdbwireStringTest, erase/count_past_size)
 {
     // Setup string
     REQUIRE(gdbwire_string_append_cstr(string, "hello") == 0);
@@ -332,7 +332,7 @@ TEST_F(GdbwireStringTest, erase/count_past_size)
     validate(string, 4, 128, "hell"); 
 }
 
-TEST_F(GdbwireStringTest, erase/pos_past_size)
+TEST_CASE_METHOD_N(GdbwireStringTest, erase/pos_past_size)
 {
     // Setup string
     REQUIRE(gdbwire_string_append_cstr(string, "hello") == 0);
@@ -343,7 +343,7 @@ TEST_F(GdbwireStringTest, erase/pos_past_size)
     validate(string, 5, 128, "hello");
 }
 
-TEST_F(GdbwireStringTest, erase/standard)
+TEST_CASE_METHOD_N(GdbwireStringTest, erase/standard)
 {
     size_t pos, count;
 

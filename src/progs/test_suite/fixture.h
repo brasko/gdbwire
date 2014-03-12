@@ -34,9 +34,9 @@ class Fixture {
          *   GdbwireStringTest/append_cstr/null_value 
          *   GdbwireStringTest/append_cstr/null_instance 
          *
-         * When using the macro TEST_F below please note that the fixture
-         * name is always the first piece of the test name. So in the
-         * examples above that means GdbmiTest or GdbwireStringTest.
+         * When using the macro TEST_CASE_METHOD_N below please note that
+         * the fixture name is always the first piece of the test name. So
+         * in the examples above that means GdbmiTest or GdbwireStringTest.
          *
          * @return
          * The test name of the test currently running.
@@ -80,6 +80,7 @@ class Fixture {
 };
 
 // A convience macro for creating unit tests.
-#define TEST_F(Fixture, name) TEST_CASE_METHOD(Fixture, #Fixture "/" #name)
+#define TEST_CASE_METHOD_N(Fixture, name) \
+    TEST_CASE_METHOD(Fixture, #Fixture "/" #name)
 
 #endif /* __FIXTURE_H__ */

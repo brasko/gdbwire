@@ -75,7 +75,7 @@ namespace {
     };
 }
 
-TEST_F(GdbmiPtTest, basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, basic)
 {
     std::string input = sourceTestDir() + "/input.mi";
     gdbmi_output *output = parse(parser, input);
