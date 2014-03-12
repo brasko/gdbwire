@@ -30,13 +30,13 @@ namespace {
         gdbmi_output *m_output;
     };
 
-    struct GdbmiTest : public Fixture {
-        GdbmiTest() {
+    struct GdbmiPtTest : public Fixture {
+        GdbmiPtTest() {
             parser = gdbmi_parser_create(parserCallback.callbacks);
             REQUIRE(parser);
         }
         
-        ~GdbmiTest() {
+        ~GdbmiPtTest() {
             gdbmi_parser_destroy(parser);
         }
 
@@ -74,7 +74,7 @@ namespace {
     };
 }
 
-TEST_F(GdbmiTest, basic)
+TEST_F(GdbmiPtTest, basic)
 {
     std::string input = sourceTestDir() + "/input.mi";
     gdbmi_output *output = parse(parser, input);

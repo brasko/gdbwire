@@ -25,7 +25,7 @@ libgdbwire_la_CFLAGS= \
 test_suite_SOURCES = \
     src/progs/test_suite/containers/gdbwire_string.cpp \
     src/progs/test_suite/fixture.cpp \
-    src/progs/test_suite/gdbmi.cpp \
+    src/progs/test_suite/gdbmi/gdbmi_pt.cpp \
     src/progs/test_suite/main.cpp
 
 BUILT_SOURCES = gdbmi_grammar.c gdbmi_lexer.c
