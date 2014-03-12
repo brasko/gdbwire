@@ -6,6 +6,21 @@
 #include "gdbmi/gdbmi_pt_print.h"
 #include "gdbmi/gdbmi_parser.h"
 
+/**
+ * The GDB/MI parse tree unit tests.
+ *
+ * Unit testing a parse tree is a non trivial task. A parse tree can have
+ * many variations and it's often difficult to test them all in isolation.
+ *
+ * The goal of the following unit tests is to isolate testing as many
+ * combinations of GDB/MI parse trees as possible. Hoping to achieve 100%
+ * coverage on the gdbmi_grammar.y file.
+ *
+ * These unit tests will not be concerned with the semantics of the parse
+ * tree, but simply validating that all combinations of GDB/MI output
+ * commands can be parsed and turned into an appropriate parse tree.
+ */
+
 namespace {
     struct GdbmiParserCallback {
         GdbmiParserCallback() : m_output(0) {
@@ -86,8 +101,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, basic)
 }
 
 /**
- * Need a way to easily build up a data structure that can then be
- * compared to the mi parse tree. This approach is not ideal.
+ * A simple console parse tree.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, console/basic)
 {
