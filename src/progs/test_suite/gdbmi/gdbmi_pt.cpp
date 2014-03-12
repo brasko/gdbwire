@@ -33,9 +33,11 @@ namespace {
 
     struct GdbmiPtTest : public Fixture {
         GdbmiPtTest() {
-            miInput = sourceTestDir() + "/input.mi";
+            input = sourceTestDir() + "/input.mi";
             parser = gdbmi_parser_create(parserCallback.callbacks);
             REQUIRE(parser);
+            output = parse(parser, input);
+            REQUIRE(output);
         }
         
         ~GdbmiPtTest() {
@@ -72,16 +74,14 @@ namespace {
         }
 
         GdbmiParserCallback parserCallback;
-        std::string miInput;
+        std::string input;
         gdbmi_parser *parser;
+        gdbmi_output *output;
     };
 }
 
 TEST_CASE_METHOD_N(GdbmiPtTest, basic)
 {
-    gdbmi_output *output = parse(parser, miInput);
-    REQUIRE(output);
-
     //REQUIRE(print_gdbmi_output(output) == 0);
 }
 
@@ -91,9 +91,6 @@ TEST_CASE_METHOD_N(GdbmiPtTest, basic)
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, console/basic)
 {
-    gdbmi_output *output = parse(parser, miInput);
-    REQUIRE(output);
-
     REQUIRE(output->oob_record);
         struct gdbmi_oob_record *oob = output->oob_record;
         REQUIRE(oob->kind == GDBMI_STREAM);
