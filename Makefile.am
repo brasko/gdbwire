@@ -28,6 +28,8 @@ test_suite_SOURCES = \
     src/progs/test_suite/gdbmi.cpp \
     src/progs/test_suite/main.cpp
 
+BUILT_SOURCES = gdbmi_grammar.c gdbmi_lexer.c
+
 test_suite_CPPFLAGS = \
     -I@GDBWIRE_ABS_TOP_SRCDIR@/src/progs/test_suite \
     -I@GDBWIRE_ABS_TOP_SRCDIR@/src/lib
