@@ -33,6 +33,7 @@ namespace {
 
     struct GdbmiPtTest : public Fixture {
         GdbmiPtTest() {
+            miInput = sourceTestDir() + "/input.mi";
             parser = gdbmi_parser_create(parserCallback.callbacks);
             REQUIRE(parser);
         }
@@ -71,15 +72,38 @@ namespace {
         }
 
         GdbmiParserCallback parserCallback;
+        std::string miInput;
         gdbmi_parser *parser;
     };
 }
 
 TEST_CASE_METHOD_N(GdbmiPtTest, basic)
 {
-    std::string input = sourceTestDir() + "/input.mi";
-    gdbmi_output *output = parse(parser, input);
+    gdbmi_output *output = parse(parser, miInput);
     REQUIRE(output);
 
     //REQUIRE(print_gdbmi_output(output) == 0);
+}
+
+/**
+ * Need a way to easily build up a data structure that can then be
+ * compared to the mi parse tree. This approach is not ideal.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, console/basic)
+{
+    gdbmi_output *output = parse(parser, miInput);
+    REQUIRE(output);
+
+    REQUIRE(output->oob_record);
+        struct gdbmi_oob_record *oob = output->oob_record;
+        REQUIRE(oob->kind == GDBMI_STREAM);
+            struct gdbmi_stream_record *stream = oob->variant.stream_record;
+            REQUIRE(stream);
+            REQUIRE(stream->kind == GDBMI_CONSOLE);
+            std::string expected =
+                "\"GNU gdb (Ubuntu/Linaro) 7.4-2012.04\\n\"";
+            REQUIRE(expected == stream->cstring);
+        REQUIRE(!oob->next);
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
 }
