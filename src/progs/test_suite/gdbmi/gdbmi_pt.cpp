@@ -88,6 +88,27 @@ namespace {
             return parserCallback.m_output;
         }
 
+        /**
+         * A utility function for checking the values in a gdbmi_stream_record.
+         *
+         * If the values do not match the record, an assertion failure is made.
+         *
+         * @param record
+         * The gdbmi stream record to check the values of.
+         *
+         * @param kind
+         * The kind of record to check for.
+         *
+         * @param expected
+         * The expected cstring value to check for.
+         */
+        void CHECK_STREAM_RECORD(struct gdbmi_stream_record *record,
+            enum gdbmi_stream_record_kind kind, const std::string &expected) {
+            REQUIRE(record);
+            REQUIRE(record->kind == kind);
+            REQUIRE(expected == record->cstring);
+        }
+
         GdbmiParserCallback parserCallback;
         std::string input;
         gdbmi_parser *parser;
@@ -106,14 +127,13 @@ TEST_CASE_METHOD_N(GdbmiPtTest, basic)
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic)
 {
     std::string expected = "\"Hello World console output\"";
-    REQUIRE(output->oob_record);
-        struct gdbmi_oob_record *oob = output->oob_record;
-        REQUIRE(oob->kind == GDBMI_STREAM);
-            struct gdbmi_stream_record *stream = oob->variant.stream_record;
-            REQUIRE(stream);
-            REQUIRE(stream->kind == GDBMI_CONSOLE);
-            REQUIRE(expected == stream->cstring);
-        REQUIRE(!oob->next);
+    struct gdbmi_oob_record *oob = output->oob_record;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, expected);
+    REQUIRE(!oob->next);
+
     REQUIRE(!output->result_record);
     REQUIRE(!output->next);
 }
@@ -158,15 +178,13 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters)
         "\\\\350\\\\351\\\\352\\\\353\\\\354\\\\355\\\\356\\\\357"
         "\\\\360\\\\361\\\\362\\\\363\\\\364\\\\365\\\\366\\\\367"
         "\\\\370\\\\371\\\\372\\\\373\\\\374\\\\375\\\\376\\\\377\\\"\"";
+    struct gdbmi_oob_record *oob = output->oob_record;
 
-    REQUIRE(output->oob_record);
-        struct gdbmi_oob_record *oob = output->oob_record;
-        REQUIRE(oob->kind == GDBMI_STREAM);
-            struct gdbmi_stream_record *stream = oob->variant.stream_record;
-            REQUIRE(stream);
-            REQUIRE(stream->kind == GDBMI_CONSOLE);
-            REQUIRE(expected == stream->cstring);
-        REQUIRE(!oob->next);
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, expected);
+    REQUIRE(!oob->next);
+
     REQUIRE(!output->result_record);
     REQUIRE(!output->next);
 }
@@ -177,14 +195,13 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters)
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic)
 {
     std::string expected = "\"Hello World target output\"";
-    REQUIRE(output->oob_record);
-        struct gdbmi_oob_record *oob = output->oob_record;
-        REQUIRE(oob->kind == GDBMI_STREAM);
-            struct gdbmi_stream_record *stream = oob->variant.stream_record;
-            REQUIRE(stream);
-            REQUIRE(stream->kind == GDBMI_TARGET);
-            REQUIRE(expected == stream->cstring);
-        REQUIRE(!oob->next);
+    struct gdbmi_oob_record *oob = output->oob_record;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_TARGET, expected);
+    REQUIRE(!oob->next);
+
     REQUIRE(!output->result_record);
     REQUIRE(!output->next);
 }
@@ -195,14 +212,13 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic)
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic)
 {
     std::string expected = "\"Hello World log output\"";
-    REQUIRE(output->oob_record);
-        struct gdbmi_oob_record *oob = output->oob_record;
-        REQUIRE(oob->kind == GDBMI_STREAM);
-            struct gdbmi_stream_record *stream = oob->variant.stream_record;
-            REQUIRE(stream);
-            REQUIRE(stream->kind == GDBMI_LOG);
-            REQUIRE(expected == stream->cstring);
-        REQUIRE(!oob->next);
+    struct gdbmi_oob_record *oob = output->oob_record;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_LOG, expected);
+    REQUIRE(!oob->next);
+
     REQUIRE(!output->result_record);
     REQUIRE(!output->next);
 }
