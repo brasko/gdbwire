@@ -1,0 +1,8 @@
+~"console line 1"
+~"console line 2"
+@"target line 1"
+&"log line 1"
+@"target line 2"
+&"log line 2"
+~"console line 3"
+(gdb) 

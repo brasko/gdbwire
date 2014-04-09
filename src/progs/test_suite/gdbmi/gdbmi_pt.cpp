@@ -222,3 +222,57 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic)
     REQUIRE(!output->result_record);
     REQUIRE(!output->next);
 }
+
+/**
+ * A simple out of band record with multiple streams of different kinds.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic)
+{
+    std::string console1 = "\"console line 1\"";
+    std::string console2 = "\"console line 2\"";
+    std::string target1 = "\"target line 1\"";
+    std::string log1 = "\"log line 1\"";
+    std::string target2 = "\"target line 2\"";
+    std::string log2 = "\"log line 2\"";
+    std::string console3 = "\"console line 3\"";
+
+    struct gdbmi_oob_record *oob = output->oob_record;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, console1);
+    oob = oob->next;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, console2);
+    oob = oob->next;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_TARGET, target1);
+    oob = oob->next;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_LOG, log1);
+    oob = oob->next;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_TARGET, target2);
+    oob = oob->next;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_LOG, log2);
+    oob = oob->next;
+
+    REQUIRE(oob);
+    REQUIRE(oob->kind == GDBMI_STREAM);
+    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, console3);
+    REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
