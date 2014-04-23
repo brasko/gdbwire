@@ -80,12 +80,74 @@ namespace {
             REQUIRE(fd);
 
             while ((c = fgetc(fd)) != EOF) {
-                char data[2] = { c, 0 };
+                char data[2] = { (char)c, 0 };
                 REQUIRE(gdbmi_parser_push(parser, data) == GDBWIRE_OK);
             }
             fclose(fd);
 
             return parserCallback.m_output;
+        }
+
+        /**
+         * Checks an out-of-band record to ensure it's an async record.
+         *
+         * @param oob
+         * The out of band record to check.
+         *
+         * @return
+         * The async record found inside the async out-of-band record.
+         */
+        gdbmi_async_record *CHECK_OOB_RECORD_ASYNC(gdbmi_oob_record *oob) {
+            REQUIRE(oob);
+            REQUIRE(oob->kind == GDBMI_ASYNC);
+            REQUIRE(oob->variant.async_record);
+            return oob->variant.async_record;
+        }
+
+        /**
+         * Check the async record matches the corresponding parameters.
+         *
+         * @param async_record
+         * The async record to check.
+         *
+         * @param token
+         * The expected token value.
+         *
+         * @param kind
+         * The expected async record kind.
+         *
+         * @return
+         * The async output structure.
+         */
+        gdbmi_async_output *CHECK_ASYNC_RECORD(
+            gdbmi_async_record *async_record, gdbmi_token_t token,
+            gdbmi_async_record_kind kind) {
+            REQUIRE(async_record);
+            REQUIRE(async_record->token == token);
+            REQUIRE(async_record->kind == kind);
+            REQUIRE(async_record->async_output);
+
+            return async_record->async_output;
+        }
+
+        /**
+         * Check the async output matches the corresponding parameters.
+         *
+         * @param async_output
+         * The async record to check.
+         *
+         * @param kind
+         * The async class to compare to.
+         *
+         * @return
+         * The async output result structure.
+         */
+        gdbmi_result *CHECK_ASYNC_OUTPUT(gdbmi_async_output *async_output,
+            gdbmi_async_class kind) {
+            REQUIRE(async_output);
+            REQUIRE(async_output->async_class == kind);
+            REQUIRE(async_output->result);
+            return async_output->result;
         }
 
         /**
@@ -102,11 +164,86 @@ namespace {
          * @param expected
          * The expected cstring value to check for.
          */
-        void CHECK_STREAM_RECORD(struct gdbmi_stream_record *record,
-            enum gdbmi_stream_record_kind kind, const std::string &expected) {
+        void CHECK_STREAM_RECORD(gdbmi_stream_record *record,
+            gdbmi_stream_record_kind kind, const std::string &expected) {
             REQUIRE(record);
             REQUIRE(record->kind == kind);
             REQUIRE(expected == record->cstring);
+        }
+
+        /** 
+         * Check that the result variable has the expected value.
+         *
+         * If the values do not match, an assertion failure is made.
+         *
+         * @param result
+         * The gdbmi result to check the variable value of.
+         *
+         * @param value
+         * The expected variable value. If empty, the result's variable
+         * should be NULL.
+         */
+        void CHECK_RESULT_VARIABLE(gdbmi_result *result,
+            const std::string &value = "") {
+            REQUIRE(result);
+
+            if (value.empty()) {
+                REQUIRE(!result->variable);
+            } else {
+                REQUIRE(value == result->variable);
+            }
+        }
+
+        /**
+         * Check that the cstring result matches the corresponding parameters.
+         *
+         * If the values do not match the result, an assertion failure is made.
+         *
+         * @param result
+         * The gdbmi result to check the values of.
+         *
+         * @param variable
+         * The result variable name or empty string if none.
+         *
+         * @param expected
+         * The expected cstring value.
+         *
+         * @return
+         * Returns the next gdbmi_result pointer.
+         */
+        gdbmi_result *CHECK_RESULT_CSTRING(gdbmi_result *result,
+            const std::string &variable, const std::string &expected) {
+
+            CHECK_RESULT_VARIABLE(result, variable);
+
+            REQUIRE(result->kind == GDBMI_CSTRING);
+            REQUIRE(expected == result->variant.cstring);
+
+            return result->next;
+        }
+
+        /**
+         * Check the tuple result matches the corresponding parameters.
+         *
+         * If the values do not match the result, an assertion failure is made.
+         *
+         * @param result
+         * The gdbmi result to check the values of.
+         *
+         * @param variable
+         * The result variable name or empty string if none.
+         *
+         * @return
+         * Returns the next gdbmi_result pointer.
+         */
+        gdbmi_result *CHECK_RESULT_TUPLE(gdbmi_result *result,
+            const std::string &variable = "") {
+
+            CHECK_RESULT_VARIABLE(result, variable);
+
+            REQUIRE(result->kind == GDBMI_TUPLE);
+            REQUIRE(result->variant.result);
+            return result->variant.result;
         }
 
         GdbmiParserCallback parserCallback;
@@ -275,4 +412,46 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic)
 
     REQUIRE(!output->result_record);
     REQUIRE(!output->next);
+}
+
+/**
+ * A simple status output parse tree.
+ *
+ * The MI status output was actually hard to make GDB produce.
+ * The help I got on the mailing list that worked for me at the time of
+ * this writing is,
+ *   1. Build hello-world 'main' test program
+ *   2. Start gdbserver as: gdbserver :1234 ./main
+ *   3. Start gdb as: gdb -i mi ./main
+ *   4. Within gdb:
+ *   (gdb) -target-select remote :1234
+ *   (gdb) -target-download
+ *   # Bunch of +download lines
+ *   # Single ^done line.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async_record;
+    gdbmi_async_output *async_output;
+    gdbmi_result *result;
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+
+    oob = output->oob_record;
+    async_record = CHECK_OOB_RECORD_ASYNC(oob);
+    REQUIRE(!oob->next);
+
+    async_output = CHECK_ASYNC_RECORD(async_record, -1, GDBMI_STATUS);
+
+    result = CHECK_ASYNC_OUTPUT(async_output, GDBMI_ASYNC_DOWNLOAD);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_TUPLE(result);
+    result = CHECK_RESULT_CSTRING(result, "section", "\".interp\"");
+    result = CHECK_RESULT_CSTRING(result, "section-size", "\"28\"");
+    result = CHECK_RESULT_CSTRING(result, "total-size", "\"2466\"");
+
+    REQUIRE(!result);
 }

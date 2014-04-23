@@ -71,9 +71,8 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
   struct gdbmi_stream_record *u_stream_record;
   int u_async_class;
   char *u_variable;
-  struct gdbmi_value *u_value;
-  struct gdbmi_tuple *u_tuple;
-  struct gdbmi_list *u_list;
+  struct gdbmi_result *u_tuple;
+  struct gdbmi_result *u_list;
   int u_stream_record_kind;
 }
 
@@ -84,6 +83,7 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
 %type <u_result_record> result_record
 %type <u_result_class> result_class
 %type <u_async_record_kind> async_record_class
+%type <u_variable> opt_variable
 %type <u_result> result_list
 %type <u_result> result
 %type <u_token> opt_token
@@ -93,8 +93,6 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
 %type <u_stream_record> stream_record
 %type <u_async_class> async_class
 %type <u_variable> variable
-%type <u_value> value
-%type <u_value> value_list
 %type <u_tuple> tuple
 %type <u_list> list
 %type <u_stream_record_kind> stream_record_class
@@ -170,7 +168,7 @@ async_output: async_class result_list {
   $$ = gdbmi_async_output_alloc();
   $$->async_class = $1;
   $$->result = $2;
-}
+};
 
 async_record_class: MULT_OP {
   $$ = GDBMI_EXEC;
@@ -200,11 +198,22 @@ result_class: STRING_LITERAL {
 };
 
 async_class: STRING_LITERAL {
-  if (strcmp ("stopped", gdbmi_text) != 0)
-    gdbmi_error (gdbmi_parser,  "Syntax error, expected 'stopped'" );
-
-  $$ = GDBMI_STOPPED;
+  if (strcmp("stopped", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_STOPPED;
+  } else if (strcmp("download", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_DOWNLOAD;
+  } else {
+      $$ = GDBMI_ASYNC_UNSUPPORTED;
+  }
 };
+
+opt_variable: {
+    $$ = 0;
+}
+
+opt_variable: variable EQUAL_SIGN {
+    $$ = $1;
+}
 
 result_list: {
   $$ = NULL;
@@ -214,40 +223,29 @@ result_list: result_list COMMA result {
   $$ = append_gdbmi_result ($1, $3);
 };
 
-result: variable EQUAL_SIGN value {
+result: opt_variable CSTRING {
   $$ = gdbmi_result_alloc();
   $$->variable = $1;
-  $$->value = $3;
+  $$->kind = GDBMI_CSTRING;
+  $$->variant.cstring = strdup(gdbmi_text); 
+};
+
+result: opt_variable tuple {
+  $$ = gdbmi_result_alloc();
+  $$->variable = $1;
+  $$->kind = GDBMI_TUPLE;
+  $$->variant.result = $2;
+};
+
+result: opt_variable list {
+  $$ = gdbmi_result_alloc();
+  $$->variable = $1;
+  $$->kind = GDBMI_LIST;
+  $$->variant.result = $2;
 };
 
 variable: STRING_LITERAL {
   $$ = strdup (gdbmi_text);
-};
-
-value_list: {
-  $$ = NULL;
-};
-
-value_list: value_list COMMA value {
-  $$ = append_gdbmi_value ($1, $3); 
-};
-
-value: CSTRING {
-  $$ = gdbmi_value_alloc();
-  $$->kind = GDBMI_CSTRING;
-  $$->variant.cstring = strdup (gdbmi_text); 
-};
-
-value: tuple {
-  $$ = gdbmi_value_alloc();
-  $$->kind = GDBMI_TUPLE;
-  $$->variant.tuple = $1;
-};
-
-value: list {
-  $$ = gdbmi_value_alloc();
-  $$->kind = GDBMI_LIST;
-  $$->variant.list = $1;
 };
 
 tuple: OPEN_BRACE CLOSED_BRACE {
@@ -255,24 +253,15 @@ tuple: OPEN_BRACE CLOSED_BRACE {
 };
 
 tuple: OPEN_BRACE result result_list CLOSED_BRACE {
-  $$ = gdbmi_tuple_alloc();
-  $$->result = append_gdbmi_result($2, $3);
+  $$ = append_gdbmi_result($2, $3);
 };
 
 list: OPEN_BRACKET CLOSED_BRACKET {
   $$ = NULL;
 };
 
-list: OPEN_BRACKET value value_list CLOSED_BRACKET {
-  $$ = gdbmi_list_alloc();
-  $$->kind = GDBMI_VALUE;
-  $$->variant.value = append_gdbmi_value($2, $3); 
-};
-
 list: OPEN_BRACKET result result_list CLOSED_BRACKET {
-  $$ = gdbmi_list_alloc();
-  $$->kind = GDBMI_RESULT;
-  $$->variant.result = append_gdbmi_result($2, $3);
+  $$ = append_gdbmi_result($2, $3);
 };
 
 stream_record: stream_record_class CSTRING {

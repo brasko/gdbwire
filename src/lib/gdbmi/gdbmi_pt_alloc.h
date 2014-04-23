@@ -33,18 +33,6 @@ void gdbmi_async_record_free(struct gdbmi_async_record *param);
 struct gdbmi_async_output *gdbmi_async_output_alloc(void);
 void gdbmi_async_output_free(struct gdbmi_async_output *param);
 
-/* struct gdbmi_value */
-struct gdbmi_value *gdbmi_value_alloc(void);
-void gdbmi_value_free(struct gdbmi_value *param);
-
-/* struct gdbmi_value */
-struct gdbmi_tuple *gdbmi_tuple_alloc(void);
-void gdbmi_tuple_free(struct gdbmi_tuple *param);
-
-/* struct gdbmi_list */
-struct gdbmi_list *gdbmi_list_alloc(void);
-void gdbmi_list_free(struct gdbmi_list *param);
-
 /* struct gdbmi_stream_record */
 struct gdbmi_stream_record *gdbmi_stream_record_alloc(void);
 void gdbmi_stream_record_free(struct gdbmi_stream_record *param);

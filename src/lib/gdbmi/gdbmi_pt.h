@@ -145,6 +145,8 @@ enum gdbmi_async_record_kind {
      *
      * Contains on-going status information about the progress of a slow
      * operation. It can be discarded.
+     *
+     * This output is prepended by the + character.
      */
     GDBMI_STATUS,
 
@@ -153,6 +155,8 @@ enum gdbmi_async_record_kind {
      *
      * Contains asynchronous state change regarding the target:
      *  (stopped, started, disappeared).
+     *
+     * This output is prepended by the * character.
      */
     GDBMI_EXEC,
 
@@ -161,6 +165,8 @@ enum gdbmi_async_record_kind {
      *
      * Contains supplementary information that the client should handle 
      * (e.g., a new breakpoint information).
+     *
+     * This output is prepended by the = character.
      */
     GDBMI_NOTIFY
 };
@@ -200,11 +206,25 @@ enum gdbmi_stream_record_kind {
 /**
  * The GDB/MI asyncronous class.
  *
- * TODO: Describe these more in general.
+ * 
  */
 enum gdbmi_async_class {
+    /**
+     * The target has stopped.
+     *
+     * This occurs if the async record is GDBMI_EXEC.
+     */
+    GDBMI_ASYNC_STOPPED,
 
-    GDBMI_STOPPED
+    /**
+     * Loading the executable onto the remote target.
+     *
+     * This occurs if the async record is GDBMI_STATUS.
+     */
+    GDBMI_ASYNC_DOWNLOAD,
+
+    /// An unsupported async class
+    GDBMI_ASYNC_UNSUPPORTED
 };
 
 /**
@@ -245,7 +265,7 @@ struct gdbmi_async_record {
  * This contains the output for the asynchronous record. 
  */
 struct gdbmi_async_output {
-    /** The asynchronous output's class */
+    /** The asynchronous output class */
     enum gdbmi_async_class async_class;
 
     /**
@@ -256,6 +276,17 @@ struct gdbmi_async_output {
     struct gdbmi_result *result;
 };
 
+/** The GDB/MI result kind */
+enum gdbmi_result_kind {
+    /** The result is a cstring */
+    GDBMI_CSTRING,
+    /** The result is a tuple */
+    GDBMI_TUPLE,
+    /** The result is a list */
+    GDBMI_LIST
+};
+
+
 /**
  * A GDB/MI result list.
  *
@@ -264,85 +295,38 @@ struct gdbmi_async_output {
  *
  * It is basically a list of key/value pairs, where the key is a
  * variable name and the value expands to a string, a tuple of results or
- * a list of values or results.
+ * a list of results.
  *
  * This can be thought of as a custom json object.
  */
 struct gdbmi_result {
-    /** The key being described by the value. */
+    /** The kind of result this represents. */
+    enum gdbmi_result_kind kind;
+
+    /** The key being described by the result. */
     char *variable;
-    /** The value describing the key */
-    struct gdbmi_value *value;
-    /** The next result or NULL if none */
-    struct gdbmi_result *next;
-};
-
-/** The GDB/MI value kind */
-enum gdbmi_value_kind {
-    /** The value is a cstring */
-    GDBMI_CSTRING,
-    /** The value is a tuple */
-    GDBMI_TUPLE,
-    /** The value is a list */
-    GDBMI_LIST
-};
-
-/**
- * A GDB/MI value list.
- */
-struct gdbmi_value {
-    /** The kind of value this represents. */
-    enum gdbmi_value_kind kind;
 
     union {
         /** When kind is GDBMI_CSTRING */
         char *cstring;
-        /** When kind is GDBMI_TUPLE */
-        struct gdbmi_tuple *tuple;
-        /** When kind is GDBMI_LIST */
-        struct gdbmi_list *list;
-    } variant;
-
-    /** The next value or NULL if none. */
-    struct gdbmi_value *next;
-};
-
-/**
- * A GDB/MI tuple.
- */
-struct gdbmi_tuple {
-    /**
-     * An optional list of results for this tuple.
-     *
-     * Will be NULL if there is no results.
-     */
-    struct gdbmi_result *result;
-};
-
-/** The GDB/MI list kind */
-enum gdbmi_list_kind {
-    /** The list is a list of values */
-    GDBMI_VALUE,
-    /** The list is a list of results */
-    GDBMI_RESULT
-};
-
-/**
- * A GDB/MI list.
- */
-struct gdbmi_list {
-    /** The kind of list this represents. */
-    enum gdbmi_list_kind kind;
-
-    union {
-        /** When kind is GDBMI_VALUE */
-        struct gdbmi_value *value;
-        /** When kind is GDBMI_RESULT */
+        /**
+         * When kind is GDBMI_TUPLE or GDBMI_LIST.
+         *
+         * If kind is GDBMI_TUPLE, each result in the tuple should have a
+         * valid key according to the GDB/MI specification. That is, for
+         * each result, result->variable should not be NULL.
+         *
+         * If kind is GDBMI_LIST, the GDB/MI specification allows results in
+         * this list to not have keys. That is, for each result,
+         * result->variable may be NULL.
+         *
+         * Will be NULL if the tuple or list is empty.
+         */
         struct gdbmi_result *result;
     } variant;
 
-    /** The next list item or NULL if none. */
-    struct gdbmi_list *next;
+    /** The next result or NULL if none */
+    struct gdbmi_result *next;
 };
 
 /**
@@ -368,12 +352,6 @@ struct gdbmi_result *append_gdbmi_result(struct gdbmi_result *list,
 
 struct gdbmi_oob_record *append_gdbmi_oob_record(struct gdbmi_oob_record *list,
         struct gdbmi_oob_record *item);
-
-struct gdbmi_value *append_gdbmi_value(struct gdbmi_value *list,
-        struct gdbmi_value *item);
-
-struct gdbmi_list *append_gdbmi_list(struct gdbmi_list *list,
-        struct gdbmi_list *item);
 
 #ifdef __cplusplus 
 }

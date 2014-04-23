@@ -51,7 +51,7 @@ gdbmi_result_record_free(struct gdbmi_result_record *param)
 struct gdbmi_result *
 gdbmi_result_alloc(void)
 {
-    return calloc(1, sizeof (struct gdbmi_result_record));
+    return calloc(1, sizeof (struct gdbmi_result));
 }
 
 void
@@ -63,8 +63,19 @@ gdbmi_result_free(struct gdbmi_result *param)
             param->variable = NULL;
         }
 
-        gdbmi_value_free(param->value);
-        param->value = NULL;
+        switch (param->kind) {
+            case GDBMI_CSTRING:
+                if (param->variant.cstring) {
+                    free(param->variant.cstring);
+                    param->variant.cstring = NULL;
+                }
+                break;
+            case GDBMI_TUPLE:
+            case GDBMI_LIST:
+                gdbmi_result_free(param->variant.result);
+                param->variant.result = NULL;
+                break;
+        }
 
         gdbmi_result_free(param->next);
         param->next = NULL;
@@ -136,91 +147,6 @@ gdbmi_async_output_free(struct gdbmi_async_output *param)
     if (param) {
         gdbmi_result_free(param->result);
         param->result = NULL;
-
-        free(param);
-        param = NULL;
-    }
-}
-
-/* struct gdbmi_value */
-struct gdbmi_value *
-gdbmi_value_alloc(void)
-{
-    return calloc(1, sizeof (struct gdbmi_value));
-}
-
-void
-gdbmi_value_free(struct gdbmi_value *param)
-{
-    if (param) {
-        switch (param->kind) {
-            case GDBMI_CSTRING:
-                if (param->variant.cstring) {
-                    free(param->variant.cstring);
-                    param->variant.cstring = NULL;
-                }
-                break;
-            case GDBMI_TUPLE:
-                gdbmi_tuple_free(param->variant.tuple);
-                param->variant.tuple = NULL;
-                break;
-            case GDBMI_LIST:
-                gdbmi_list_free(param->variant.list);
-                param->variant.list = NULL;
-                break;
-        }
-
-        gdbmi_value_free(param->next);
-        param->next = NULL;
-
-        free(param);
-        param = NULL;
-    }
-}
-
-/* struct gdbmi_value */
-struct gdbmi_tuple *
-gdbmi_tuple_alloc(void)
-{
-    return calloc(1, sizeof (struct gdbmi_tuple));
-}
-
-void
-gdbmi_tuple_free(struct gdbmi_tuple *param)
-{
-    if (param) {
-        gdbmi_result_free(param->result);
-        param->result = NULL;
-
-        free(param);
-        param = NULL;
-    }
-}
-
-/* struct gdbmi_list */
-struct gdbmi_list *
-gdbmi_list_alloc(void)
-{
-    return calloc(1, sizeof (struct gdbmi_list));
-}
-
-void
-gdbmi_list_free(struct gdbmi_list *param)
-{
-    if (param) {
-        switch (param->kind) {
-            case GDBMI_VALUE:
-                gdbmi_value_free(param->variant.value);
-                param->variant.value = NULL;
-                break;
-            case GDBMI_RESULT:
-                gdbmi_result_free(param->variant.result);
-                param->variant.result = NULL;
-                break;
-        }
-
-        gdbmi_list_free(param->next);
-        param->next = NULL;
 
         free(param);
         param = NULL;

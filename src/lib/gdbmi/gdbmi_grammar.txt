@@ -14,7 +14,7 @@ notify-async-output -> [token] "=" async-output
 
 async-output        -> async-class ("," result)* nl
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
-async-class         -> "stopped"
+async-class         -> "stopped" | "download"
 result              -> variable "=" value
 variable            -> string
 value               -> const | tuple | list
@@ -105,21 +105,80 @@ sytax above to the LR(1) grammar I provide to bison.
     stream-record       -> stream-record-kind c-string
     stream-record-kind  -> "~" | "@" | "&"
 
+Extensions to GDB/MI
+--------------------
+
 Finally, gdbwire must be able to receive many output commands during
 a single session. So the grammar supports accepting an output list.
 
-Please note that the oob-record-list rule,
-  oob-record-list -> oob-record-list oob-record nl
-and the opt-result-record rule,
-  opt-result-record   -> result-record nl
-have a newline at the end of them even though it is not in the GDB syntax.
+GDB/MI Bug Fixes
+----------------
 
-On the contrary, the syntax has,
-    async-output        -> async-class ("," result)* nl
-but there is no nl after the async output.
+1) The GDB/MI newline bug
 
-These are most likely errors in the GDB syntax.
+  It appears that the GDB/MI specification incorrectly states in the grammar
+  where the newlines are placed. This documentation shows how I've changed the
+  GDB/MI grammar to handle the actual newlines put out by GDB/MI.
 
+  Please note that the oob-record-list rule,
+    oob-record-list -> oob-record-list oob-record nl
+  and the opt-result-record rule,
+    opt-result-record   -> result-record nl
+  have a newline at the end of them even though it is not in the GDB syntax.
+
+  On the contrary, the syntax has,
+      async-output        -> async-class ("," result)* nl
+  but there is no nl after the async output.
+
+2) The GDB/MI result versus value bug
+
+  You can think of a result as a key/value pair. Where the key component is
+  a string name, and the value component is a c-string, tuple or list.
+
+  The GDB/MI specification attempts to clearly state where value's will be
+  used and where result's will be used. The reality is, it does this wrong.
+  There are places where it specifies a result will be, but a value is found.
+  A case I found like this is with async-output records which contain values
+  instead of results like specified.
+    -target-download
+    ...
+    +download,{section=".interp",section-size="28",total-size="2466"}
+              ^ This should start a result, not a value.
+
+  The solution to this problem is to relax the parser. To do this, I drop
+  the value concept. The result now represents the c-string, tuple or list
+  and it contains an optional key.
+
+  This fix resolves the buggy GDB/MI result/value specification at the
+  parser level and pushes the problem to the semantic layer. That is,
+  certain front ends may expect or not expect the key to be set at certain
+  locations in the parser tree.
+
+  To implement the above modifications to the GDB/MI parser specification,
+  the following changes are made to the grammar.
+
+  The value-list and value rule are removed. Removing these,
+    value-list          -> value-list "," value | epsilon
+    value               -> c-string | tuple | list
+
+  The value-list rule was only used in the list rule. The list rule is
+  changed to use result-list instead.
+  From
+    list                -> "[]" |
+                       "[" value value-list "]" | "[" result result-list "]"
+  To
+    list                -> "[]" | "[" result result-list "]"
+
+  The value rule was only used in the result rule. So result was changed
+  From
+    result              -> variable "=" value
+    value               -> c-string | tuple | list
+  To
+    opt_variable        -> variable "=" | epsilon
+    result              -> opt_variable c-string
+    result              -> opt_variable tuple
+    result              -> opt_variable list
+  
 LR(1) Grammar
 -------------
 
@@ -134,14 +193,14 @@ async-record-kind   -> "*" | "+" | "="
 async-output        -> async-class result-list
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
 async-class         -> "stopped"
+opt_variable        -> variable "=" | epsilon
 result-list         -> result-list "," result | epsilon
-result              -> variable "=" value
+result              -> opt_variable c-string
+result              -> opt_variable tuple
+result              -> opt_variable list
 variable            -> string
-value-list          -> value-list "," value | epsilon
-value               -> c-string | tuple | list
 tuple               -> "{}" | "{" result result-list "}"
-list                -> "[]" |
-                       "[" value value-list "]" | "[" result result-list "]"
+list                -> "[]" | "[" result result-list "]"
 stream-record       -> stream-record-kind c-string
 stream-record-kind  -> "~" | "@" | "&"
 nl                  -> CR | CR LF

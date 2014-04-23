@@ -85,11 +85,31 @@ int print_gdbmi_result(struct gdbmi_result *param)
     int result;
 
     while (cur) {
-        printf("variable->(%s)\n", cur->variable);
+        if (cur->variable) {
+            printf("variable->(%s)\n", cur->variable);
+        } else {
+            printf("variable->(NULL)\n");
+        }
 
-        result = print_gdbmi_value(cur->value);
+        result = print_gdbmi_result_kind(cur->kind);
         if (result == -1)
             return -1;
+
+        switch (cur->kind) {
+            case GDBMI_CSTRING:
+                printf("cstring->(%s)\n", cur->variant.cstring);
+                break;
+            case GDBMI_TUPLE:
+                result = print_gdbmi_result(cur->variant.result);
+                break;
+            case GDBMI_LIST:
+                result = print_gdbmi_result(cur->variant.result);
+                break;
+        }
+
+        if (result == -1) {
+            return -1;
+        }
 
         cur = cur->next;
     }
@@ -223,17 +243,21 @@ int print_gdbmi_async_output(struct gdbmi_async_output *param)
 int print_gdbmi_async_class(enum gdbmi_async_class param)
 {
     switch (param) {
-        case GDBMI_STOPPED:
-            printf("GDBMI_STOPPED\n");
+        case GDBMI_ASYNC_STOPPED:
+            printf("GDBMI_ASYNC_STOPPED\n");
             break;
-        default:
-            return -1;
+        case GDBMI_ASYNC_DOWNLOAD:
+            printf("GDBMI_ASYNC_DOWNLOAD\n");
+            break;
+        case GDBMI_ASYNC_UNSUPPORTED:
+            printf("GDBMI_ASYNC_UNSUPPORTED\n");
+            break;
     };
 
     return 0;
 }
 
-int print_gdbmi_value_kind(enum gdbmi_value_kind param)
+int print_gdbmi_result_kind(enum gdbmi_result_kind param)
 {
     switch (param) {
         case GDBMI_CSTRING:
@@ -245,94 +269,7 @@ int print_gdbmi_value_kind(enum gdbmi_value_kind param)
         case GDBMI_LIST:
             printf("GDBMI_LIST\n");
             break;
-        default:
-            return -1;
     };
-
-    return 0;
-}
-
-int print_gdbmi_value(struct gdbmi_value *param)
-{
-    struct gdbmi_value *cur = param;
-    int result;
-
-    while (cur) {
-        result = print_gdbmi_value_kind(cur->kind);
-        if (result == -1)
-            return -1;
-
-        if (cur->kind == GDBMI_CSTRING) {
-            printf("cstring->(%s)\n", cur->variant.cstring);
-        } else if (cur->kind == GDBMI_TUPLE) {
-            result = print_gdbmi_tuple(cur->variant.tuple);
-            if (result == -1)
-                return -1;
-        } else if (cur->kind == GDBMI_LIST) {
-            result = print_gdbmi_list(cur->variant.list);
-            if (result == -1)
-                return -1;
-        } else
-            return -1;
-
-        cur = cur->next;
-    }
-
-    return 0;
-}
-
-/* Creating, Destroying and printing tuple  */
-int print_gdbmi_tuple(struct gdbmi_tuple *param)
-{
-    int result;
-
-    result = print_gdbmi_result(param->result);
-    if (result == -1)
-        return -1;
-
-    return 0;
-}
-
-int print_gdbmi_list_kind(enum gdbmi_list_kind param)
-{
-    switch (param) {
-        case GDBMI_VALUE:
-            printf("GDBMI_VALUE\n");
-            break;
-        case GDBMI_RESULT:
-            printf("GDBMI_RESULT\n");
-            break;
-        default:
-            return -1;
-    };
-
-    return 0;
-}
-
-
-int print_gdbmi_list(struct gdbmi_list *param)
-{
-    struct gdbmi_list *cur = param;
-    int result;
-
-    while (cur) {
-        result = print_gdbmi_list_kind(cur->kind);
-        if (result == -1)
-            return -1;
-
-        if (cur->kind == GDBMI_VALUE) {
-            result = print_gdbmi_value(cur->variant.value);
-            if (result == -1)
-                return -1;
-        } else if (cur->kind == GDBMI_RESULT) {
-            result = print_gdbmi_result(cur->variant.result);
-            if (result == -1)
-                return -1;
-        } else
-            return -1;
-
-        cur = cur->next;
-    }
 
     return 0;
 }
