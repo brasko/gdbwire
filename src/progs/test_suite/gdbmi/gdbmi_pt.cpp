@@ -455,3 +455,29 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic)
 
     REQUIRE(!result);
 }
+
+/**
+ * A simple async exec output tree.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async_record;
+    gdbmi_async_output *async_output;
+    gdbmi_result *result;
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+
+    oob = output->oob_record;
+    async_record = CHECK_OOB_RECORD_ASYNC(oob);
+    REQUIRE(!oob->next);
+
+    async_output = CHECK_ASYNC_RECORD(async_record, -1, GDBMI_EXEC);
+
+    result = CHECK_ASYNC_OUTPUT(async_output, GDBMI_ASYNC_RUNNING);
+
+    result = CHECK_RESULT_CSTRING(result, "thread-id", "\"all\"");
+
+    REQUIRE(!result);
+}

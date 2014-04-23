@@ -14,7 +14,7 @@ notify-async-output -> [token] "=" async-output
 
 async-output        -> async-class ("," result)* nl
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
-async-class         -> "stopped" | "download"
+async-class         -> "stopped" | "running" | "download"
 result              -> variable "=" value
 variable            -> string
 value               -> const | tuple | list
@@ -192,7 +192,7 @@ async-record        -> opt-token async-record-kind async-output
 async-record-kind   -> "*" | "+" | "="
 async-output        -> async-class result-list
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
-async-class         -> "stopped"
+async-class         -> "stopped" | "running" | "download"
 opt_variable        -> variable "=" | epsilon
 result-list         -> result-list "," result | epsilon
 result              -> opt_variable c-string

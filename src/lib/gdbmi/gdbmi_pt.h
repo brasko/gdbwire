@@ -217,6 +217,13 @@ enum gdbmi_async_class {
     GDBMI_ASYNC_STOPPED,
 
     /**
+     * The target is now running.
+     *
+     * This occurs if the async record is GDBMI_EXEC.
+     */
+    GDBMI_ASYNC_RUNNING,
+
+    /**
      * Loading the executable onto the remote target.
      *
      * This occurs if the async record is GDBMI_STATUS.
