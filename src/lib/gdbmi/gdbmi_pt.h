@@ -210,6 +210,13 @@ enum gdbmi_stream_record_kind {
  */
 enum gdbmi_async_class {
     /**
+     * Loading the executable onto the remote target.
+     *
+     * This occurs if the async record is GDBMI_STATUS.
+     */
+    GDBMI_ASYNC_DOWNLOAD,
+
+    /**
      * The target has stopped.
      *
      * This occurs if the async record is GDBMI_EXEC.
@@ -224,11 +231,12 @@ enum gdbmi_async_class {
     GDBMI_ASYNC_RUNNING,
 
     /**
-     * Loading the executable onto the remote target.
+     * Reports that a breakpoint was created.
+     * Only user-visible breakpoints are reported to the MI user. 
      *
-     * This occurs if the async record is GDBMI_STATUS.
+     * This occurs if the async record is GDBMI_NOTIFY.
      */
-    GDBMI_ASYNC_DOWNLOAD,
+    GDBMI_ASYNC_BREAKPOINT_CREATED,
 
     /// An unsupported async class
     GDBMI_ASYNC_UNSUPPORTED

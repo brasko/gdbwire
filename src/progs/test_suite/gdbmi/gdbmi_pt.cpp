@@ -481,3 +481,33 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic)
 
     REQUIRE(!result);
 }
+
+/**
+ * A simple async notify output tree.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async_record;
+    gdbmi_async_output *async_output;
+    gdbmi_result *result;
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+
+    oob = output->oob_record;
+    async_record = CHECK_OOB_RECORD_ASYNC(oob);
+    REQUIRE(!oob->next);
+
+    async_output = CHECK_ASYNC_RECORD(async_record, -1, GDBMI_NOTIFY);
+
+    result = CHECK_ASYNC_OUTPUT(async_output, GDBMI_ASYNC_BREAKPOINT_CREATED);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_TUPLE(result, "bkpt");
+    result = CHECK_RESULT_CSTRING(result, "number", "\"2\"");
+    result = CHECK_RESULT_CSTRING(result, "type", "\"breakpoint\"");
+    result = CHECK_RESULT_CSTRING(result, "line", "\"9\"");
+
+    REQUIRE(!result);
+}

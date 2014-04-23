@@ -243,14 +243,17 @@ int print_gdbmi_async_output(struct gdbmi_async_output *param)
 int print_gdbmi_async_class(enum gdbmi_async_class param)
 {
     switch (param) {
+        case GDBMI_ASYNC_DOWNLOAD:
+            printf("GDBMI_ASYNC_DOWNLOAD\n");
+            break;
         case GDBMI_ASYNC_STOPPED:
             printf("GDBMI_ASYNC_STOPPED\n");
             break;
         case GDBMI_ASYNC_RUNNING:
             printf("GDBMI_ASYNC_RUNNING\n");
             break;
-        case GDBMI_ASYNC_DOWNLOAD:
-            printf("GDBMI_ASYNC_DOWNLOAD\n");
+        case GDBMI_ASYNC_BREAKPOINT_CREATED:
+            printf("GDBMI_ASYNC_BREAKPOINT_CREATED\n");
             break;
         case GDBMI_ASYNC_UNSUPPORTED:
             printf("GDBMI_ASYNC_UNSUPPORTED\n");

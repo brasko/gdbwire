@@ -198,12 +198,14 @@ result_class: STRING_LITERAL {
 };
 
 async_class: STRING_LITERAL {
-  if (strcmp("stopped", gdbmi_text) == 0) {
+  if (strcmp("download", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_DOWNLOAD;
+  } else if (strcmp("stopped", gdbmi_text) == 0) {
       $$ = GDBMI_ASYNC_STOPPED;
   } else if (strcmp("running", gdbmi_text) == 0) {
       $$ = GDBMI_ASYNC_RUNNING;
-  } else if (strcmp("download", gdbmi_text) == 0) {
-      $$ = GDBMI_ASYNC_DOWNLOAD;
+  } else if (strcmp("breakpoint-created", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_BREAKPOINT_CREATED;
   } else {
       $$ = GDBMI_ASYNC_UNSUPPORTED;
   }
