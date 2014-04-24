@@ -89,6 +89,22 @@ namespace {
         }
 
         /**
+         * Checks an out-of-band record to ensure it's an stream record.
+         *
+         * @param oob
+         * The out of band record to check.
+         *
+         * @return
+         * The stream record found inside the async out-of-band record.
+         */
+        gdbmi_stream_record *CHECK_OOB_RECORD_STREAM(gdbmi_oob_record *oob) {
+            REQUIRE(oob);
+            REQUIRE(oob->kind == GDBMI_STREAM);
+            REQUIRE(oob->variant.stream_record);
+            return oob->variant.stream_record;
+        }
+
+        /**
          * Checks an out-of-band record to ensure it's an async record.
          *
          * @param oob
@@ -102,6 +118,27 @@ namespace {
             REQUIRE(oob->kind == GDBMI_ASYNC);
             REQUIRE(oob->variant.async_record);
             return oob->variant.async_record;
+        }
+
+        /**
+         * A utility function for checking the values in a gdbmi_stream_record.
+         *
+         * If the values do not match the record, an assertion failure is made.
+         *
+         * @param record
+         * The gdbmi stream record to check the values of.
+         *
+         * @param kind
+         * The kind of record to check for.
+         *
+         * @param expected
+         * The expected cstring value to check for.
+         */
+        void CHECK_STREAM_RECORD(gdbmi_stream_record *record,
+            gdbmi_stream_record_kind kind, const std::string &expected) {
+            REQUIRE(record);
+            REQUIRE(record->kind == kind);
+            REQUIRE(expected == record->cstring);
         }
 
         /**
@@ -148,27 +185,6 @@ namespace {
             REQUIRE(async_output->async_class == kind);
             REQUIRE(async_output->result);
             return async_output->result;
-        }
-
-        /**
-         * A utility function for checking the values in a gdbmi_stream_record.
-         *
-         * If the values do not match the record, an assertion failure is made.
-         *
-         * @param record
-         * The gdbmi stream record to check the values of.
-         *
-         * @param kind
-         * The kind of record to check for.
-         *
-         * @param expected
-         * The expected cstring value to check for.
-         */
-        void CHECK_STREAM_RECORD(gdbmi_stream_record *record,
-            gdbmi_stream_record_kind kind, const std::string &expected) {
-            REQUIRE(record);
-            REQUIRE(record->kind == kind);
-            REQUIRE(expected == record->cstring);
         }
 
         /** 
@@ -265,10 +281,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic)
 {
     std::string expected = "\"Hello World console output\"";
     struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_stream_record *stream;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, expected);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
+
     REQUIRE(!oob->next);
 
     REQUIRE(!output->result_record);
@@ -316,10 +333,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters)
         "\\\\360\\\\361\\\\362\\\\363\\\\364\\\\365\\\\366\\\\367"
         "\\\\370\\\\371\\\\372\\\\373\\\\374\\\\375\\\\376\\\\377\\\"\"";
     struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_stream_record *stream;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, expected);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
+
     REQUIRE(!oob->next);
 
     REQUIRE(!output->result_record);
@@ -333,10 +351,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic)
 {
     std::string expected = "\"Hello World target output\"";
     struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_stream_record *stream;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_TARGET, expected);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_TARGET, expected);
+
     REQUIRE(!oob->next);
 
     REQUIRE(!output->result_record);
@@ -350,10 +369,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic)
 {
     std::string expected = "\"Hello World log output\"";
     struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_stream_record *stream;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_LOG, expected);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_LOG, expected);
     REQUIRE(!oob->next);
 
     REQUIRE(!output->result_record);
@@ -377,40 +396,34 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic)
     std::string console3 = "\"console line 3\"";
 
     struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_stream_record *stream;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, console1);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, console1);
     oob = oob->next;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, console2);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, console2);
     oob = oob->next;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_TARGET, target1);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_TARGET, target1);
     oob = oob->next;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_LOG, log1);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_LOG, log1);
     oob = oob->next;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_TARGET, target2);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_TARGET, target2);
     oob = oob->next;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_LOG, log2);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_LOG, log2);
     oob = oob->next;
 
-    REQUIRE(oob);
-    REQUIRE(oob->kind == GDBMI_STREAM);
-    CHECK_STREAM_RECORD(oob->variant.stream_record, GDBMI_CONSOLE, console3);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, console3);
     REQUIRE(!oob->next);
 
     REQUIRE(!output->result_record);
@@ -439,9 +452,6 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic)
     gdbmi_async_output *async_output;
     gdbmi_result *result;
 
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
-
     oob = output->oob_record;
     async_record = CHECK_OOB_RECORD_ASYNC(oob);
     REQUIRE(!oob->next);
@@ -457,6 +467,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic)
     result = CHECK_RESULT_CSTRING(result, "total-size", "\"2466\"");
 
     REQUIRE(!result);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
 }
 
 /**
@@ -469,9 +482,6 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic)
     gdbmi_async_output *async_output;
     gdbmi_result *result;
 
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
-
     oob = output->oob_record;
     async_record = CHECK_OOB_RECORD_ASYNC(oob);
     REQUIRE(!oob->next);
@@ -483,6 +493,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic)
     result = CHECK_RESULT_CSTRING(result, "thread-id", "\"all\"");
 
     REQUIRE(!result);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
 }
 
 /**
@@ -494,9 +507,6 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic)
     gdbmi_async_record *async_record;
     gdbmi_async_output *async_output;
     gdbmi_result *result;
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
 
     oob = output->oob_record;
     async_record = CHECK_OOB_RECORD_ASYNC(oob);
@@ -513,6 +523,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic)
     result = CHECK_RESULT_CSTRING(result, "line", "\"9\"");
 
     REQUIRE(!result);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
 }
 
 /**
@@ -527,9 +540,6 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic)
     gdbmi_async_record *async_record;
     gdbmi_async_output *async_output;
     gdbmi_result *result;
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
 
     oob = output->oob_record;
     async_record = CHECK_OOB_RECORD_ASYNC(oob);
@@ -566,4 +576,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic)
     REQUIRE(result);
 
     REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
 }
