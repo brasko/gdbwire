@@ -1,0 +1,6 @@
+*running,{}
+=breakpoint-created,{}
++download,{}
+=breakpoint-created,{}
+*stopped,{}
+(gdb)
