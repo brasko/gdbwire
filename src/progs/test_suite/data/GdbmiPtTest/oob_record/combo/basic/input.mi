@@ -1,0 +1,10 @@
+~"console line 1"
+*running,{}
+~"console line 2"
+@"target line 1"
++download,{}
+=breakpoint-created,{}
+&"log line 1"
+*stopped,{}
+&"log line 2"
+(gdb) 

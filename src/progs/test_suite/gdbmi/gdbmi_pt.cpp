@@ -580,3 +580,82 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic)
     REQUIRE(!output->result_record);
     REQUIRE(!output->next);
 }
+
+/**
+ * A simple out of band record with multiple stream and async records.
+ *
+ * This test is intended to show that multiple different stream and async
+ * records can be contained in a single out of band record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic)
+{
+    std::string console1 = "\"console line 1\"";
+    std::string console2 = "\"console line 2\"";
+    std::string target1 = "\"target line 1\"";
+    std::string log1 = "\"log line 1\"";
+    std::string log2 = "\"log line 2\"";
+
+    gdbmi_oob_record *oob;
+    gdbmi_stream_record *stream_record;
+    gdbmi_async_record *async_record;
+    gdbmi_async_output *async_output;
+    gdbmi_result *result;
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+
+    oob = output->oob_record;
+
+    stream_record = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream_record, GDBMI_CONSOLE, console1);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async_record = CHECK_OOB_RECORD_ASYNC(oob);
+    async_output = CHECK_ASYNC_RECORD(async_record, -1, GDBMI_EXEC);
+    result = CHECK_ASYNC_OUTPUT(async_output, GDBMI_ASYNC_RUNNING);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    stream_record = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream_record, GDBMI_CONSOLE, console2);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    stream_record = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream_record, GDBMI_TARGET, target1);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async_record = CHECK_OOB_RECORD_ASYNC(oob);
+    async_output = CHECK_ASYNC_RECORD(async_record, -1, GDBMI_STATUS);
+    result = CHECK_ASYNC_OUTPUT(async_output, GDBMI_ASYNC_DOWNLOAD);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async_record = CHECK_OOB_RECORD_ASYNC(oob);
+    async_output = CHECK_ASYNC_RECORD(async_record, -1, GDBMI_NOTIFY);
+    result = CHECK_ASYNC_OUTPUT(async_output, GDBMI_ASYNC_BREAKPOINT_CREATED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    stream_record = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream_record, GDBMI_LOG, log1);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async_record = CHECK_OOB_RECORD_ASYNC(oob);
+    async_output = CHECK_ASYNC_RECORD(async_record, -1, GDBMI_EXEC);
+    result = CHECK_ASYNC_OUTPUT(async_output, GDBMI_ASYNC_STOPPED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    stream_record = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream_record, GDBMI_LOG, log2);
+
+    REQUIRE(!oob->next);
+}
