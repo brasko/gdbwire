@@ -105,6 +105,23 @@ sytax above to the LR(1) grammar I provide to bison.
     stream-record       -> stream-record-kind c-string
     stream-record-kind  -> "~" | "@" | "&"
 
+Simplifications
+---------------
+
+Below are some simplifications I've made to the grammar.
+
+1) async-output
+
+  async-output is used in one location and defined in one location. It makes
+  sense to combine this rule with the rule that uses it, async-record.
+
+  To accomplish this, change the grammar
+  From:
+    async-record        -> opt-token async-record-kind async-output
+    async-output        -> async-class result-list
+  To
+    async-record        -> opt-token async-record-kind async-class result-list
+
 Extensions to GDB/MI
 --------------------
 
@@ -188,9 +205,8 @@ oob-record-list     -> oob-record-list oob-record nl | epsilon
 opt-result-record   -> result-record nl | epsilon
 result-record       -> opt-token "^" result-class result-list
 oob-record          -> async-record | stream-record
-async-record        -> opt-token async-record-kind async-output
+async-record        -> opt-token async-record-kind async-class result-list
 async-record-kind   -> "*" | "+" | "="
-async-output        -> async-class result-list
 result-class        -> "done" | "running" | "connected" | "error" | "exit"
 async-class         -> "stopped" | "running" | "download"
 opt_variable        -> variable "=" | epsilon

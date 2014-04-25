@@ -67,7 +67,6 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
   struct gdbmi_result *u_result;
   long u_token;
   struct gdbmi_async_record *u_async_record;
-  struct gdbmi_async_output *u_async_output;
   struct gdbmi_stream_record *u_stream_record;
   int u_async_class;
   char *u_variable;
@@ -89,7 +88,6 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
 %type <u_token> opt_token
 %type <u_token> token
 %type <u_async_record> async_record
-%type <u_async_output> async_output
 %type <u_stream_record> stream_record
 %type <u_async_class> async_class
 %type <u_variable> variable
@@ -157,17 +155,12 @@ oob_record: stream_record {
   $$->variant.stream_record = $1;
 };
 
-async_record: opt_token async_record_class async_output {
+async_record: opt_token async_record_class async_class result_list {
   $$ = gdbmi_async_record_alloc();
   $$->token = $1;
   $$->kind = $2;
-  $$->async_output = $3;
-};
-
-async_output: async_class result_list {
-  $$ = gdbmi_async_output_alloc();
-  $$->async_class = $1;
-  $$->result = $2;
+  $$->async_class = $3;
+  $$->result = $4;
 };
 
 async_record_class: MULT_OP {

@@ -126,25 +126,6 @@ void
 gdbmi_async_record_free(struct gdbmi_async_record *param)
 {
     if (param) {
-        gdbmi_async_output_free(param->async_output);
-        param->async_output = NULL;
-
-        free(param);
-        param = NULL;
-    }
-}
-
-/* struct gdbmi_async_output */
-struct gdbmi_async_output *
-gdbmi_async_output_alloc(void)
-{
-    return calloc(1, sizeof (struct gdbmi_async_output));
-}
-
-void
-gdbmi_async_output_free(struct gdbmi_async_output *param)
-{
-    if (param) {
         gdbmi_result_free(param->result);
         param->result = NULL;
 

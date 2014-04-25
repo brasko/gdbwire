@@ -264,22 +264,6 @@ struct gdbmi_async_record {
     /** The kind of asynchronous record. */
     enum gdbmi_async_record_kind kind;
 
-    /**
-     * The output associated with this asynchronous record.
-     *
-     * This will never be NULL.
-     * TODO: Make this not a pointer?
-     */
-    struct gdbmi_async_output *async_output;
-
-};
-
-/**
- * The GDB/MI asyncronous output.
- *
- * This contains the output for the asynchronous record. 
- */
-struct gdbmi_async_output {
     /** The asynchronous output class */
     enum gdbmi_async_class async_class;
 
@@ -300,7 +284,6 @@ enum gdbmi_result_kind {
     /** The result is a list */
     GDBMI_LIST
 };
-
 
 /**
  * A GDB/MI result list.

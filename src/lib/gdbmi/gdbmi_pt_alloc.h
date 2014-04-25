@@ -29,10 +29,6 @@ void gdbmi_oob_record_free(struct gdbmi_oob_record *param);
 struct gdbmi_async_record *gdbmi_async_record_alloc(void);
 void gdbmi_async_record_free(struct gdbmi_async_record *param);
 
-/* struct gdbmi_async_output */
-struct gdbmi_async_output *gdbmi_async_output_alloc(void);
-void gdbmi_async_output_free(struct gdbmi_async_output *param);
-
 /* struct gdbmi_stream_record */
 struct gdbmi_stream_record *gdbmi_stream_record_alloc(void);
 void gdbmi_stream_record_free(struct gdbmi_stream_record *param);

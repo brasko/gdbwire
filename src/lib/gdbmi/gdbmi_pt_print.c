@@ -214,21 +214,6 @@ int print_gdbmi_async_record(struct gdbmi_async_record *param)
     if (result == -1)
         return -1;
 
-    result = print_gdbmi_async_output(param->async_output);
-    if (result == -1)
-        return -1;
-
-    return 0;
-}
-
-/* Creating, Destroying and printing async_output  */
-int print_gdbmi_async_output(struct gdbmi_async_output *param)
-{
-    int result;
-
-    if (!param)
-        return 0;
-
     result = print_gdbmi_async_class(param->async_class);
     if (result == -1)
         return -1;

@@ -16,7 +16,6 @@ int print_gdbmi_oob_record(struct gdbmi_oob_record *param);
 int print_gdbmi_async_record_kind(enum gdbmi_async_record_kind param);
 int print_gdbmi_stream_record_kind(enum gdbmi_stream_record_kind param);
 int print_gdbmi_async_record(struct gdbmi_async_record *param);
-int print_gdbmi_async_output(struct gdbmi_async_output *param);
 int print_gdbmi_async_class(enum gdbmi_async_class param);
 int print_gdbmi_result_kind(enum gdbmi_result_kind param);
 int print_gdbmi_stream_record(struct gdbmi_stream_record *param);
