@@ -9,6 +9,7 @@ IDENTIFIER {L}+{T}*
 
 %{
 
+#define YY_NO_INPUT
 #include <stdio.h>
 #include "gdbmi_grammar.h"
 %}
