@@ -6,7 +6,7 @@ AM_CONFIG_HEADER(build/config.h)
 
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 
 dnl Checks for programs.
 AC_LANG_CPLUSPLUS

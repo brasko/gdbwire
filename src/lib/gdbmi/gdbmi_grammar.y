@@ -1,6 +1,6 @@
-%name-prefix="gdbmi_"
-%define api.pure
-%define api.push_pull "push"
+%name-prefix "gdbmi_"
+%define api.pure full
+%define api.push-pull push
 %defines
 %code requires { struct gdbmi_parser; }
 %parse-param { struct gdbmi_parser *gdbmi_parser }
