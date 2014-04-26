@@ -45,6 +45,9 @@ cat <<EOF
 $PACKAGE_NAME configuration summary:
 
     Install prefix ........... : ${prefix}
+
+    bison .................... : ${YFLAGS}
+
     C preprocessor ........... : ${CPP}
     C compiler ............... : ${CC}
     C++ preprocessor ......... : ${CXXCPP}
