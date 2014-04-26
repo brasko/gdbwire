@@ -83,5 +83,5 @@ gdbwire_logger_log(const char *file, int line, enum gdbwire_logger_level level,
     va_list ap;
     va_start(ap, fmt);
 
-    _clog_log(file, line, (enum clog_level)level, GDBWIRE_LOGGER, fmt, ap);
+    _clog_log(file, line, clevel, GDBWIRE_LOGGER, fmt, ap);
 }
