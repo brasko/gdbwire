@@ -212,6 +212,8 @@ enum gdbmi_async_class {
     /**
      * Loading the executable onto the remote target.
      *
+     * This was undocumented in the GDB manual as far as GDB 7.7.
+     *
      * This occurs if the async record is GDBMI_STATUS.
      */
     GDBMI_ASYNC_DOWNLOAD,

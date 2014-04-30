@@ -455,6 +455,29 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic)
 }
 
 /**
+ * All of the supported async class's for the status kind.
+ *
+ * Currently, +download is the only known async class for async status
+ * records. This particular class is not documented in the latest manual.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/async_class)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async;
+    gdbmi_result *result;
+
+    oob = output->oob_record;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
+    REQUIRE(result);
+
+    REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
+
+/**
  * A simple async exec output tree.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic)
