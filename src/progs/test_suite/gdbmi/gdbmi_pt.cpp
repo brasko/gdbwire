@@ -500,6 +500,32 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic)
 }
 
 /**
+ * All of the supported async class's for the exec kind.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/async_class)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async;
+    gdbmi_result *result;
+
+    oob = output->oob_record;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
+    REQUIRE(result);
+
+    REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
+
+/**
  * A simple async notify output tree.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic)

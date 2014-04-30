@@ -1,0 +1,3 @@
+*stopped,reason=""
+*running,thread-id="all"
+(gdb)
