@@ -197,8 +197,46 @@ async_class: STRING_LITERAL {
       $$ = GDBMI_ASYNC_STOPPED;
   } else if (strcmp("running", gdbmi_text) == 0) {
       $$ = GDBMI_ASYNC_RUNNING;
+  } else if (strcmp("thread-group-added", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_THREAD_GROUP_ADDED;
+  } else if (strcmp("thread-group-removed", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_THREAD_GROUP_REMOVED;
+  } else if (strcmp("thread-group-started", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_THREAD_GROUP_STARTED;
+  } else if (strcmp("thread-group-exited", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_THREAD_GROUP_EXITED;
+  } else if (strcmp("thread-created", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_THREAD_CREATED;
+  } else if (strcmp("thread-exited", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_THREAD_EXITED;
+  } else if (strcmp("thread-selected", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_THREAD_SELECTED;
+  } else if (strcmp("library-loaded", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_LIBRARY_LOADED;
+  } else if (strcmp("library-unloaded", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_LIBRARY_UNLOADED;
+  } else if (strcmp("traceframe-changed", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_TRACEFRAME_CHANGED;
+  } else if (strcmp("tsv-created", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_TSV_CREATED;
+  } else if (strcmp("tsv-modified", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_TSV_MODIFIED;
+  } else if (strcmp("tsv-deleted", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_TSV_DELETED;
   } else if (strcmp("breakpoint-created", gdbmi_text) == 0) {
       $$ = GDBMI_ASYNC_BREAKPOINT_CREATED;
+  } else if (strcmp("breakpoint-modified", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_BREAKPOINT_MODIFIED;
+  } else if (strcmp("breakpoint-deleted", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_BREAKPOINT_DELETED;
+  } else if (strcmp("record-started", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_RECORD_STARTED;
+  } else if (strcmp("record-stopped", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_RECORD_STOPPED;
+  } else if (strcmp("cmd-param-changed", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_CMD_PARAM_CHANGED;
+  } else if (strcmp("memory-changed", gdbmi_text) == 0) {
+      $$ = GDBMI_ASYNC_MEMORY_CHANGED;
   } else {
       $$ = GDBMI_ASYNC_UNSUPPORTED;
   }

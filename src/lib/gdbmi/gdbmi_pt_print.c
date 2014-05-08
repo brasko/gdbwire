@@ -237,8 +237,65 @@ int print_gdbmi_async_class(enum gdbmi_async_class param)
         case GDBMI_ASYNC_RUNNING:
             printf("GDBMI_ASYNC_RUNNING\n");
             break;
+        case GDBMI_ASYNC_THREAD_GROUP_ADDED:
+            printf("GDBMI_ASYNC_THREAD_GROUP_ADDED\n");
+            break;
+        case GDBMI_ASYNC_THREAD_GROUP_REMOVED:
+            printf("GDBMI_ASYNC_THREAD_GROUP_REMOVED\n");
+            break;
+        case GDBMI_ASYNC_THREAD_GROUP_STARTED:
+            printf("GDBMI_ASYNC_THREAD_GROUP_STARTED\n");
+            break;
+        case GDBMI_ASYNC_THREAD_GROUP_EXITED:
+            printf("GDBMI_ASYNC_THREAD_GROUP_EXITED\n");
+            break;
+        case GDBMI_ASYNC_THREAD_CREATED:
+            printf("GDBMI_ASYNC_THREAD_CREATED\n");
+            break;
+        case GDBMI_ASYNC_THREAD_EXITED:
+            printf("GDBMI_ASYNC_THREAD_EXITED\n");
+            break;
+        case GDBMI_ASYNC_THREAD_SELECTED:
+            printf("GDBMI_ASYNC_THREAD_SELECTED\n");
+            break;
+        case GDBMI_ASYNC_LIBRARY_LOADED:
+            printf("GDBMI_ASYNC_LIBRARY_LOADED\n");
+            break;
+        case GDBMI_ASYNC_LIBRARY_UNLOADED:
+            printf("GDBMI_ASYNC_LIBRARY_UNLOADED\n");
+            break;
+        case GDBMI_ASYNC_TRACEFRAME_CHANGED:
+            printf("GDBMI_ASYNC_TRACEFRAME_CHANGED\n");
+            break;
+        case GDBMI_ASYNC_TSV_CREATED:
+            printf("GDBMI_ASYNC_TSV_CREATED\n");
+            break;
+        case GDBMI_ASYNC_TSV_MODIFIED:
+            printf("GDBMI_ASYNC_TSV_MODIFIED\n");
+            break;
+        case GDBMI_ASYNC_TSV_DELETED:
+            printf("GDBMI_ASYNC_TSV_DELETED\n");
+            break;
         case GDBMI_ASYNC_BREAKPOINT_CREATED:
             printf("GDBMI_ASYNC_BREAKPOINT_CREATED\n");
+            break;
+        case GDBMI_ASYNC_BREAKPOINT_MODIFIED:
+            printf("GDBMI_ASYNC_BREAKPOINT_MODIFIED\n");
+            break;
+        case GDBMI_ASYNC_BREAKPOINT_DELETED:
+            printf("GDBMI_ASYNC_BREAKPOINT_DELETED\n");
+            break;
+        case GDBMI_ASYNC_RECORD_STARTED:
+            printf("GDBMI_ASYNC_RECORD_STARTED\n");
+            break;
+        case GDBMI_ASYNC_RECORD_STOPPED:
+            printf("GDBMI_ASYNC_RECORD_STOPPED\n");
+            break;
+        case GDBMI_ASYNC_CMD_PARAM_CHANGED:
+            printf("GDBMI_ASYNC_CMD_PARAM_CHANGED\n");
+            break;
+        case GDBMI_ASYNC_MEMORY_CHANGED:
+            printf("GDBMI_ASYNC_MEMORY_CHANGED\n");
             break;
         case GDBMI_ASYNC_UNSUPPORTED:
             printf("GDBMI_ASYNC_UNSUPPORTED\n");

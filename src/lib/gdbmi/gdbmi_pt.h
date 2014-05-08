@@ -214,31 +214,192 @@ enum gdbmi_async_class {
      *
      * This was undocumented in the GDB manual as far as GDB 7.7.
      *
-     * This occurs if the async record is GDBMI_STATUS.
+     * This occurs if the async record is GDBMI_STATUS as +download.
      */
     GDBMI_ASYNC_DOWNLOAD,
 
     /**
      * The target has stopped.
      *
-     * This occurs if the async record is GDBMI_EXEC.
+     * This occurs if the async record is GDBMI_EXEC as *stopped.
      */
     GDBMI_ASYNC_STOPPED,
 
     /**
      * The target is now running.
      *
-     * This occurs if the async record is GDBMI_EXEC.
+     * This occurs if the async record is GDBMI_EXEC as *running.
      */
     GDBMI_ASYNC_RUNNING,
 
     /**
+     * Reports that a thread group was added.
+     *
+     * When a thread group is added, it generally might not be associated
+     * with a running process.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =thread-group-added.
+     */
+    GDBMI_ASYNC_THREAD_GROUP_ADDED,
+
+    /**
+     * Reports that a thread group was removed.
+     *
+     * When a thread group is removed, its id becomes invalid and cannot be
+     * used in any way. 
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =thread-group-removed.
+     */
+    GDBMI_ASYNC_THREAD_GROUP_REMOVED,
+
+    /**
+     * Reports that a thread group was started.
+     *
+     * A thread group became associated with a running program.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =thread-group-started.
+     */
+    GDBMI_ASYNC_THREAD_GROUP_STARTED,
+
+    /**
+     * Reports that a thread group was exited.
+     *
+     * A thread group is no longer associated with a running program.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =thread-group-exited.
+     */
+    GDBMI_ASYNC_THREAD_GROUP_EXITED,
+
+    /**
+     * Reports that a thread was created.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =thread-created.
+     */
+    GDBMI_ASYNC_THREAD_CREATED,
+
+    /**
+     * Reports that a thread was exited.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =thread-exited.
+     */
+    GDBMI_ASYNC_THREAD_EXITED,
+
+    /**
+     * Reports that a thread was selected.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =thread-selected.
+     */
+    GDBMI_ASYNC_THREAD_SELECTED,
+
+    /**
+     * Reports that a new library was loaded.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =library-loaded.
+     */
+    GDBMI_ASYNC_LIBRARY_LOADED,
+
+    /**
+     * Reports that a new library was unloaded.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =library-unloaded.
+     */
+    GDBMI_ASYNC_LIBRARY_UNLOADED,
+
+    /**
+     * Reports that a trace frame was changed.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =traceframe-changed.
+     */
+    GDBMI_ASYNC_TRACEFRAME_CHANGED,
+
+    /**
+     * Reports that a trace state variable was created.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =tsv-created.
+     */
+    GDBMI_ASYNC_TSV_CREATED,
+
+    /**
+     * Reports that a trace state variable was modified.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =tsv-modified.
+     */
+    GDBMI_ASYNC_TSV_MODIFIED,
+
+    /**
+     * Reports that a trace state variable was deleted.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =tsv-deleted.
+     */
+    GDBMI_ASYNC_TSV_DELETED,
+
+    /**
      * Reports that a breakpoint was created.
+     *
      * Only user-visible breakpoints are reported to the MI user. 
      *
-     * This occurs if the async record is GDBMI_NOTIFY.
+     * If a breakpoint is emitted in the result record of a
+     * command, then it will not also be emitted in an async record. 
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =breakpoint-created.
      */
     GDBMI_ASYNC_BREAKPOINT_CREATED,
+
+    /**
+     * Reports that a breakpoint was modified.
+     *
+     * Only user-visible breakpoints are reported to the MI user. 
+     *
+     * If a breakpoint is emitted in the result record of a
+     * command, then it will not also be emitted in an async record. 
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =breakpoint-modified.
+     */
+    GDBMI_ASYNC_BREAKPOINT_MODIFIED,
+
+    /**
+     * Reports that a breakpoint was deleted.
+     *
+     * Only user-visible breakpoints are reported to the MI user. 
+     *
+     * If a breakpoint is emitted in the result record of a
+     * command, then it will not also be emitted in an async record. 
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =breakpoint-deleted.
+     */
+    GDBMI_ASYNC_BREAKPOINT_DELETED,
+
+    /**
+     * Reports that execution log recording was started on an inferior.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =record-started.
+     */
+    GDBMI_ASYNC_RECORD_STARTED,
+
+    /**
+     * Reports that execution log recording was stopped on an inferior.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =record-stopped.
+     */
+    GDBMI_ASYNC_RECORD_STOPPED,
+
+    /**
+     * Reports that a parameter of the command set param is changed to value.
+     *
+     * For example, when the user runs a command like 'set print pretty on',
+     * this async command will be invoked with the parameter reported as
+     * 'print pretty' and the value as 'on'.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =cmd-param-changed.
+     */
+    GDBMI_ASYNC_CMD_PARAM_CHANGED,
+
+    /**
+     * Reports that bytes from addr to data + len were written in an inferior.
+     *
+     * This occurs if the async record is GDBMI_NOTIFY as =memory-changed.
+     */
+    GDBMI_ASYNC_MEMORY_CHANGED,
 
     /// An unsupported async class
     GDBMI_ASYNC_UNSUPPORTED

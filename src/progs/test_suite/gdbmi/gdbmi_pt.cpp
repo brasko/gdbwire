@@ -555,6 +555,157 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic)
 }
 
 /**
+ * All of the supported async class's for the notify kind.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/async_class)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async;
+    gdbmi_result *result;
+
+    oob = output->oob_record;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_THREAD_GROUP_ADDED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_THREAD_GROUP_REMOVED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_THREAD_GROUP_STARTED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_THREAD_GROUP_EXITED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_THREAD_CREATED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_THREAD_EXITED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_THREAD_SELECTED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_LIBRARY_LOADED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_LIBRARY_UNLOADED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_TRACEFRAME_CHANGED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_CREATED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_MODIFIED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_DELETED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_BREAKPOINT_CREATED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_BREAKPOINT_MODIFIED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_BREAKPOINT_DELETED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_RECORD_STARTED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_RECORD_STOPPED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_CMD_PARAM_CHANGED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_MEMORY_CHANGED);
+    REQUIRE(result);
+
+    REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
+
+/**
  * A simple out of band record with multiple async records of different kinds.
  *
  * This test is intended to show that multiple different async records (in
