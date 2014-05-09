@@ -18,4 +18,5 @@
 =record-stopped,thread-group=""
 =cmd-param-changed,param="",value=""
 =memory-changed,thread-group="",addr="",len=""
+=unsupported-notify,id=""
 (gdb)

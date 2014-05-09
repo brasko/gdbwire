@@ -1,3 +1,4 @@
 *stopped,reason=""
 *running,thread-id="all"
+*unsupported-exec,thread-id="all"
 (gdb)

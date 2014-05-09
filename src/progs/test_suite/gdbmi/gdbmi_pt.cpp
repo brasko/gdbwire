@@ -471,6 +471,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/async_class)
     result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
     REQUIRE(result);
 
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_UNSUPPORTED);
+    REQUIRE(result);
+
     REQUIRE(!oob->next);
 
     REQUIRE(!output->result_record);
@@ -517,6 +523,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/async_class)
     oob = oob->next;
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_UNSUPPORTED);
     REQUIRE(result);
 
     REQUIRE(!oob->next);
@@ -697,6 +709,13 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/async_class)
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_MEMORY_CHANGED);
+    REQUIRE(result);
+
+    REQUIRE(oob->next);
+    oob = oob->next;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
+            GDBMI_ASYNC_UNSUPPORTED);
     REQUIRE(result);
 
     REQUIRE(!oob->next);
