@@ -29,15 +29,60 @@ extern "C" {
 typedef long gdbmi_token_t;
 
 /**
- * The result records result class.
- *
- * TODO: Describe these more in general.
+ * A GDB/MI output command may contain one of the following result indications.
  */
 enum gdbmi_result_class {
+    /**
+     * The synchronous operation was successful (^done).
+     */
     GDBMI_DONE,
+
+    /**
+     * Equivalent to GDBMI_DONE (^running).
+     *
+     * Historically, was output by GDB instead of ^done if the command
+     * resumed the target.
+     *
+     * Do not rely on or use this result class in the front end to determine
+     * the state of the target. Use the async *running output record to
+     * determine which threads have resumed running.
+     *
+     * TODO: Ensure that early versions of GDB can depend on the async
+     * *running or if front ends DO have to rely on ^running.
+     */
     GDBMI_RUNNING,
+
+    /**
+     * GDB has connected to a remote target (^connected).
+     *
+     * This is in response to the -target-select command.
+     *
+     * A comment in the GDB source code says,
+     *   There's no particularly good reason why target-connect results
+     *   in not ^done.  Should kill ^connected for MI3.
+     *
+     * With this in mind, it makes sense to assume that GDBMI_CONNECTED and
+     * GDBMI_DONE are equivalent.
+     */
     GDBMI_CONNECTED,
+
+    /**
+     * An error has occurred (^error).
+     *
+     * This can occur if the user provides an improper command to GDB.
+     * In this case, the user will be provided the standard error output but
+     * the front end will also be provided this information independently.
+     */
     GDBMI_ERROR,
+
+    /**
+     * GDB has terminated (^exit).
+     *
+     * When GDB knows it is about to exit, it provides this notification
+     * in the GDB/MI output command. However, on all other circumstances,
+     * the front end should be prepared to have GDB exit and not provide
+     * this information.
+     */
     GDBMI_EXIT
 };
 

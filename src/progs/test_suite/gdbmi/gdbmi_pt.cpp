@@ -89,6 +89,30 @@ namespace {
         }
 
         /**
+         * Checks a result record in an output command.
+         *
+         * @param output
+         * The output command to check the result record in.
+         *
+         * @param result_class
+         * The result class to compare in the result record.
+         *
+         * @param token
+         * The token to compare in the result record.
+         *
+         * @return
+         * The gdbmi result or NULL if none in the result record.
+         */
+        gdbmi_result *CHECK_OUTPUT_RESULT_RECORD(gdbmi_output *output,
+            gdbmi_result_class result_class, gdbmi_token_t token = -1) {
+            REQUIRE(output);
+            REQUIRE(output->result_record);
+            REQUIRE(output->result_record->token == token);
+            REQUIRE(output->result_record->result_class == result_class);
+            return output->result_record->result;
+        }
+
+        /**
          * Checks an out-of-band record to ensure it's an stream record.
          *
          * @param oob
@@ -846,4 +870,19 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic)
     CHECK_STREAM_RECORD(stream_record, GDBMI_LOG, log2);
 
     REQUIRE(!oob->next);
+}
+
+/**
+ * Test the done result class of a result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/done)
+{
+    gdbmi_result *result;
+
+    REQUIRE(!output->oob_record);
+
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_DONE);
+    REQUIRE(result);
+
+    REQUIRE(!output->next);
 }
