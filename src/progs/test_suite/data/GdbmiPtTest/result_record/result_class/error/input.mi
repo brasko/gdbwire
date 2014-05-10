@@ -1,0 +1,2 @@
+^error,msg="Undefined command: \"null\".  Try \"help\"."
+(gdb)

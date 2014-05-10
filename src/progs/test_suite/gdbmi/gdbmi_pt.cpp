@@ -916,3 +916,21 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/connected)
 
     REQUIRE(!output->next);
 }
+
+/**
+ * Test the error result class of a result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/error)
+{
+    std::string expected =
+        "\"Undefined command: \\\"null\\\".  Try \\\"help\\\".\"";
+    gdbmi_result *result;
+
+    REQUIRE(!output->oob_record);
+
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR);
+    result = CHECK_RESULT_CSTRING(result, "msg", expected);
+    REQUIRE(!result);
+
+    REQUIRE(!output->next);
+}
