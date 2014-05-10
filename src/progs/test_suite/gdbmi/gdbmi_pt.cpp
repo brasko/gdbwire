@@ -934,3 +934,18 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/error)
 
     REQUIRE(!output->next);
 }
+
+/**
+ * Test the exit result class of a result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit)
+{
+    gdbmi_result *result;
+
+    REQUIRE(!output->oob_record);
+
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_EXIT);
+    REQUIRE(!result);
+
+    REQUIRE(!output->next);
+}
