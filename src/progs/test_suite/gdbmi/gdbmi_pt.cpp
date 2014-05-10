@@ -901,3 +901,18 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/running)
 
     REQUIRE(!output->next);
 }
+
+/**
+ * Test the connected result class of a result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/connected)
+{
+    gdbmi_result *result;
+
+    REQUIRE(!output->oob_record);
+
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_CONNECTED);
+    REQUIRE(!result);
+
+    REQUIRE(!output->next);
+}
