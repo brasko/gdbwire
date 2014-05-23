@@ -39,6 +39,8 @@ void
 gdbmi_result_record_free(struct gdbmi_result_record *param)
 {
     if (param) {
+        free(param->token);
+
         gdbmi_result_free(param->result);
         param->result = NULL;
 
@@ -126,6 +128,8 @@ void
 gdbmi_async_record_free(struct gdbmi_async_record *param)
 {
     if (param) {
+        free(param->token);
+
         gdbmi_result_free(param->result);
         param->result = NULL;
 

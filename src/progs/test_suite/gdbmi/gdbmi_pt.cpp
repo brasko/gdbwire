@@ -104,10 +104,15 @@ namespace {
          * The gdbmi result or NULL if none in the result record.
          */
         gdbmi_result *CHECK_OUTPUT_RESULT_RECORD(gdbmi_output *output,
-            gdbmi_result_class result_class, gdbmi_token_t token = -1) {
+            gdbmi_result_class result_class, const std::string &token = "") {
             REQUIRE(output);
             REQUIRE(output->result_record);
-            REQUIRE(output->result_record->token == token);
+            if (token.empty()) {
+                REQUIRE(!output->result_record->token);
+            } else {
+                REQUIRE(output->result_record->token);
+                REQUIRE(token == output->result_record->token);
+            }
             REQUIRE(output->result_record->result_class == result_class);
             return output->result_record->result;
         }
@@ -177,18 +182,15 @@ namespace {
          * @param async_class
          * The expected async class kind.
          *
-         * @param token
-         * The expected token value.
-         *
          * @return
          * The gdbmi result of the async record (may be NULL);
          */
         gdbmi_result *CHECK_ASYNC_RECORD(
             gdbmi_async_record *async_record,
-            gdbmi_async_record_kind kind, gdbmi_async_class async_class,
-            gdbmi_token_t token = -1) {
+            gdbmi_async_record_kind kind, gdbmi_async_class async_class) {
             REQUIRE(async_record);
-            REQUIRE(async_record->token == token);
+            // The token can never be non NULL (see documentation if curious)
+            REQUIRE(!async_record->token);
             REQUIRE(async_record->kind == kind);
             REQUIRE(async_record->async_class == async_class);
 
@@ -946,6 +948,21 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit)
 
     result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_EXIT);
     REQUIRE(!result);
+
+    REQUIRE(!output->next);
+}
+
+/**
+ * Test the token field of a result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token)
+{
+    gdbmi_result *result;
+
+    REQUIRE(!output->oob_record);
+
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR, "512");
+    REQUIRE(result);
 
     REQUIRE(!output->next);
 }

@@ -2,11 +2,11 @@
 
 #include "gdbmi_pt_print.h"
 
-int print_token(long l)
+int print_token(gdbmi_token_t token)
 {
-    if (l == -1)
-        return 0;
-    printf("token(%ld)", l);
+    if (token) {
+        printf("token(%s)", token);
+    }
     return 0;
 }
 

@@ -6,29 +6,6 @@ extern "C" {
 #endif 
 
 /**
- * A GDB/MI token.
- *
- * When the client requests information from GDB, it does so in the
- * form of a GDB/MI input command. The client may provide a unique
- * id along with the GDB/MI input command, this is the token.
- *
- * When GDB finally gets around to responding with a GDB/MI output
- * command, it passes back the token that was supplied to it so that
- * the client can associate the GDB/MI output command with the
- * corresponding GDB/MI input command.
- *
- * From the GDB documentation:
- *   Note that for all async output, while the token is allowed by the
- *   grammar and may be output by future versions of gdb for select async
- *   output messages, it is generally omitted. Frontends should treat all
- *   async output as reporting general changes in the state of the target
- *   and there should be no need to associate async output to any prior
- *   command. 
- * In other words, asynchronous output commands will not have the token set.
- */
-typedef long gdbmi_token_t;
-
-/**
  * A GDB/MI output command may contain one of the following result indications.
  */
 enum gdbmi_result_class {
@@ -112,6 +89,14 @@ struct gdbmi_output {
 };
 
 /**
+ * A GDB/MI token.
+ *
+ * A string made up of one or more digits.
+ * The regular expression [0-9]+ will match this types contents.
+ */
+typedef char *gdbmi_token_t;
+
+/**
  * The GDB/MI result record in an output command.
  *
  * The result record represents the result data in the GDB/MI output
@@ -120,15 +105,23 @@ struct gdbmi_output {
  */
 struct gdbmi_result_record {
     /**
-     * The result record token.
+     * The token associated with the corresponding GDB/MI input command.
      *
-     * Please see the documentation for gdbmi_token_t to learn more about this.
+     * The client may provide a unique string of digits at the beginning of a
+     * GDB/MI input command. For example,
+     *   0000-foo
+     * When GDB finally gets around to responding to the GDB/MI input command,
+     * it takes the token provided in the input command and puts it into the
+     * result record of the corresponding GDB/MI output command. For
+     * example, the output commmand associated with the above input command is,
+     *   0000^error,msg="Undefined MI command: foo",code="undefined-command"
+     * and the result record would have the below token field set to "0000".
      *
-     * This value will be zero if the token was ommited in the GDB/MI
-     * output command. Otherwise the token will be set to the value
-     * the GDB/MI output command has provided. Note: This means that the
-     * client should not send GDB/MI input commands with a token of
-     * value 0.
+     * This is intended to allow the front end to correlate the GDB/MI input
+     * command it sent with the GDB/MI output command GDB responded with.
+     *
+     * This represents the token value the front end provided to the
+     * corresponding GDB/MI input command or NULL if no token was provided.
      */
     gdbmi_token_t token;
 
@@ -460,12 +453,19 @@ struct gdbmi_async_record {
     /**
      * The result record token.
      *
-     * Please see the documentation for gdbmi_token_t to learn more about this.
-     *
      * Please note that the GDB/MI manual says that asyncronous records
      * do not currently populate this token on output but reserve the right
-     * to do so. For that reason, token here should always have the value
-     * zero.
+     * to do so. For that reason, token here should always be NULL.
+     *
+     * From the GDB documentation:
+     *   Note that for all async output, while the token is allowed by the
+     *   grammar and may be output by future versions of gdb for select async
+     *   output messages, it is generally omitted. Frontends should treat all
+     *   async output as reporting general changes in the state of the target
+     *   and there should be no need to associate async output to any prior
+     *   command. 
+     *
+     * Always NULL.
      */
     gdbmi_token_t token;
 

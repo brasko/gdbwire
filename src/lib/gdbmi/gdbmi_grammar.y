@@ -7,7 +7,6 @@
 
 %{
 #include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include "src/lib/gdbmi/gdbmi_parser.h"
 #include "src/lib/gdbmi/gdbmi_pt.h"
@@ -65,7 +64,7 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
   int u_result_class;
   int u_async_record_kind;
   struct gdbmi_result *u_result;
-  long u_token;
+  char *u_token;
   struct gdbmi_async_record *u_async_record;
   struct gdbmi_stream_record *u_stream_record;
   int u_async_class;
@@ -318,7 +317,7 @@ stream_record_class: AMPERSAND {
 };
 
 opt_token: {
-  $$ = -1;	
+  $$ = NULL;	
 };
 
 opt_token: token {
@@ -326,5 +325,5 @@ opt_token: token {
 };
 
 token: INTEGER_LITERAL {
-  $$ = atol (gdbmi_text);
+  $$ = strdup(gdbmi_text);
 };
