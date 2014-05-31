@@ -182,15 +182,25 @@ namespace {
          * @param async_class
          * The expected async class kind.
          *
+         * @param token
+         * The token to compare in the result record.
+         *
          * @return
          * The gdbmi result of the async record (may be NULL);
          */
         gdbmi_result *CHECK_ASYNC_RECORD(
             gdbmi_async_record *async_record,
-            gdbmi_async_record_kind kind, gdbmi_async_class async_class) {
+            gdbmi_async_record_kind kind, gdbmi_async_class async_class,
+            const std::string &token = "") {
             REQUIRE(async_record);
-            // The token can never be non NULL (see documentation if curious)
-            REQUIRE(!async_record->token);
+
+            if (token.empty()) {
+                REQUIRE(!async_record->token);
+            } else {
+                REQUIRE(async_record->token);
+                REQUIRE(token == async_record->token);
+            }
+
             REQUIRE(async_record->kind == kind);
             REQUIRE(async_record->async_class == async_class);
 
@@ -791,6 +801,26 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic)
     oob = oob->next;
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+    REQUIRE(result);
+
+    REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
+
+/**
+ * Test the token field of an async record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async;
+    gdbmi_result *result;
+
+    oob = output->oob_record;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED, "111");
     REQUIRE(result);
 
     REQUIRE(!oob->next);

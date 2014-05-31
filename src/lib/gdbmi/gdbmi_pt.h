@@ -465,7 +465,28 @@ struct gdbmi_async_record {
      *   and there should be no need to associate async output to any prior
      *   command. 
      *
-     * Always NULL.
+     * After further investigation, I determined that newer GDB's will no
+     * longer ever output this information. Older GDB's will. The commit
+     * that made this change in GDB is 721c02de on April 24th, 2008.
+     * The next GDB that was released was on October 6th, 2009, version 7.0.
+     *
+     * Before the above mentioned commit async *stopped commands would
+     * sometimes output the token associated with the last token provided in
+     * a GDB/MI input command. After that change, the token is never
+     * associated with an async output command, even though the
+     * documentation says it might be.
+     *
+     * Finally, even before that change when the token was output in the
+     * async *stopped command, the developers of GDB felt that it was not
+     * useful and should be avoided by front ends.
+     *
+     * With this information, I've determined that front ends should never
+     * use this value to determine logic. However, the value is parsed in
+     * order to accurately handle and represent the cases where this value
+     * occurs.
+     *
+     * This represents the token value the front end provided to the
+     * corresponding GDB/MI input command or NULL if no token was provided.
      */
     gdbmi_token_t token;
 
