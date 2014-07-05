@@ -517,7 +517,7 @@ enum gdbmi_result_kind {
 /**
  * A GDB/MI result list.
  *
- * This is one of the key GDB/MI data structures. GDB communicates many
+ * This is one of the important GDB/MI data structures. GDB communicates many
  * of it's values to the front end through this key/value data structure.
  *
  * It is basically a list of key/value pairs, where the key is a
