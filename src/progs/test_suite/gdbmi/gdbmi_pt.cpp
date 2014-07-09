@@ -48,10 +48,9 @@ namespace {
 
     struct GdbmiPtTest : public Fixture {
         GdbmiPtTest() {
-            input = sourceTestDir() + "/input.mi";
             parser = gdbmi_parser_create(parserCallback.callbacks);
             REQUIRE(parser);
-            output = parse(parser, input);
+            output = parse(parser, sourceTestPath());
             REQUIRE(output);
         }
         
@@ -283,13 +282,12 @@ namespace {
         }
 
         GdbmiParserCallback parserCallback;
-        std::string input;
         gdbmi_parser *parser;
         gdbmi_output *output;
     };
 }
 
-TEST_CASE_METHOD_N(GdbmiPtTest, basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, temporary_manual_compare_test/input.mi)
 {
     //REQUIRE(print_gdbmi_output(output) == 0);
 }
@@ -297,7 +295,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, basic)
 /**
  * A simple console output parse tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic.mi)
 {
     std::string expected = "\"Hello World console output\"";
     struct gdbmi_oob_record *oob = output->oob_record;
@@ -326,7 +324,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic)
  * again to compare the values.
  * 
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters.mi)
 {
     std::string expected =
         "\"$1 = "
@@ -367,7 +365,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters)
 /**
  * A simple target output parse tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic.mi)
 {
     std::string expected = "\"Hello World target output\"";
     struct gdbmi_oob_record *oob = output->oob_record;
@@ -385,7 +383,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic)
 /**
  * A simple log output parse tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic.mi)
 {
     std::string expected = "\"Hello World log output\"";
     struct gdbmi_oob_record *oob = output->oob_record;
@@ -405,7 +403,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic)
  * This test is intended to show that multiple different stream records (in
  * any order) can be contained in a single out of band record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic.mi)
 {
     std::string console1 = "\"console line 1\"";
     std::string console2 = "\"console line 2\"";
@@ -465,7 +463,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic)
  *   # Bunch of +download lines
  *   # Single ^done line.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic.mi)
 {
     gdbmi_oob_record *oob;
     gdbmi_async_record *async;
@@ -496,7 +494,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic)
  * Currently, +download is the only known async class for async status
  * records. This particular class is not documented in the latest manual.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/async_class)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/async_class.mi)
 {
     gdbmi_oob_record *oob;
     gdbmi_async_record *async;
@@ -522,7 +520,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/async_class)
 /**
  * A simple async exec output tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic.mi)
 {
     gdbmi_oob_record *oob;
     gdbmi_async_record *async;
@@ -544,7 +542,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic)
 /**
  * All of the supported async class's for the exec kind.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/async_class)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/async_class.mi)
 {
     gdbmi_oob_record *oob;
     gdbmi_async_record *async;
@@ -576,7 +574,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/async_class)
 /**
  * A simple async notify output tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic.mi)
 {
     gdbmi_oob_record *oob;
     gdbmi_async_record *async;
@@ -605,7 +603,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic)
 /**
  * All of the supported async class's for the notify kind.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/async_class)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/async_class.mi)
 {
     gdbmi_oob_record *oob;
     gdbmi_async_record *async;
@@ -766,7 +764,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/async_class)
  * This test is intended to show that multiple different async records (in
  * any order) can be contained in a single out of band record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic.mi)
 {
     gdbmi_oob_record *oob;
     gdbmi_async_record *async;
@@ -812,7 +810,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic)
 /**
  * Test the token field of an async record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token/basic.mi)
 {
     gdbmi_oob_record *oob;
     gdbmi_async_record *async;
@@ -835,7 +833,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token)
  * This test is intended to show that multiple different stream and async
  * records can be contained in a single out of band record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic.mi)
 {
     std::string console1 = "\"console line 1\"";
     std::string console2 = "\"console line 2\"";
@@ -907,7 +905,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic)
 /**
  * Test the done result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/done)
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/done.mi)
 {
     gdbmi_result *result;
 
@@ -922,7 +920,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/done)
 /**
  * Test the running result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/running)
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/running.mi)
 {
     gdbmi_result *result;
 
@@ -937,7 +935,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/running)
 /**
  * Test the connected result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/connected)
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/connected.mi)
 {
     gdbmi_result *result;
 
@@ -952,7 +950,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/connected)
 /**
  * Test the error result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/error)
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/error.mi)
 {
     std::string expected =
         "\"Undefined command: \\\"null\\\".  Try \\\"help\\\".\"";
@@ -970,7 +968,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/error)
 /**
  * Test the exit result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit)
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit.mi)
 {
     gdbmi_result *result;
 
@@ -985,7 +983,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit)
 /**
  * Test the token field of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token)
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token/basic.mi)
 {
     gdbmi_result *result;
 

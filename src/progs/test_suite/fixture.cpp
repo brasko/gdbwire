@@ -27,9 +27,9 @@ Fixture::data()
 }
 
 std::string
-Fixture::sourceTestDir()
+Fixture::sourceTestPath()
 {
-    std::string datadir = data();
-    datadir = datadir + "/" + testName();
-    return datadir;
+    std::string resultPath = data();
+    resultPath = resultPath + "/" + testName();
+    return resultPath;
 }

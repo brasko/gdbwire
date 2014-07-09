@@ -66,17 +66,18 @@ class Fixture {
         std::string data();
 
         /** 
-         * Get the test specific directory in the source directory.
+         * Get the test specific path (file or directory) in the source tree.
          *
          * For example
          *   $abs_top_srcdir/progs/test_suite/data/TestName.
+         * where TestName could refer to a file or directory.
          *
          * @return
-         * The absolute path to the test specific directory contained in the
-         * source directory this test suite is running against.
+         * The absolute path to the test specific path (file or directory)
+         * contained in the source tree this test suite is running against.
          * This may be read-only.
          */
-        std::string sourceTestDir();
+        std::string sourceTestPath();
 };
 
 // A convience macro for creating unit tests.
