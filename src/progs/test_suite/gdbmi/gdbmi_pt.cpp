@@ -994,3 +994,51 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token/basic.mi)
 
     REQUIRE(!output->next);
 }
+
+/**
+ * Test a value only cstring in a result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/value.mi)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async;
+    gdbmi_result *result;
+
+    oob = output->oob_record;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+
+    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+    REQUIRE(result);
+
+    result = CHECK_RESULT_CSTRING(result, "", "\"value\"");
+    REQUIRE(!result);
+
+    REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
+
+/**
+ * Test a key/value cstring in a result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async;
+    gdbmi_result *result;
+
+    oob = output->oob_record;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+
+    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+    REQUIRE(result);
+
+    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    REQUIRE(!result);
+
+    REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
