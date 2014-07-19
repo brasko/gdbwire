@@ -281,6 +281,37 @@ namespace {
             return result->variant.result;
         }
 
+        /** 
+         * A utility function to get a result for the result unit tests.
+         *
+         * Each result unit test has to get a result from a gdb mi
+         * output rule. Each result comes from an output command like this,
+         *   *stopped,{}
+         *   (gdb)
+         * The output command is parsed and the result is retrieved so that
+         * it can be properly unit tested. This functionality was placed
+         * into a convience function to keep the size of the unit tests down.
+         *
+         * @param output
+         * The output command containing an async output record, containing
+         * a result.
+         *
+         * @return
+         * The result associated with the async output record.
+         */
+        gdbmi_result *GET_RESULT(gdbmi_output *output) {
+            gdbmi_oob_record *oob;
+            gdbmi_async_record *async;
+            gdbmi_result *result;
+
+            oob = output->oob_record;
+            async = CHECK_OOB_RECORD_ASYNC(oob);
+
+            result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+            REQUIRE(result);
+            return result;
+        }
+
         GdbmiParserCallback parserCallback;
         gdbmi_parser *parser;
         gdbmi_output *output;
@@ -1002,23 +1033,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token/basic.mi)
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/value.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
-
-    oob = output->oob_record;
-    async = CHECK_OOB_RECORD_ASYNC(oob);
-
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
-    REQUIRE(result);
+    gdbmi_result *result = GET_RESULT(output);
 
     result = CHECK_RESULT_CSTRING(result, "", "\"value\"");
     REQUIRE(!result);
-
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
 }
 
 /**
@@ -1026,23 +1044,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/value.mi)
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
-
-    oob = output->oob_record;
-    async = CHECK_OOB_RECORD_ASYNC(oob);
-
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
-    REQUIRE(result);
+    gdbmi_result *result = GET_RESULT(output);
 
     result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
     REQUIRE(!result);
-
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
 }
 
 /**
@@ -1050,21 +1055,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/null.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
-
-    oob = output->oob_record;
-    async = CHECK_OOB_RECORD_ASYNC(oob);
-
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
-    REQUIRE(result);
+    gdbmi_result *result = GET_RESULT(output);
 
     result = CHECK_RESULT_TUPLE(result, "");
     REQUIRE(!result);
-
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
 }
