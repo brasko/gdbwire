@@ -225,6 +225,7 @@ namespace {
             if (value.empty()) {
                 REQUIRE(!result->variable);
             } else {
+                REQUIRE(result->variable);
                 REQUIRE(value == result->variable);
             }
         }
@@ -277,7 +278,6 @@ namespace {
             CHECK_RESULT_VARIABLE(result, variable);
 
             REQUIRE(result->kind == GDBMI_TUPLE);
-            REQUIRE(result->variant.result);
             return result->variant.result;
         }
 
@@ -478,6 +478,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic.mi)
     REQUIRE(!result->next);
 
     result = CHECK_RESULT_TUPLE(result);
+    REQUIRE(result);
     result = CHECK_RESULT_CSTRING(result, "section", "\".interp\"");
     result = CHECK_RESULT_CSTRING(result, "section-size", "\"28\"");
     result = CHECK_RESULT_CSTRING(result, "total-size", "\"2466\"");
@@ -590,6 +591,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic.mi)
     REQUIRE(!result->next);
 
     result = CHECK_RESULT_TUPLE(result, "bkpt");
+    REQUIRE(result);
     result = CHECK_RESULT_CSTRING(result, "number", "\"2\"");
     result = CHECK_RESULT_CSTRING(result, "type", "\"breakpoint\"");
     result = CHECK_RESULT_CSTRING(result, "line", "\"9\"");
@@ -1035,6 +1037,30 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
     REQUIRE(result);
 
     result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    REQUIRE(!result);
+
+    REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
+
+/**
+ * Test a null tuple result record, ie. {}.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/null.mi)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async;
+    gdbmi_result *result;
+
+    oob = output->oob_record;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+
+    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+    REQUIRE(result);
+
+    result = CHECK_RESULT_TUPLE(result, "");
     REQUIRE(!result);
 
     REQUIRE(!oob->next);
