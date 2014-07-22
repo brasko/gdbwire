@@ -1057,6 +1057,17 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/null.mi)
 {
     gdbmi_result *result = GET_RESULT(output);
 
-    result = CHECK_RESULT_TUPLE(result, "");
+    result = CHECK_RESULT_TUPLE(result);
+    REQUIRE(!result);
+}
+
+/**
+ * Test a null tuple result record, ie. {}.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/key_null.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+
+    result = CHECK_RESULT_TUPLE(result, "key");
     REQUIRE(!result);
 }
