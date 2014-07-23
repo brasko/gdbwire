@@ -1050,24 +1050,38 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
     REQUIRE(!result);
 }
 
-/**
- * Test a null tuple result record, ie. {}.
+/** * Test a null tuple result record, ie. {}.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/null.mi)
 {
     gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
 
     result = CHECK_RESULT_TUPLE(result);
     REQUIRE(!result);
 }
 
 /**
- * Test a null tuple result record, ie. {}.
+ * Test a null tuple result record with a key, ie. {}.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/key_null.mi)
 {
     gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
 
     result = CHECK_RESULT_TUPLE(result, "key");
+    REQUIRE(!result);
+}
+
+/**
+ * Test a tuple result record with a cstring element
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_cstring.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_TUPLE(result);
+    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
     REQUIRE(!result);
 }

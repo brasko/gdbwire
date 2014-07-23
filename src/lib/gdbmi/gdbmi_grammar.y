@@ -287,7 +287,11 @@ tuple: OPEN_BRACE CLOSED_BRACE {
 };
 
 tuple: OPEN_BRACE result result_list CLOSED_BRACE {
-  $$ = append_gdbmi_result($2, $3);
+    if ($3) {
+        $$ = append_gdbmi_result($2, $3);
+    } else {
+        $$ = $2;
+    }
 };
 
 list: OPEN_BRACKET CLOSED_BRACKET {
@@ -295,7 +299,11 @@ list: OPEN_BRACKET CLOSED_BRACKET {
 };
 
 list: OPEN_BRACKET result result_list CLOSED_BRACKET {
-  $$ = append_gdbmi_result($2, $3);
+    if ($3) {
+        $$ = append_gdbmi_result($2, $3);
+    } else {
+        $$ = $2;
+    }
 };
 
 stream_record: stream_record_class CSTRING {
