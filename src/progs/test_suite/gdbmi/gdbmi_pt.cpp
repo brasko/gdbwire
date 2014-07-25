@@ -1050,6 +1050,19 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
     REQUIRE(!result);
 }
 
+/**
+ * Test a key/value cstring in a result record with whitespace added.
+ *
+ * Try spaces and tabs between the key, the equal sign and the value.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value_whitespace.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+
+    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    REQUIRE(!result);
+}
+
 /** * Test a null tuple result record, ie. {}.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/null.mi)
