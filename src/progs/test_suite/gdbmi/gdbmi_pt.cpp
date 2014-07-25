@@ -1172,3 +1172,16 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/key_null.mi)
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key");
     REQUIRE(!result);
 }
+
+/**
+ * Test a list result record with a cstring element
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_cstring.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
+    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    REQUIRE(!result);
+}
