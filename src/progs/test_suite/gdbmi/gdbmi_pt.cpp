@@ -1229,3 +1229,33 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_null_list.mi)
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key");
     REQUIRE(!result);
 }
+
+/**
+ * Test a result record with many next pointers.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/next.mi)
+{
+    gdbmi_result *top_result = GET_RESULT(output), *result;
+
+    result = CHECK_RESULT_VARIANT(top_result, GDBMI_LIST, "key");
+    result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
+    REQUIRE(!result);
+
+    REQUIRE(top_result->next);
+    top_result = top_result->next;
+
+    result = CHECK_RESULT_VARIANT(top_result, GDBMI_TUPLE, "key3");
+    result = CHECK_RESULT_CSTRING(result, "key4", "\"value4\"");
+    result = CHECK_RESULT_CSTRING(result, "key5", "\"value5\"");
+    REQUIRE(!result);
+
+    REQUIRE(top_result->next);
+    top_result = top_result->next;
+
+    result = CHECK_RESULT_VARIANT(top_result, GDBMI_LIST);
+    result = CHECK_RESULT_CSTRING(result, "key6", "\"value6\"");
+    result = CHECK_RESULT_CSTRING(result, "", "\"value7\"");
+    REQUIRE(!result);
+
+    REQUIRE(!top_result->next);
+}
