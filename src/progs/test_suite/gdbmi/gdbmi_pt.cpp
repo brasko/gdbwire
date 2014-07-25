@@ -1199,3 +1199,18 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_2_cstring.mi)
     result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
     REQUIRE(!result);
 }
+
+/**
+ * Test a list result record with three cstring elements
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_3_cstring.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
+    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
+    result = CHECK_RESULT_CSTRING(result, "key3", "\"value3\"");
+    REQUIRE(!result);
+}
