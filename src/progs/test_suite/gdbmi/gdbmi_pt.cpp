@@ -1085,3 +1085,17 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_cstring.mi)
     result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
     REQUIRE(!result);
 }
+
+/**
+ * Test a tuple result record with two cstring elements
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_2_cstring.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_TUPLE(result);
+    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
+    REQUIRE(!result);
+}
