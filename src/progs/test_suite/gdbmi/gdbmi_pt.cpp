@@ -1160,3 +1160,15 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/null.mi)
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
     REQUIRE(!result);
 }
+
+/**
+ * Test a null list result record with a key, ie. [].
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/list/key_null.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key");
+    REQUIRE(!result);
+}
