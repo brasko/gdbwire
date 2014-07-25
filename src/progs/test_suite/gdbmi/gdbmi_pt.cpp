@@ -259,12 +259,15 @@ namespace {
         }
 
         /**
-         * Check the tuple result matches the corresponding parameters.
+         * Check the tuple or list result matches the corresponding parameters.
          *
          * If the values do not match the result, an assertion failure is made.
          *
          * @param result
          * The gdbmi result to check the values of.
+         *
+         * @param kind
+         * A tuple or list is allowed to be checked for.
          *
          * @param variable
          * The result variable name or empty string if none.
@@ -272,12 +275,14 @@ namespace {
          * @return
          * Returns the next gdbmi_result pointer.
          */
-        gdbmi_result *CHECK_RESULT_TUPLE(gdbmi_result *result,
+        gdbmi_result *CHECK_RESULT_VARIANT(gdbmi_result *result,
+            enum gdbmi_result_kind kind,
             const std::string &variable = "") {
+            REQUIRE((kind == GDBMI_TUPLE || kind == GDBMI_LIST));
 
             CHECK_RESULT_VARIABLE(result, variable);
 
-            REQUIRE(result->kind == GDBMI_TUPLE);
+            REQUIRE(result->kind == kind);
             return result->variant.result;
         }
 
@@ -508,7 +513,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic.mi)
     REQUIRE(result);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_TUPLE(result);
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
     REQUIRE(result);
     result = CHECK_RESULT_CSTRING(result, "section", "\".interp\"");
     result = CHECK_RESULT_CSTRING(result, "section-size", "\"28\"");
@@ -621,7 +626,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic.mi)
     REQUIRE(result);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_TUPLE(result, "bkpt");
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "bkpt");
     REQUIRE(result);
     result = CHECK_RESULT_CSTRING(result, "number", "\"2\"");
     result = CHECK_RESULT_CSTRING(result, "type", "\"breakpoint\"");
@@ -1063,14 +1068,15 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value_whitespace.mi)
     REQUIRE(!result);
 }
 
-/** * Test a null tuple result record, ie. {}.
+/**
+ * Test a null tuple result record, ie. {}.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/null.mi)
 {
     gdbmi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_TUPLE(result);
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
     REQUIRE(!result);
 }
 
@@ -1082,7 +1088,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/key_null.mi)
     gdbmi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_TUPLE(result, "key");
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key");
     REQUIRE(!result);
 }
 
@@ -1094,7 +1100,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_cstring.mi)
     gdbmi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_TUPLE(result);
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
     result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
     REQUIRE(!result);
 }
@@ -1107,7 +1113,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_2_cstring.mi)
     gdbmi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_TUPLE(result);
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
     result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
     result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
     REQUIRE(!result);
@@ -1121,7 +1127,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_3_cstring.mi)
     gdbmi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_TUPLE(result);
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
     result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
     result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
     result = CHECK_RESULT_CSTRING(result, "key3", "\"value3\"");
@@ -1136,9 +1142,21 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_null_tuple.mi)
     gdbmi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_TUPLE(result);
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_TUPLE(result, "key");
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key");
+    REQUIRE(!result);
+}
+
+/**
+ * Test a null list result record, ie. [].
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/list/null.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
     REQUIRE(!result);
 }
