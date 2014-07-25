@@ -1259,3 +1259,33 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/next.mi)
 
     REQUIRE(!top_result->next);
 }
+
+/**
+ * Test a recursive result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/recursive.mi)
+{
+    gdbmi_result *top_result = GET_RESULT(output), *result, *inside_result;
+    REQUIRE(!top_result->next);
+
+    result = CHECK_RESULT_VARIANT(top_result, GDBMI_TUPLE);
+    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key2");
+
+    inside_result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key3");
+    inside_result = CHECK_RESULT_CSTRING(inside_result, "", "\"value3\"");
+    inside_result = CHECK_RESULT_CSTRING(inside_result, "", "\"value4\"");
+    REQUIRE(!inside_result);
+
+    REQUIRE(result->next);
+    result = result->next;
+
+    inside_result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key5");
+    inside_result = CHECK_RESULT_CSTRING(inside_result, "key6", "\"value6\"");
+    inside_result = CHECK_RESULT_CSTRING(inside_result, "key7", "\"value7\"");
+    REQUIRE(!inside_result);
+
+    REQUIRE(!result->next);
+}
