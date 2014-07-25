@@ -1127,3 +1127,18 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_3_cstring.mi)
     result = CHECK_RESULT_CSTRING(result, "key3", "\"value3\"");
     REQUIRE(!result);
 }
+
+/**
+ * Test a tuple result record of a null tuple.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_null_tuple.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_TUPLE(result);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_TUPLE(result, "key");
+    REQUIRE(!result);
+}
