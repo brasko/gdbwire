@@ -941,6 +941,21 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic.mi)
 }
 
 /**
+ * Test the token field of a result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token/basic.mi)
+{
+    gdbmi_result *result;
+
+    REQUIRE(!output->oob_record);
+
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR, "512");
+    REQUIRE(result);
+
+    REQUIRE(!output->next);
+}
+
+/**
  * Test the done result class of a result record.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/done.mi)
@@ -1019,16 +1034,16 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit.mi)
 }
 
 /**
- * Test the token field of a result record.
+ * Test the result record can have a NULL result field.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token/basic.mi)
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result/null.mi)
 {
     gdbmi_result *result;
 
     REQUIRE(!output->oob_record);
 
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR, "512");
-    REQUIRE(result);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_EXIT);
+    REQUIRE(!result);
 
     REQUIRE(!output->next);
 }
