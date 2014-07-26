@@ -485,6 +485,26 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic.mi)
 }
 
 /**
+ * Test the token field of an async record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token/basic.mi)
+{
+    gdbmi_oob_record *oob;
+    gdbmi_async_record *async;
+    gdbmi_result *result;
+
+    oob = output->oob_record;
+    async = CHECK_OOB_RECORD_ASYNC(oob);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED, "111");
+    REQUIRE(result);
+
+    REQUIRE(!oob->next);
+
+    REQUIRE(!output->result_record);
+    REQUIRE(!output->next);
+}
+
+/**
  * A simple status output parse tree.
  *
  * The MI status output was actually hard to make GDB produce.
@@ -846,9 +866,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic.mi)
 }
 
 /**
- * Test the token field of an async record.
+ * Test the result record can have a NULL result field.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token/basic.mi)
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/result/null.mi)
 {
     gdbmi_oob_record *oob;
     gdbmi_async_record *async;
@@ -856,11 +876,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token/basic.mi)
 
     oob = output->oob_record;
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED, "111");
-    REQUIRE(result);
+    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_DELETED);
+    REQUIRE(!result);
 
     REQUIRE(!oob->next);
-
     REQUIRE(!output->result_record);
     REQUIRE(!output->next);
 }
