@@ -203,25 +203,25 @@ TEST_CASE_METHOD_N(GdbwireStringTest, capacity)
 
         switch (i) {
             case 1 ... 127:
-                REQUIRE(gdbwire_string_capacity(string) == 128);
+                REQUIRE(gdbwire_string_capacity(string) == (size_t)128);
                 break;
             case 128 ... 255:
-                REQUIRE(gdbwire_string_capacity(string) == 256);
+                REQUIRE(gdbwire_string_capacity(string) == (size_t)256);
                 break;
             case 256 ... 511:
-                REQUIRE(gdbwire_string_capacity(string) == 512);
+                REQUIRE(gdbwire_string_capacity(string) == (size_t)512);
                 break;
             case 512 ... 1023:
-                REQUIRE(gdbwire_string_capacity(string) == 1024);
+                REQUIRE(gdbwire_string_capacity(string) == (size_t)1024);
                 break;
             case 1024 ... 2047:
-                REQUIRE(gdbwire_string_capacity(string) == 2048);
+                REQUIRE(gdbwire_string_capacity(string) == (size_t)2048);
                 break;
             case 2048 ... 4095:
-                REQUIRE(gdbwire_string_capacity(string) == 4096);
+                REQUIRE(gdbwire_string_capacity(string) == (size_t)4096);
                 break;
             case 4096:
-                REQUIRE(gdbwire_string_capacity(string) == 8192);
+                REQUIRE(gdbwire_string_capacity(string) == (size_t)8192);
                 break;
             default:
                 FAIL("Should be unreachable");
@@ -232,17 +232,17 @@ TEST_CASE_METHOD_N(GdbwireStringTest, capacity)
 
 TEST_CASE_METHOD_N(GdbwireStringTest, find_first_of/null_instance)
 {
-    REQUIRE(gdbwire_string_find_first_of(NULL, NULL) == 0);
+    REQUIRE(gdbwire_string_find_first_of(NULL, NULL) == (size_t)0);
 }
 
 TEST_CASE_METHOD_N(GdbwireStringTest, find_first_of/empty_string_instance)
 {
     // empty string instance always returns position 0 which is
     // gdbwire_string_size().
-    REQUIRE(gdbwire_string_find_first_of(string, NULL) == 0);
-    REQUIRE(gdbwire_string_find_first_of(string, "") == 0);
-    REQUIRE(gdbwire_string_find_first_of(string, "a") == 0);
-    REQUIRE(gdbwire_string_find_first_of(string, "abc") == 0);
+    REQUIRE(gdbwire_string_find_first_of(string, NULL) == (size_t)0);
+    REQUIRE(gdbwire_string_find_first_of(string, "") == (size_t)0);
+    REQUIRE(gdbwire_string_find_first_of(string, "a") == (size_t)0);
+    REQUIRE(gdbwire_string_find_first_of(string, "abc") == (size_t)0);
 }
 
 TEST_CASE_METHOD_N(GdbwireStringTest, find_first_of/standard)
@@ -260,16 +260,16 @@ TEST_CASE_METHOD_N(GdbwireStringTest, find_first_of/standard)
     REQUIRE(gdbwire_string_find_first_of(string, "") == size);
 
     // Searching for 'a' finds the first position of a.
-    REQUIRE(gdbwire_string_find_first_of(string, "a") == 0);
+    REQUIRE(gdbwire_string_find_first_of(string, "a") == (size_t)0);
 
     // Searching for 'e' finds the first position of e.
-    REQUIRE(gdbwire_string_find_first_of(string, "e") == 4);
+    REQUIRE(gdbwire_string_find_first_of(string, "e") == (size_t)4);
 
     // Searching for 'a' or 'e' finds the first position of a.
-    REQUIRE(gdbwire_string_find_first_of(string, "ae") == 0);
+    REQUIRE(gdbwire_string_find_first_of(string, "ae") == (size_t)0);
 
     // Searching for 'e' or 'a' finds the first position of a.
-    REQUIRE(gdbwire_string_find_first_of(string, "ea") == 0);
+    REQUIRE(gdbwire_string_find_first_of(string, "ea") == (size_t)0);
 
     // Searching for 'f' finds the first position of f (after NUL char).
     REQUIRE(gdbwire_string_find_first_of(string, "f") == size - 1);
