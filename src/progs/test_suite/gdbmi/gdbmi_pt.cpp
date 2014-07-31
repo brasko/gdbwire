@@ -333,7 +333,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, temporary_manual_compare_test/input.mi)
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic.mi)
 {
-    std::string expected = "\"Hello World console output\"";
+    std::string expected = "Hello World console output";
     struct gdbmi_oob_record *oob = output->oob_record;
     struct gdbmi_stream_record *stream;
 
@@ -363,29 +363,29 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic.mi)
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters.mi)
 {
     std::string expected =
-        "\"$1 = "
-        "\\\"\\\\000\\\\001\\\\002\\\\003\\\\004\\\\005\\\\006\\\\a"
-        "\\\\b\\\\t\\\\n\\\\v\\\\f\\\\r\\\\016\\\\017"
-        "\\\\020\\\\021\\\\022\\\\023\\\\024\\\\025\\\\026\\\\027"
-        "\\\\030\\\\031\\\\032\\\\033\\\\034\\\\035\\\\036\\\\037"
-        " !\\\\\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "[\\\\\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\\\\177"
-        "\\\\200\\\\201\\\\202\\\\203\\\\204\\\\205\\\\206\\\\207"
-        "\\\\210\\\\211\\\\212\\\\213\\\\214\\\\215\\\\216\\\\217"
-        "\\\\220\\\\221\\\\222\\\\223\\\\224\\\\225\\\\226\\\\227"
-        "\\\\230\\\\231\\\\232\\\\233\\\\234\\\\235\\\\236\\\\237"
-        "\\\\240\\\\241\\\\242\\\\243\\\\244\\\\245\\\\246\\\\247"
-        "\\\\250\\\\251\\\\252\\\\253\\\\254\\\\255\\\\256\\\\257"
-        "\\\\260\\\\261\\\\262\\\\263\\\\264\\\\265\\\\266\\\\267"
-        "\\\\270\\\\271\\\\272\\\\273\\\\274\\\\275\\\\276\\\\277"
-        "\\\\300\\\\301\\\\302\\\\303\\\\304\\\\305\\\\306\\\\307"
-        "\\\\310\\\\311\\\\312\\\\313\\\\314\\\\315\\\\316\\\\317"
-        "\\\\320\\\\321\\\\322\\\\323\\\\324\\\\325\\\\326\\\\327"
-        "\\\\330\\\\331\\\\332\\\\333\\\\334\\\\335\\\\336\\\\337"
-        "\\\\340\\\\341\\\\342\\\\343\\\\344\\\\345\\\\346\\\\347"
-        "\\\\350\\\\351\\\\352\\\\353\\\\354\\\\355\\\\356\\\\357"
-        "\\\\360\\\\361\\\\362\\\\363\\\\364\\\\365\\\\366\\\\367"
-        "\\\\370\\\\371\\\\372\\\\373\\\\374\\\\375\\\\376\\\\377\\\"\"";
+        "$1 = "
+        "\"\\000\\001\\002\\003\\004\\005\\006\\a"
+        "\\b\\t\\n\\v\\f\\r\\016\\017"
+        "\\020\\021\\022\\023\\024\\025\\026\\027"
+        "\\030\\031\\032\\033\\034\\035\\036\\037"
+        " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\\177"
+        "\\200\\201\\202\\203\\204\\205\\206\\207"
+        "\\210\\211\\212\\213\\214\\215\\216\\217"
+        "\\220\\221\\222\\223\\224\\225\\226\\227"
+        "\\230\\231\\232\\233\\234\\235\\236\\237"
+        "\\240\\241\\242\\243\\244\\245\\246\\247"
+        "\\250\\251\\252\\253\\254\\255\\256\\257"
+        "\\260\\261\\262\\263\\264\\265\\266\\267"
+        "\\270\\271\\272\\273\\274\\275\\276\\277"
+        "\\300\\301\\302\\303\\304\\305\\306\\307"
+        "\\310\\311\\312\\313\\314\\315\\316\\317"
+        "\\320\\321\\322\\323\\324\\325\\326\\327"
+        "\\330\\331\\332\\333\\334\\335\\336\\337"
+        "\\340\\341\\342\\343\\344\\345\\346\\347"
+        "\\350\\351\\352\\353\\354\\355\\356\\357"
+        "\\360\\361\\362\\363\\364\\365\\366\\367"
+        "\\370\\371\\372\\373\\374\\375\\376\\377\"";
     struct gdbmi_oob_record *oob = output->oob_record;
     struct gdbmi_stream_record *stream;
 
@@ -403,7 +403,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters.mi)
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic.mi)
 {
-    std::string expected = "\"Hello World target output\"";
+    std::string expected = "Hello World target output";
     struct gdbmi_oob_record *oob = output->oob_record;
     struct gdbmi_stream_record *stream;
 
@@ -421,7 +421,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic.mi)
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic.mi)
 {
-    std::string expected = "\"Hello World log output\"";
+    std::string expected = "Hello World log output";
     struct gdbmi_oob_record *oob = output->oob_record;
     struct gdbmi_stream_record *stream;
 
@@ -441,13 +441,13 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic.mi)
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic.mi)
 {
-    std::string console1 = "\"console line 1\"";
-    std::string console2 = "\"console line 2\"";
-    std::string target1 = "\"target line 1\"";
-    std::string log1 = "\"log line 1\"";
-    std::string target2 = "\"target line 2\"";
-    std::string log2 = "\"log line 2\"";
-    std::string console3 = "\"console line 3\"";
+    std::string console1 = "console line 1";
+    std::string console2 = "console line 2";
+    std::string target1 = "target line 1";
+    std::string log1 = "log line 1";
+    std::string target2 = "target line 2";
+    std::string log2 = "log line 2";
+    std::string console3 = "console line 3";
 
     struct gdbmi_oob_record *oob = output->oob_record;
     struct gdbmi_stream_record *stream;
@@ -535,9 +535,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic.mi)
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
     REQUIRE(result);
-    result = CHECK_RESULT_CSTRING(result, "section", "\".interp\"");
-    result = CHECK_RESULT_CSTRING(result, "section-size", "\"28\"");
-    result = CHECK_RESULT_CSTRING(result, "total-size", "\"2466\"");
+    result = CHECK_RESULT_CSTRING(result, "section", ".interp");
+    result = CHECK_RESULT_CSTRING(result, "section-size", "28");
+    result = CHECK_RESULT_CSTRING(result, "total-size", "2466");
 
     REQUIRE(!result);
 
@@ -588,7 +588,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic.mi)
     REQUIRE(!oob->next);
 
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
-    result = CHECK_RESULT_CSTRING(result, "thread-id", "\"all\"");
+    result = CHECK_RESULT_CSTRING(result, "thread-id", "all");
 
     REQUIRE(!result);
 
@@ -648,9 +648,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic.mi)
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "bkpt");
     REQUIRE(result);
-    result = CHECK_RESULT_CSTRING(result, "number", "\"2\"");
-    result = CHECK_RESULT_CSTRING(result, "type", "\"breakpoint\"");
-    result = CHECK_RESULT_CSTRING(result, "line", "\"9\"");
+    result = CHECK_RESULT_CSTRING(result, "number", "2");
+    result = CHECK_RESULT_CSTRING(result, "type", "breakpoint");
+    result = CHECK_RESULT_CSTRING(result, "line", "9");
 
     REQUIRE(!result);
 
@@ -892,11 +892,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/result/null.mi)
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic.mi)
 {
-    std::string console1 = "\"console line 1\"";
-    std::string console2 = "\"console line 2\"";
-    std::string target1 = "\"target line 1\"";
-    std::string log1 = "\"log line 1\"";
-    std::string log2 = "\"log line 2\"";
+    std::string console1 = "console line 1";
+    std::string console2 = "console line 2";
+    std::string target1 = "target line 1";
+    std::string log1 = "log line 1";
+    std::string log2 = "log line 2";
 
     gdbmi_oob_record *oob;
     gdbmi_stream_record *stream_record;
@@ -1025,7 +1025,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/connected.mi)
 TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/error.mi)
 {
     std::string expected =
-        "\"Undefined command: \\\"null\\\".  Try \\\"help\\\".\"";
+        "Undefined command: \"null\".  Try \"help\".";
     gdbmi_result *result;
 
     REQUIRE(!output->oob_record);
@@ -1074,7 +1074,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/value.mi)
 {
     gdbmi_result *result = GET_RESULT(output);
 
-    result = CHECK_RESULT_CSTRING(result, "", "\"value\"");
+    result = CHECK_RESULT_CSTRING(result, "", "value");
     REQUIRE(!result);
 }
 
@@ -1085,7 +1085,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
 {
     gdbmi_result *result = GET_RESULT(output);
 
-    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
 }
 
@@ -1098,7 +1098,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value_whitespace.mi)
 {
     gdbmi_result *result = GET_RESULT(output);
 
-    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
 }
 
@@ -1135,7 +1135,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_cstring.mi)
     REQUIRE(!result->next);
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
-    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
 }
 
@@ -1148,8 +1148,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_2_cstring.mi)
     REQUIRE(!result->next);
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
-    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
-    result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
+    result = CHECK_RESULT_CSTRING(result, "key", "value");
+    result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     REQUIRE(!result);
 }
 
@@ -1162,9 +1162,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_3_cstring.mi)
     REQUIRE(!result->next);
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
-    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
-    result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
-    result = CHECK_RESULT_CSTRING(result, "key3", "\"value3\"");
+    result = CHECK_RESULT_CSTRING(result, "key", "value");
+    result = CHECK_RESULT_CSTRING(result, "key2", "value2");
+    result = CHECK_RESULT_CSTRING(result, "key3", "value3");
     REQUIRE(!result);
 }
 
@@ -1216,7 +1216,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_cstring.mi)
     REQUIRE(!result->next);
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
-    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
 }
 
@@ -1229,8 +1229,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_2_cstring.mi)
     REQUIRE(!result->next);
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
-    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
-    result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
+    result = CHECK_RESULT_CSTRING(result, "key", "value");
+    result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     REQUIRE(!result);
 }
 
@@ -1243,9 +1243,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_3_cstring.mi)
     REQUIRE(!result->next);
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
-    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
-    result = CHECK_RESULT_CSTRING(result, "", "\"value2\"");
-    result = CHECK_RESULT_CSTRING(result, "key3", "\"value3\"");
+    result = CHECK_RESULT_CSTRING(result, "key", "value");
+    result = CHECK_RESULT_CSTRING(result, "", "value2");
+    result = CHECK_RESULT_CSTRING(result, "key3", "value3");
     REQUIRE(!result);
 }
 
@@ -1272,23 +1272,23 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/next.mi)
     gdbmi_result *top_result = GET_RESULT(output), *result;
 
     result = CHECK_RESULT_VARIANT(top_result, GDBMI_LIST, "key");
-    result = CHECK_RESULT_CSTRING(result, "key2", "\"value2\"");
+    result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     REQUIRE(!result);
 
     REQUIRE(top_result->next);
     top_result = top_result->next;
 
     result = CHECK_RESULT_VARIANT(top_result, GDBMI_TUPLE, "key3");
-    result = CHECK_RESULT_CSTRING(result, "key4", "\"value4\"");
-    result = CHECK_RESULT_CSTRING(result, "key5", "\"value5\"");
+    result = CHECK_RESULT_CSTRING(result, "key4", "value4");
+    result = CHECK_RESULT_CSTRING(result, "key5", "value5");
     REQUIRE(!result);
 
     REQUIRE(top_result->next);
     top_result = top_result->next;
 
     result = CHECK_RESULT_VARIANT(top_result, GDBMI_LIST);
-    result = CHECK_RESULT_CSTRING(result, "key6", "\"value6\"");
-    result = CHECK_RESULT_CSTRING(result, "", "\"value7\"");
+    result = CHECK_RESULT_CSTRING(result, "key6", "value6");
+    result = CHECK_RESULT_CSTRING(result, "", "value7");
     REQUIRE(!result);
 
     REQUIRE(!top_result->next);
@@ -1303,22 +1303,22 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/recursive.mi)
     REQUIRE(!top_result->next);
 
     result = CHECK_RESULT_VARIANT(top_result, GDBMI_TUPLE);
-    result = CHECK_RESULT_CSTRING(result, "key", "\"value\"");
+    result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result->next);
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key2");
 
     inside_result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key3");
-    inside_result = CHECK_RESULT_CSTRING(inside_result, "", "\"value3\"");
-    inside_result = CHECK_RESULT_CSTRING(inside_result, "", "\"value4\"");
+    inside_result = CHECK_RESULT_CSTRING(inside_result, "", "value3");
+    inside_result = CHECK_RESULT_CSTRING(inside_result, "", "value4");
     REQUIRE(!inside_result);
 
     REQUIRE(result->next);
     result = result->next;
 
     inside_result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key5");
-    inside_result = CHECK_RESULT_CSTRING(inside_result, "key6", "\"value6\"");
-    inside_result = CHECK_RESULT_CSTRING(inside_result, "key7", "\"value7\"");
+    inside_result = CHECK_RESULT_CSTRING(inside_result, "key6", "value6");
+    inside_result = CHECK_RESULT_CSTRING(inside_result, "key7", "value7");
     REQUIRE(!inside_result);
 
     REQUIRE(!result->next);

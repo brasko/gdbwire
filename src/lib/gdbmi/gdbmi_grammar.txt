@@ -128,6 +128,39 @@ Extensions to GDB/MI
 Finally, gdbwire must be able to receive many output commands during
 a single session. So the grammar supports accepting an output list.
 
+GDB/MI Clarifications
+---------------------
+
+1) The c-string GDB/MI output rule
+
+  For the GDB/MI output command, there is no clarification for exactly
+  what the c-string rule outputs. When I look at the documentation for the
+  GDB/MI input command I see this,
+    c-string -> """ seven-bit-iso-c-string-content """
+  The documentation doesn't say if this is true for the GDB/MI output
+  command as well. It also doesn't clarify exactly what will be output.
+
+  I determined from trial and error that the c-string rule starts with a
+  double quote, has zero or more characters and ends with a double quote.
+  This can be verified in GDB in utils.c:printchar.
+
+  Any double quote or backslash character between the starting and ending
+  double quotes is escaped with another backslash. It looks like this,
+    if (c == '\\' || c == quoter)
+      do_fputs ("\\", stream);
+  where in this instance quoter is ".
+
+  Any unprintable character is printed as octal as so,
+    do_fprintf (stream, "\\%.3o", (unsigned int) c);
+  The CLI also has this behavior.
+
+  Several other special characters like \n and \r, etc are translated to \\n.
+
+  In order to provide the gdbwire user with the intended information, I had
+  to write an unescape c-string function which undoes the escaping added
+  in the GDB/MI protocol layer. Currently, the functionality simply skips
+  any \ characters in the c-string and takes the next character.
+
 GDB/MI Bug Fixes
 ----------------
 

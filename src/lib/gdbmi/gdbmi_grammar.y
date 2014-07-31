@@ -36,6 +36,54 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
       fprintf (stderr, "%s:%d before (%s)\n", __FILE__, __LINE__, gdbmi_text);
     }
 }
+
+/**
+ * GDB/MI escapes characters in the c-string rule.
+ *
+ * The c-string starts and ends with a ".
+ * Each " in the c-string is escaped with a \. So GDB turns " into \".
+ * Each \ in the string is then escaped with a \. So GDB turns \ into \\.
+ *
+ * Remove the GDB/MI escape characters to provide back to the user the
+ * original characters that GDB was intending to transmit. So
+ *   \" -> "
+ *   \\ -> \
+ *
+ * See gdbmi_grammar.txt (GDB/MI Clarifications) for more information.
+ *
+ * @param str
+ * The escaped GDB/MI c-string data.
+ *
+ * @return
+ * An allocated strng representing str with the escaping undone.
+ */
+static char *gdbmi_unescape_cstring(char *str)
+{
+    char *result;
+    size_t r, s, length;
+
+    //assert(str);
+
+    result = strdup(str);
+    length = strlen(str);
+
+    /* a CSTRING should start and end with a quote */
+    //assert(result);
+    //assert(length >= 2);
+
+    for (r = 0, s = 1; s < length - 1; ++s) {
+        if (str[s] == '\\') {
+            result[r++] = str[++s];
+        } else {
+            result[r++] = str[s];
+        }
+    }
+
+    result[r] = 0;
+
+    return result;
+}
+
 %}
 
 %token OPEN_BRACE	/* { */
@@ -69,6 +117,7 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
   struct gdbmi_stream_record *u_stream_record;
   int u_async_class;
   char *u_variable;
+  char *u_cstring;
   struct gdbmi_result *u_tuple;
   struct gdbmi_result *u_list;
   int u_stream_record_kind;
@@ -90,6 +139,7 @@ void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
 %type <u_stream_record> stream_record
 %type <u_async_class> async_class
 %type <u_variable> variable
+%type <u_cstring> cstring
 %type <u_tuple> tuple
 %type <u_list> list
 %type <u_stream_record_kind> stream_record_class
@@ -257,11 +307,11 @@ result_list: result_list COMMA result {
   $$ = append_gdbmi_result ($1, $3);
 };
 
-result: opt_variable CSTRING {
+result: opt_variable cstring {
   $$ = gdbmi_result_alloc();
   $$->variable = $1;
   $$->kind = GDBMI_CSTRING;
-  $$->variant.cstring = strdup(gdbmi_text); 
+  $$->variant.cstring = $2;
 };
 
 result: opt_variable tuple {
@@ -279,7 +329,11 @@ result: opt_variable list {
 };
 
 variable: STRING_LITERAL {
-  $$ = strdup (gdbmi_text);
+  $$ = strdup(gdbmi_text);
+};
+
+cstring: CSTRING {
+  $$ = gdbmi_unescape_cstring(gdbmi_text);
 };
 
 tuple: OPEN_BRACE CLOSED_BRACE {
@@ -306,10 +360,10 @@ list: OPEN_BRACKET result result_list CLOSED_BRACKET {
     }
 };
 
-stream_record: stream_record_class CSTRING {
+stream_record: stream_record_class cstring {
   $$ = gdbmi_stream_record_alloc();
   $$->kind = $1;
-  $$->cstring = strdup ( gdbmi_text );
+  $$->cstring = $2;
 };
 
 stream_record_class: TILDA {
