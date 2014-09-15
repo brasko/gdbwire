@@ -5,6 +5,61 @@
 extern "C" { 
 #endif 
 
+/** The gdbmi output kinds. */
+enum gdbmi_output_kind {
+    /**
+     * The GDB/MI output contains an out of band record.
+     *
+     * The out of band record is not necessarily associated with any
+     * particular GDB/MI input command.
+     */
+    GDBMI_OUTPUT_OOB,
+
+    /**
+     * The GDB/MI output contains a gdbmi result record.
+     *
+     * This record typically contains the result data from a request
+     * made by the client in a previous GDB/MI input command.
+     */
+    GDBMI_OUTPUT_RESULT,
+
+    /**
+     * The GDB/MI output represents a prompt. (ie. (gdb) )
+     * 
+     * TODO: Document when GDB is ready to receive a command. Only if
+     * the prompt is received and at *stopped?
+     */
+    GDBMI_OUTPUT_PROMPT
+};
+
+/**
+ * The GDB/MI output command.
+ *
+ * A GDB/MI output command is the main mechanism in which GDB
+ * corresponds with a front end.
+ */
+struct gdbmi_output {
+    enum gdbmi_output_kind kind;
+
+    union {
+        /** When kind == GDBMI_OUTPUT_OOB, never NULL. */
+        struct gdbmi_oob_record *oob_record;
+        /** When kind == GDBMI_OUTPUT_RESULT, never NULL. */
+        struct gdbmi_result_record *result_record;
+    } variant;
+
+    /** The next GDB/MI output command or NULL if none */
+    struct gdbmi_output *next;
+};
+
+/**
+ * A GDB/MI token.
+ *
+ * A string made up of one or more digits.
+ * The regular expression [0-9]+ will match this types contents.
+ */
+typedef char *gdbmi_token_t;
+
 /**
  * A GDB/MI output command may contain one of the following result indications.
  */
@@ -62,39 +117,6 @@ enum gdbmi_result_class {
      */
     GDBMI_EXIT
 };
-
-/**
- * The GDB/MI output command.
- *
- * A GDB/MI output command is the main mechanism in which GDB
- * corresponds with a front end.
- */
-struct gdbmi_output {
-    /**
-     * An optional list of out-of-band records.
-     *
-     * Will be NULL if there is no list for this output command.
-     */
-    struct gdbmi_oob_record *oob_record;
-
-    /**
-     * An optional result record.
-     *
-     * Will be NULL if there is no result record for this output command.
-     */
-    struct gdbmi_result_record *result_record;
-
-    /** The next GDB/MI output command or NULL if none */
-    struct gdbmi_output *next;
-};
-
-/**
- * A GDB/MI token.
- *
- * A string made up of one or more digits.
- * The regular expression [0-9]+ will match this types contents.
- */
-typedef char *gdbmi_token_t;
 
 /**
  * The GDB/MI result record in an output command.
@@ -171,9 +193,6 @@ struct gdbmi_oob_record {
         /** When kind == GDBMI_STREAM. */
         struct gdbmi_stream_record *stream_record;
     } variant;
-
-    /** The next gdbmi out of band record or NULL if none. */
-    struct gdbmi_oob_record *next;
 };
 
 /** The asynchronous out of band record kinds */
@@ -576,9 +595,6 @@ struct gdbmi_output *append_gdbmi_output(struct gdbmi_output *list,
 
 struct gdbmi_result *append_gdbmi_result(struct gdbmi_result *list,
         struct gdbmi_result *item);
-
-struct gdbmi_oob_record *append_gdbmi_oob_record(struct gdbmi_oob_record *list,
-        struct gdbmi_oob_record *item);
 
 #ifdef __cplusplus 
 }

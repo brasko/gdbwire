@@ -124,9 +124,8 @@ static char *gdbmi_unescape_cstring(char *str)
 }
 
 %type <u_output> output
+%type <u_output> output_variant
 %type <u_oob_record> oob_record
-%type <u_oob_record> oob_record_list
-%type <u_result_record> opt_result_record
 %type <u_result_record> result_record
 %type <u_result_class> result_class
 %type <u_async_record_kind> async_record_class
@@ -153,37 +152,34 @@ output_list: {
 output_list: output_list output {
 };
 
-output: oob_record_list opt_result_record OPEN_PAREN variable CLOSED_PAREN NEWLINE { 
+output: output_variant NEWLINE {
   struct gdbmi_parser_callbacks callbacks =
       gdbmi_parser_get_callbacks(gdbmi_parser);
 
+  callbacks.gdbmi_output_callback(callbacks.context, $1);
+};
+
+output_variant: oob_record {
   $$ = gdbmi_output_alloc();
-  $$->oob_record = $1;
-  $$->result_record = $2;
+  $$->kind = GDBMI_OUTPUT_OOB;
+  $$->variant.oob_record = $1;
+}
 
-  if (strcmp ("gdb", $4) != 0)
+output_variant: result_record {
+  $$ = gdbmi_output_alloc();
+  $$->kind = GDBMI_OUTPUT_RESULT;
+  $$->variant.result_record = $1;
+}
+
+output_variant: OPEN_PAREN variable CLOSED_PAREN {
+  if (strcmp("gdb", $2) != 0) {
     gdbmi_error (gdbmi_parser, "Syntax error, expected 'gdb'");
+  }
+  free($2);
 
-  free ($4);
-
-  callbacks.gdbmi_output_callback(callbacks.context, $$);
-} ;
-
-oob_record_list: {
-  $$ = NULL;
-};
-
-oob_record_list: oob_record_list oob_record NEWLINE {
-  $$ = append_gdbmi_oob_record ($1, $2);
-};
-
-opt_result_record: {
-  $$ = NULL;
-};
-
-opt_result_record: result_record NEWLINE {
-  $$ = $1;
-};
+  $$ = gdbmi_output_alloc();
+  $$->kind = GDBMI_OUTPUT_PROMPT;
+}
 
 result_record: opt_token CARROT result_class result_list {
   $$ = gdbmi_result_record_alloc();

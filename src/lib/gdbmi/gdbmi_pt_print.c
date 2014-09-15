@@ -41,13 +41,23 @@ int print_gdbmi_output(struct gdbmi_output *param)
     int result;
 
     while (cur) {
-        result = print_gdbmi_oob_record(cur->oob_record);
-        if (result == -1)
-            return -1;
-
-        result = print_gdbmi_result_record(cur->result_record);
-        if (result == -1)
-            return -1;
+        switch (cur->kind) {
+            case GDBMI_OUTPUT_OOB:
+                result = print_gdbmi_oob_record(cur->variant.oob_record);
+                if (result == -1) {
+                    return -1;
+                }
+                break;
+            case GDBMI_OUTPUT_RESULT:
+                result = print_gdbmi_result_record(cur->variant.result_record);
+                if (result == -1) {
+                    return -1;
+                }
+                break;
+            case GDBMI_OUTPUT_PROMPT:
+                printf("(gdb)\n");
+                break;
+        }
 
         cur = cur->next;
     }
@@ -135,26 +145,23 @@ int print_gdbmi_oob_record_kind(enum gdbmi_oob_record_kind param)
 
 int print_gdbmi_oob_record(struct gdbmi_oob_record *param)
 {
-    struct gdbmi_oob_record *cur = param;
     int result;
 
-    while (cur) {
-        result = print_gdbmi_oob_record_kind(cur->kind);
+    if (param) {
+        result = print_gdbmi_oob_record_kind(param->kind);
         if (result == -1)
             return -1;
 
-        if (cur->kind == GDBMI_ASYNC) {
-            result = print_gdbmi_async_record(cur->variant.async_record);
+        if (param->kind == GDBMI_ASYNC) {
+            result = print_gdbmi_async_record(param->variant.async_record);
             if (result == -1)
                 return -1;
-        } else if (cur->kind == GDBMI_STREAM) {
-            result = print_gdbmi_stream_record(cur->variant.stream_record);
+        } else if (param->kind == GDBMI_STREAM) {
+            result = print_gdbmi_stream_record(param->variant.stream_record);
             if (result == -1)
                 return -1;
         } else
             return -1;
-
-        cur = cur->next;
     }
 
     return 0;

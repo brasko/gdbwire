@@ -105,15 +105,36 @@ namespace {
         gdbmi_result *CHECK_OUTPUT_RESULT_RECORD(gdbmi_output *output,
             gdbmi_result_class result_class, const std::string &token = "") {
             REQUIRE(output);
-            REQUIRE(output->result_record);
+            REQUIRE(output->kind == GDBMI_OUTPUT_RESULT);
+            gdbmi_result_record *result_record = output->variant.result_record;
+            REQUIRE(result_record);
             if (token.empty()) {
-                REQUIRE(!output->result_record->token);
+                REQUIRE(!result_record->token);
             } else {
-                REQUIRE(output->result_record->token);
-                REQUIRE(token == output->result_record->token);
+                REQUIRE(result_record->token);
+                REQUIRE(token == result_record->token);
             }
-            REQUIRE(output->result_record->result_class == result_class);
-            return output->result_record->result;
+            REQUIRE(result_record->result_class == result_class);
+            return result_record->result;
+        }
+
+        gdbmi_oob_record *CHECK_OUTPUT_OOB_RECORD(gdbmi_output *output) {
+            REQUIRE(output);
+            REQUIRE(output->kind == GDBMI_OUTPUT_OOB);
+            REQUIRE(output->variant.oob_record);
+            return output->variant.oob_record;
+        }
+
+        gdbmi_output *CHECK_OUTPUT_PROMPT(gdbmi_output *output) {
+            REQUIRE(output);
+            REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+            return output->next;
+        }
+
+        void CHECK_OUTPUT_AT_FINAL_PROMPT(gdbmi_output *output) {
+            REQUIRE(output);
+            output = CHECK_OUTPUT_PROMPT(output);
+            REQUIRE(!output);
         }
 
         /**
@@ -309,7 +330,7 @@ namespace {
             gdbmi_async_record *async;
             gdbmi_result *result;
 
-            oob = output->oob_record;
+            oob = CHECK_OUTPUT_OOB_RECORD(output);
             async = CHECK_OOB_RECORD_ASYNC(oob);
 
             result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
@@ -334,16 +355,14 @@ TEST_CASE_METHOD_N(GdbmiPtTest, temporary_manual_compare_test/input.mi)
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic.mi)
 {
     std::string expected = "Hello World console output";
-    struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_oob_record *oob;
     struct gdbmi_stream_record *stream;
 
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
 
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -386,16 +405,14 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters.mi)
         "\\350\\351\\352\\353\\354\\355\\356\\357"
         "\\360\\361\\362\\363\\364\\365\\366\\367"
         "\\370\\371\\372\\373\\374\\375\\376\\377\"";
-    struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_oob_record *oob;
     struct gdbmi_stream_record *stream;
 
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
 
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -404,16 +421,14 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters.mi)
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic.mi)
 {
     std::string expected = "Hello World target output";
-    struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_oob_record *oob;
     struct gdbmi_stream_record *stream;
 
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_TARGET, expected);
 
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -422,15 +437,14 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic.mi)
 TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic.mi)
 {
     std::string expected = "Hello World log output";
-    struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_oob_record *oob;
     struct gdbmi_stream_record *stream;
 
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_LOG, expected);
-    REQUIRE(!oob->next);
 
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -449,39 +463,44 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic.mi)
     std::string log2 = "log line 2";
     std::string console3 = "console line 3";
 
-    struct gdbmi_oob_record *oob = output->oob_record;
+    struct gdbmi_oob_record *oob;
     struct gdbmi_stream_record *stream;
 
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, console1);
-    oob = oob->next;
 
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, console2);
-    oob = oob->next;
 
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_TARGET, target1);
-    oob = oob->next;
 
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_LOG, log1);
-    oob = oob->next;
 
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_TARGET, target2);
-    oob = oob->next;
 
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_LOG, log2);
-    oob = oob->next;
 
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, console3);
-    REQUIRE(!oob->next);
 
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -493,15 +512,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token/basic.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    oob = output->oob_record;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED, "111");
     REQUIRE(result);
 
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -525,9 +541,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    oob = output->oob_record;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
+
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    REQUIRE(!oob->next);
 
     result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
     REQUIRE(result);
@@ -538,11 +554,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic.mi)
     result = CHECK_RESULT_CSTRING(result, "section", ".interp");
     result = CHECK_RESULT_CSTRING(result, "section-size", "28");
     result = CHECK_RESULT_CSTRING(result, "total-size", "2466");
-
     REQUIRE(!result);
 
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -557,21 +571,18 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/async_class.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    oob = output->oob_record;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_UNSUPPORTED);
     REQUIRE(result);
 
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -583,17 +594,15 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    oob = output->oob_record;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    REQUIRE(!oob->next);
 
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
     result = CHECK_RESULT_CSTRING(result, "thread-id", "all");
 
     REQUIRE(!result);
 
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -605,27 +614,24 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/async_class.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    oob = output->oob_record;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_UNSUPPORTED);
     REQUIRE(result);
 
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -637,9 +643,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    oob = output->oob_record;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    REQUIRE(!oob->next);
 
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_BREAKPOINT_CREATED);
@@ -654,8 +659,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic.mi)
 
     REQUIRE(!result);
 
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -667,153 +671,150 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/async_class.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    oob = output->oob_record;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_THREAD_GROUP_ADDED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_THREAD_GROUP_REMOVED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_THREAD_GROUP_STARTED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_THREAD_GROUP_EXITED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_THREAD_CREATED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_THREAD_EXITED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_THREAD_SELECTED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_LIBRARY_LOADED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_LIBRARY_UNLOADED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_TRACEFRAME_CHANGED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_CREATED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_MODIFIED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_DELETED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_BREAKPOINT_CREATED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_BREAKPOINT_MODIFIED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_BREAKPOINT_DELETED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_RECORD_STARTED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_RECORD_STOPPED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_CMD_PARAM_CHANGED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_MEMORY_CHANGED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_UNSUPPORTED);
     REQUIRE(result);
 
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -828,41 +829,38 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    oob = output->oob_record;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_BREAKPOINT_CREATED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_BREAKPOINT_CREATED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
     REQUIRE(result);
 
-    REQUIRE(!oob->next);
-
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -874,14 +872,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/result/null.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    oob = output->oob_record;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_DELETED);
     REQUIRE(!result);
 
-    REQUIRE(!oob->next);
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -903,60 +899,56 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic.mi)
     gdbmi_async_record *async;
     gdbmi_result *result;
 
-    REQUIRE(!output->result_record);
-    REQUIRE(!output->next);
-
-    oob = output->oob_record;
-
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream_record, GDBMI_CONSOLE, console1);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream_record, GDBMI_CONSOLE, console2);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream_record, GDBMI_TARGET, target1);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
             GDBMI_ASYNC_BREAKPOINT_CREATED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream_record, GDBMI_LOG, log1);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
     result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
     REQUIRE(result);
 
-    REQUIRE(oob->next);
-    oob = oob->next;
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
     CHECK_STREAM_RECORD(stream_record, GDBMI_LOG, log2);
 
-    REQUIRE(!oob->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -966,12 +958,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token/basic.mi)
 {
     gdbmi_result *result;
 
-    REQUIRE(!output->oob_record);
-
     result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR, "512");
     REQUIRE(result);
 
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -981,12 +971,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/done.mi)
 {
     gdbmi_result *result;
 
-    REQUIRE(!output->oob_record);
-
     result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_DONE);
     REQUIRE(result);
 
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -996,12 +984,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/running.mi)
 {
     gdbmi_result *result;
 
-    REQUIRE(!output->oob_record);
-
     result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_RUNNING);
     REQUIRE(!result);
 
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1011,12 +997,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/connected.mi)
 {
     gdbmi_result *result;
 
-    REQUIRE(!output->oob_record);
-
     result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_CONNECTED);
     REQUIRE(!result);
 
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1028,13 +1012,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/error.mi)
         "Undefined command: \"null\".  Try \"help\".";
     gdbmi_result *result;
 
-    REQUIRE(!output->oob_record);
-
     result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR);
     result = CHECK_RESULT_CSTRING(result, "msg", expected);
     REQUIRE(!result);
 
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1044,12 +1026,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit.mi)
 {
     gdbmi_result *result;
 
-    REQUIRE(!output->oob_record);
-
     result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_EXIT);
     REQUIRE(!result);
 
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1059,12 +1039,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result/null.mi)
 {
     gdbmi_result *result;
 
-    REQUIRE(!output->oob_record);
-
     result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_EXIT);
     REQUIRE(!result);
 
-    REQUIRE(!output->next);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1076,6 +1054,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/value.mi)
 
     result = CHECK_RESULT_CSTRING(result, "", "value");
     REQUIRE(!result);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1087,6 +1066,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
 
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1100,6 +1080,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value_whitespace.mi)
 
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1112,6 +1093,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/null.mi)
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
     REQUIRE(!result);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1124,6 +1106,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/key_null.mi)
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key");
     REQUIRE(!result);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1137,6 +1120,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_cstring.mi)
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1151,6 +1135,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_2_cstring.mi)
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     REQUIRE(!result);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1166,6 +1151,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_3_cstring.mi)
     result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     result = CHECK_RESULT_CSTRING(result, "key3", "value3");
     REQUIRE(!result);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1181,6 +1167,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_null_tuple.mi)
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key");
     REQUIRE(!result);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1193,6 +1181,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/null.mi)
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
     REQUIRE(!result);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1205,6 +1195,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/key_null.mi)
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key");
     REQUIRE(!result);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1218,6 +1210,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_cstring.mi)
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1232,6 +1226,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_2_cstring.mi)
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     REQUIRE(!result);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1247,6 +1243,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_3_cstring.mi)
     result = CHECK_RESULT_CSTRING(result, "", "value2");
     result = CHECK_RESULT_CSTRING(result, "key3", "value3");
     REQUIRE(!result);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1262,6 +1260,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_null_list.mi)
 
     result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key");
     REQUIRE(!result);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1292,6 +1292,8 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/next.mi)
     REQUIRE(!result);
 
     REQUIRE(!top_result->next);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
 
 /**
@@ -1322,4 +1324,6 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/recursive.mi)
     REQUIRE(!inside_result);
 
     REQUIRE(!result->next);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }

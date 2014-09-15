@@ -42,24 +42,3 @@ append_gdbmi_result(struct gdbmi_result *list, struct gdbmi_result *item)
 
     return list;
 }
-
-struct gdbmi_oob_record *
-append_gdbmi_oob_record(struct gdbmi_oob_record *list,
-        struct gdbmi_oob_record *item)
-{
-    if (!item)
-        return NULL;
-
-    if (!list)
-        list = item;
-    else {
-        struct gdbmi_oob_record *cur = list;
-
-        while (cur->next)
-            cur = cur->next;
-
-        cur->next = item;
-    }
-
-    return list;
-}

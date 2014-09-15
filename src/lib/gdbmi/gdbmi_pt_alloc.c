@@ -14,11 +14,18 @@ void
 gdbmi_output_free(struct gdbmi_output *param)
 {
     if (param) {
-        gdbmi_oob_record_free(param->oob_record);
-        param->oob_record = NULL;
-
-        gdbmi_result_record_free(param->result_record);
-        param->result_record = NULL;
+        switch (param->kind) {
+            case GDBMI_OUTPUT_OOB:
+                gdbmi_oob_record_free(param->variant.oob_record);
+                param->variant.oob_record = NULL;
+                break;
+            case GDBMI_OUTPUT_RESULT:
+                gdbmi_result_record_free(param->variant.result_record);
+                param->variant.result_record = NULL;
+                break;
+            case GDBMI_OUTPUT_PROMPT:
+                break;
+        }
 
         gdbmi_output_free(param->next);
         param->next = NULL;
@@ -108,9 +115,6 @@ gdbmi_oob_record_free(struct gdbmi_oob_record *param)
                 param->variant.stream_record = NULL;
                 break;
         }
-
-        gdbmi_oob_record_free(param->next);
-        param->next = NULL;
 
         free(param);
         param = NULL;

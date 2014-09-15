@@ -56,7 +56,7 @@ Zero or one rules like the regular expression [pattern] look like this:
   opt_pattern -> pattern
 
 Below are the transformations that I use to get from the documented
-sytax above to the LR(1) grammar I provide to bison.
+syntax above to the LR(1) grammar I provide to bison.
 
 - (out-of-band-record)* transforms to out-of-band-record-list
   out-of-band-record-list -> epsilon
@@ -78,7 +78,7 @@ sytax above to the LR(1) grammar I provide to bison.
   value-list -> epsilon
   value-list -> value-list "," value
 
-- Consolidate the following rules to a more consice set of rules
+- Consolidate the following rules to a more concise set of rules
 - From
     async-record        -> exec-async-output |
                            status-async-output |
@@ -228,14 +228,75 @@ GDB/MI Bug Fixes
     result              -> opt_variable c-string
     result              -> opt_variable tuple
     result              -> opt_variable list
-  
+
+3) The GDB/MI output command is a hoax
+
+  While testing I ran into this output command,
+    0000-exec-run
+    =library-unloaded,id=...
+    =library-unloaded,id=...
+    =thread-group-started,...
+    =thread-created,id=...
+    0000^running                <- result record sandwich
+    *running,...
+    (gdb)
+  From the grammar, it should be obvious that the result record should
+  always come after the oob-record-list. However, in the above case
+  it doesn't.
+
+  I contacted the GDB mailing list and here was the response:
+    Out of band records don't necessary correspond to any command,
+    therefore making them a part of command output in the grammar is not
+    logically reasonable.
+
+    A better approach would be to say that each thing GDB outputs
+    is a sequence of line, and each line can be parsed as either out
+    of band record or result record or prompt.
+
+  So in other words, the documented grammar is fundamentally wrong compared
+  to how GDB actually works. The way GDB actually works is super easy to
+  understand. GDB simply outputs a line at a time. The line can be
+  an oob-record, a result-record or a gdb prompt.
+
+  There is a significant advantage to this line at a time approach.
+  gdbwire can now return to the client information faster than previously
+  possible as it is now possible to parse a single line and return just
+  that information rather than wait for an entire GDB/MI output record
+  to be received and parsed.
+
+  Another advantage of the line at a time approach is that it
+  simplifies error handling. Previously, if part of a GDB/MI output command
+  could not be parsed the entire output command would be considered an
+  error. Now, the error is bound only to the line being parsed that
+  contains the error.
+
+  Changing the bison grammar to accept the line at a time approach is
+  actually quite easy. gdbwire now accepts these top level rules
+    - oob-record
+    - result-record
+    - gdb prompt
+
+  Grammar modification is as follows:
+  From:
+    output-list         -> output-list output | epsilon
+    output              -> oob-record-list opt-result-record "(gdb)" nl
+    oob-record-list     -> oob-record-list oob-record nl | epsilon
+    opt-result-record   -> result-record nl | epsilon
+
+  To:
+    output-list         -> output-list output | epsilon
+    output              -> output_variant nl
+    output_variant      -> oob-record | result-record | "(gdb)"
+  Remove:
+    oob-record-list     -> oob-record-list oob-record nl | epsilon
+    opt-result-record   -> result-record nl | epsilon
+
 LR(1) Grammar
 -------------
 
 output-list         -> output-list output | epsilon
-output              -> oob-record-list opt-result-record "(gdb)" nl
-oob-record-list     -> oob-record-list oob-record nl | epsilon
-opt-result-record   -> result-record nl | epsilon
+output              -> output_variant nl
+output_variant      -> oob-record | result-record | "(gdb)"
 result-record       -> opt-token "^" result-class result-list
 oob-record          -> async-record | stream-record
 async-record        -> opt-token async-record-kind async-class result-list
