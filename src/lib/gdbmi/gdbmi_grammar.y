@@ -2,13 +2,12 @@
 %define api.pure                                                               
 %define api.push_pull "push"                                                   
 %defines
-%code requires { struct gdbmi_parser; }
-%parse-param { struct gdbmi_parser *gdbmi_parser }
+%code requires { struct gdbmi_output; }
+%parse-param {struct gdbmi_output **gdbmi_output}
 
 %{
 #include <string.h>
 #include <stdio.h>
-#include "src/lib/gdbmi/gdbmi_parser.h"
 #include "src/lib/gdbmi/gdbmi_pt.h"
 #include "src/lib/gdbmi/gdbmi_pt_alloc.h"
 
@@ -16,13 +15,7 @@ extern char *gdbmi_text;
 extern int gdbmi_lex (void);
 extern int gdbmi_lineno;
 
-/* The below functions are defined in gdbmi_parser.c. It is not desirable
-   to move them into the header file because general users of the parser
-   should not be accessing the output command directory. */
-extern struct gdbmi_parser_callbacks
-    gdbmi_parser_get_callbacks(struct gdbmi_parser *parser);
-
-void gdbmi_error (struct gdbmi_parser *gdbmi_parser, const char *s)
+void gdbmi_error(struct gdbmi_output **gdbmi_output, const char *s)
 { 
   fprintf (stderr, "%s:%d Error %s", __FILE__, __LINE__, s);
   if (strcmp (gdbmi_text, "\n") == 0)
@@ -153,10 +146,7 @@ output_list: output_list output {
 };
 
 output: output_variant NEWLINE {
-  struct gdbmi_parser_callbacks callbacks =
-      gdbmi_parser_get_callbacks(gdbmi_parser);
-
-  callbacks.gdbmi_output_callback(callbacks.context, $1);
+  *gdbmi_output = $1;
 };
 
 output_variant: oob_record {
@@ -173,7 +163,7 @@ output_variant: result_record {
 
 output_variant: OPEN_PAREN variable CLOSED_PAREN {
   if (strcmp("gdb", $2) != 0) {
-    gdbmi_error (gdbmi_parser, "Syntax error, expected 'gdb'");
+    gdbmi_error(gdbmi_output, "Syntax error, expected 'gdb'");
   }
   free($2);
 
@@ -232,7 +222,8 @@ result_class: STRING_LITERAL {
   else if (strcmp ("exit", gdbmi_text) == 0)
     $$ = GDBMI_EXIT;
   else
-    gdbmi_error (gdbmi_parser, "Syntax error, expected 'done|running|connected|error|exit");
+    gdbmi_error(gdbmi_output,
+        "Syntax error, expected 'done|running|connected|error|exit");
 };
 
 async_class: STRING_LITERAL {

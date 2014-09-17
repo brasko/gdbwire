@@ -71,6 +71,12 @@ void gdbmi_parser_destroy(struct gdbmi_parser *parser)
     }
 }
 
+static struct gdbmi_parser_callbacks
+gdbmi_parser_get_callbacks(struct gdbmi_parser *parser)
+{
+    return parser->callbacks;
+}
+
 /**
  * Parse a line of output in GDB/MI format.
  *
@@ -90,6 +96,9 @@ void gdbmi_parser_destroy(struct gdbmi_parser *parser)
 static enum gdbwire_result
 gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
 {
+    struct gdbmi_parser_callbacks callbacks =
+        gdbmi_parser_get_callbacks(parser);
+    struct gdbmi_output *output = 0;
     YY_BUFFER_STATE state = 0;
     int pattern, mi_status;
 
@@ -104,12 +113,12 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
         pattern = gdbmi_lex();
         if (pattern == 0)
             break;
-        mi_status = gdbmi_push_parse(parser->mips, pattern, NULL, parser);
+        mi_status = gdbmi_push_parse(parser->mips, pattern, NULL, &output);
     } while (mi_status == YYPUSH_MORE);
 
     /* Free the scanners buffer */
     gdbmi__delete_buffer(state);
-    
+
     /**
      * The push parser should either be returning
      * - YYPUSH_MORE for more input to be passed to it or
@@ -120,6 +129,10 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
      * This assertion needs to go to a cleanup state.
      */
     GDBWIRE_ASSERT(mi_status == YYPUSH_MORE || mi_status == 0);
+
+    /* Each GDB/MI line should produce an output command */
+    GDBWIRE_ASSERT(output);
+    callbacks.gdbmi_output_callback(callbacks.context, output);
 
     return GDBWIRE_OK;
 }
@@ -224,10 +237,4 @@ gdbmi_parser_push(struct gdbmi_parser *parser, char *data)
 
 cleanup:
     return result;
-}
-
-struct gdbmi_parser_callbacks
-gdbmi_parser_get_callbacks(struct gdbmi_parser *parser)
-{
-    return parser->callbacks;
 }
