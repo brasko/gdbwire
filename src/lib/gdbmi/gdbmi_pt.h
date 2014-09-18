@@ -48,6 +48,17 @@ struct gdbmi_output {
         struct gdbmi_result_record *result_record;
     } variant;
 
+    /**
+     * The GDB/MI output line that was used to create this output instance.
+     *
+     * Each gdbmi output structure is created from exactly one line of
+     * MI output from GDB. This field represents the line that created 
+     * this particular output structure.
+     *
+     * This field is always available and never NULL.
+     */
+    char *line;
+
     /** The next GDB/MI output command or NULL if none */
     struct gdbmi_output *next;
 };

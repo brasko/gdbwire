@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "logging/gdbwire_assert.h"
 #include "gdbmi_grammar.h"
@@ -132,6 +133,7 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
 
     /* Each GDB/MI line should produce an output command */
     GDBWIRE_ASSERT(output);
+    output->line = strdup(line);
     callbacks.gdbmi_output_callback(callbacks.context, output);
 
     return GDBWIRE_OK;

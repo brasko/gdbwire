@@ -27,6 +27,9 @@ gdbmi_output_free(struct gdbmi_output *param)
                 break;
         }
 
+        free(param->line);
+        param->line = 0;
+
         gdbmi_output_free(param->next);
         param->next = NULL;
 

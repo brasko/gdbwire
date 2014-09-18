@@ -52,6 +52,7 @@ namespace {
             REQUIRE(parser);
             output = parse(parser, sourceTestPath());
             REQUIRE(output);
+            REQUIRE(output->line);
         }
         
         ~GdbmiPtTest() {
@@ -1326,4 +1327,49 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/recursive.mi)
     REQUIRE(!result->next);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
+}
+
+/**
+ * Test the line field when the output kind is GDBMI_OUTPUT_OOB.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, line/oob.mi)
+{
+    std::string expected = "Hello World console output";
+    struct gdbmi_oob_record *oob;
+    struct gdbmi_stream_record *stream;
+
+    REQUIRE(output->kind == GDBMI_OUTPUT_OOB);
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
+
+    REQUIRE(std::string(output->line) == "~\"Hello World console output\"\n");
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
+}
+
+/**
+ * Test the line field when the output kind is GDBMI_OUTPUT_RESULT.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, line/result.mi)
+{
+    gdbmi_result *result;
+
+    REQUIRE(output->kind == GDBMI_OUTPUT_RESULT);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_EXIT);
+    REQUIRE(!result);
+
+    REQUIRE(std::string(output->line) == "^exit\n");
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
+}
+
+/**
+ * Test the line field when the output kind is GDBMI_OUTPUT_PROMPT.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, line/prompt.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+    REQUIRE(std::string(output->line) == "(gdb)\n");
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output);
 }
