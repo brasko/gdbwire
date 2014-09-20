@@ -20,6 +20,12 @@ char *gdbmi_get_text(yyscan_t yyscanner);
 void gdbmi_error(yyscan_t yyscanner, struct gdbmi_output **gdbmi_output,
     const char *s)
 { 
+    // TODO: Save an error message for the client application
+    // line with parse error
+    // at column C
+    // at token T
+    // with bison string message S
+#if 0
     char *text = gdbmi_get_text(yyscanner);
     fprintf (stderr, "%s:%d Error %s", __FILE__, __LINE__, s);
     if (strcmp(text, "\n") == 0) {
@@ -27,6 +33,7 @@ void gdbmi_error(yyscan_t yyscanner, struct gdbmi_output **gdbmi_output,
     } else {
         fprintf(stderr, "%s:%d at token(%s)\n", __FILE__, __LINE__, text);
     }
+#endif
 }
 
 /**
@@ -146,6 +153,11 @@ output_list: output_list output {
 
 output: output_variant NEWLINE {
   *gdbmi_output = $1;
+};
+
+output: error NEWLINE {
+  *gdbmi_output = gdbmi_output_alloc();
+  (*gdbmi_output)->kind = GDBMI_OUTPUT_PARSE_ERROR;
 };
 
 output_variant: oob_record {

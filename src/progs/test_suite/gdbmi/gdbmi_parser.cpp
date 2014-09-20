@@ -259,8 +259,11 @@ TEST_CASE_METHOD_N(GdbmiParserTest, push/crnl_supported_as_newline)
  */
 TEST_CASE_METHOD_N(GdbmiParserTest, push/syntax_error)
 {
+    gdbmi_output *output;
     gdbwire_result result;
-    result = gdbmi_parser_push(parser, "error");
+    result = gdbmi_parser_push(parser, "error\n");
     REQUIRE(result == GDBWIRE_OK);
-    // TODO: Handle syntax error
+    output = parserCallback.m_output;
+    REQUIRE(output);
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
 }

@@ -57,6 +57,9 @@ int print_gdbmi_output(struct gdbmi_output *param)
             case GDBMI_OUTPUT_PROMPT:
                 printf("(gdb)\n");
                 break;
+            case GDBMI_OUTPUT_PARSE_ERROR:
+                printf("%s", param->line);
+                break;
         }
 
         cur = cur->next;

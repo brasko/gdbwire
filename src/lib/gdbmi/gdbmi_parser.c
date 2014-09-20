@@ -115,17 +115,16 @@ gdbmi_parser_get_callbacks(struct gdbmi_parser *parser)
 }
 
 /**
- * Parse a line of output in GDB/MI format.
+ * Parse a single line of output in GDB/MI format.
  *
- * The data must be either a full line or multiple full lines.
  * The normal usage of this function is to call it over and over again with
- * more data and wait for it to return an mi output command.
+ * more data lines and wait for it to return an mi output command.
  *
  * @param parser
  * The parser context to operate on.
  *
  * @param line
- * A line of output in GDB/MI format.
+ * A line of output in GDB/MI format to be parsed.
  *
  * \return
  * GDBWIRE_OK on success or appropriate error result on failure.
@@ -158,19 +157,29 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
     gdbmi__delete_buffer(state, parser->mils);
 
     /**
-     * The push parser should either be returning
-     * - YYPUSH_MORE for more input to be passed to it or
-     * - 0 for a successful parse of the last token.
-     * Anything besides this would be unexpected. The grammar is designed
-     * to accept an infinate list of GDB/MI output commands.
+     * The push parser will return,
+     * - 0 if parsing was successful (return is due to end-of-input).
+     * - 1 if parsing failed because of invalid input, i.e., input
+     *     that contains a syntax error or that causes YYABORT to be invoked.
+     * - 2 if parsing failed due to memory exhaustion. 
+     * - YYPUSH_MORE if more input is required to finish parsing the grammar. 
+     * Anything besides this would be unexpected.
      *
-     * This assertion needs to go to a cleanup state.
+     * The grammar is designed to accept an infinate list of GDB/MI
+     * output commands. For this reason, YYPUSH_MORE is the expected
+     * return value of all the calls to gdbmi_push_parse. However,
+     * in reality, gdbwire only translates a line at a time from GDB.
+     * When the line is finished, gdbmi_lex returns 0, and the parsing
+     * is done.
      */
-    GDBWIRE_ASSERT(mi_status == YYPUSH_MORE || mi_status == 0);
 
     /* Each GDB/MI line should produce an output command */
     GDBWIRE_ASSERT(output);
     output->line = strdup(line);
+
+    // Check mi_status, will be 1 on parse error, and YYPUSH_MORE on success
+    GDBWIRE_ASSERT(mi_status == 1 || mi_status == YYPUSH_MORE);
+
     callbacks.gdbmi_output_callback(callbacks.context, output);
 
     return GDBWIRE_OK;

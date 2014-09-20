@@ -29,7 +29,12 @@ enum gdbmi_output_kind {
      * TODO: Document when GDB is ready to receive a command. Only if
      * the prompt is received and at *stopped?
      */
-    GDBMI_OUTPUT_PROMPT
+    GDBMI_OUTPUT_PROMPT,
+
+    /**
+     * A parse error occured.
+     */
+    GDBMI_OUTPUT_PARSE_ERROR
 };
 
 /**
@@ -55,7 +60,7 @@ struct gdbmi_output {
      * MI output from GDB. This field represents the line that created 
      * this particular output structure.
      *
-     * This field is always available and never NULL.
+     * This field is always available and never NULL, even for a parse error.
      */
     char *line;
 
