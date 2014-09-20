@@ -242,7 +242,7 @@ cleanup:
 }
 
 enum gdbwire_result
-gdbmi_parser_push(struct gdbmi_parser *parser, char *data)
+gdbmi_parser_push(struct gdbmi_parser *parser, const char *data)
 {
     struct gdbwire_string *line = 0;
     enum gdbwire_result result = GDBWIRE_OK;

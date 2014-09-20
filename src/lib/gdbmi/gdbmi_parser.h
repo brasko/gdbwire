@@ -81,7 +81,8 @@ void gdbmi_parser_destroy(struct gdbmi_parser *parser);
  * @return
  * GDBWIRE_OK on success or appropriate error result on failure.
  */
-enum gdbwire_result gdbmi_parser_push(struct gdbmi_parser *parser, char *data);
+enum gdbwire_result gdbmi_parser_push(struct gdbmi_parser *parser,
+        const char *data);
 
 #ifdef __cplusplus 
 }
