@@ -8,14 +8,27 @@
 #include "containers/gdbwire_string.h"
 
 /* flex prototypes used in this unit */
+typedef void *yyscan_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
-extern YY_BUFFER_STATE gdbmi__scan_string(const char *yy_str);
-extern void gdbmi__delete_buffer(YY_BUFFER_STATE state);
-extern int gdbmi_lex(void);
+
+/* Lexer set/destroy buffer to parse */
+extern YY_BUFFER_STATE gdbmi__scan_string(
+    const char *yy_str, yyscan_t yyscanner);
+extern void gdbmi__delete_buffer(YY_BUFFER_STATE state, yyscan_t yyscanner);
+
+/* Lexer get token function */
+extern int gdbmi_lex(yyscan_t yyscanner);
+extern char *gdbmi_get_text(yyscan_t yyscanner);
+
+/* Lexer state create/destroy functions */
+extern int gdbmi_lex_init(yyscan_t *scanner);
+extern int gdbmi_lex_destroy(yyscan_t scanner);
 
 struct gdbmi_parser {
     /* The buffer pushed into the parser from the user */
     struct gdbwire_string *buffer;
+    /* The GDB/MI lexer state */
+    yyscan_t mils;
     /* The GDB/MI push parser state */
     gdbmi_pstate *mips;
     /* The client parser callbacks */
@@ -39,9 +52,17 @@ gdbmi_parser_create(struct gdbmi_parser_callbacks callbacks)
         return NULL;
     }
 
+    /* Create a new lexer state instance */
+    if (gdbmi_lex_init(&parser->mils) != 0) {
+        free(parser->buffer);
+        free(parser);
+        return NULL;
+    }
+
     /* Create a new push parser state instance */
     parser->mips = gdbmi_pstate_new();
     if (!parser->mips) {
+        gdbmi_lex_destroy(parser->mils);
         free(parser->buffer);
         free(parser);
         return NULL;
@@ -59,6 +80,12 @@ void gdbmi_parser_destroy(struct gdbmi_parser *parser)
         if (parser->buffer) {
             gdbwire_string_destroy(parser->buffer);
             parser->buffer = NULL;
+        }
+
+        /* Free the lexer instance */
+        if (parser->mils) {
+            gdbmi_lex_destroy(parser->mils);
+            parser->mils = 0;
         }
 
         /* Free the push parser instance */
@@ -106,19 +133,20 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
     GDBWIRE_ASSERT(parser && line);
 
     /* Create a new input buffer for flex. */
-    state = gdbmi__scan_string(line);
+    state = gdbmi__scan_string(line, parser->mils);
     GDBWIRE_ASSERT(state);
 
     /* Iterate over all the tokens found in the scanner buffer */
     do {
-        pattern = gdbmi_lex();
+        pattern = gdbmi_lex(parser->mils);
         if (pattern == 0)
             break;
-        mi_status = gdbmi_push_parse(parser->mips, pattern, NULL, &output);
+        mi_status = gdbmi_push_parse(parser->mips, pattern, NULL,
+            parser->mils, &output);
     } while (mi_status == YYPUSH_MORE);
 
     /* Free the scanners buffer */
-    gdbmi__delete_buffer(state);
+    gdbmi__delete_buffer(state, parser->mils);
 
     /**
      * The push parser should either be returning

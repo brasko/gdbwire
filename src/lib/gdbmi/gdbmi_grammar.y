@@ -1,9 +1,12 @@
 %name-prefix "gdbmi_"
-%define api.pure                                                               
-%define api.push_pull "push"                                                   
+%define api.pure full
+%define api.push-pull push
 %defines
-%code requires { struct gdbmi_output; }
-%parse-param {struct gdbmi_output **gdbmi_output}
+%code requires {
+    typedef void *yyscan_t;
+    struct gdbmi_output;
+}
+%parse-param {yyscan_t yyscanner}{struct gdbmi_output **gdbmi_output}
 
 %{
 #include <string.h>
@@ -11,22 +14,18 @@
 #include "src/lib/gdbmi/gdbmi_pt.h"
 #include "src/lib/gdbmi/gdbmi_pt_alloc.h"
 
-extern char *gdbmi_text;
-extern int gdbmi_lex (void);
-extern int gdbmi_lineno;
+typedef void *yyscan_t;
+char *gdbmi_get_text(yyscan_t yyscanner);
 
-void gdbmi_error(struct gdbmi_output **gdbmi_output, const char *s)
+void gdbmi_error(yyscan_t yyscanner, struct gdbmi_output **gdbmi_output,
+    const char *s)
 { 
-  fprintf (stderr, "%s:%d Error %s", __FILE__, __LINE__, s);
-  if (strcmp (gdbmi_text, "\n") == 0)
-    fprintf (stderr, "%s:%d at end of line %d\n", __FILE__, __LINE__, 
-	     gdbmi_lineno);
-  else 
-    {
-      fprintf (stderr, "%s:%d at token(%s), line (%d)\n", __FILE__, __LINE__, 
-	       gdbmi_text, gdbmi_lineno );
-      gdbmi_lex();
-      fprintf (stderr, "%s:%d before (%s)\n", __FILE__, __LINE__, gdbmi_text);
+    char *text = gdbmi_get_text(yyscanner);
+    fprintf (stderr, "%s:%d Error %s", __FILE__, __LINE__, s);
+    if (strcmp(text, "\n") == 0) {
+        fprintf(stderr, "%s:%d at end of line\n", __FILE__, __LINE__);
+    } else {
+        fprintf(stderr, "%s:%d at token(%s)\n", __FILE__, __LINE__, text);
     }
 }
 
@@ -163,7 +162,7 @@ output_variant: result_record {
 
 output_variant: OPEN_PAREN variable CLOSED_PAREN {
   if (strcmp("gdb", $2) != 0) {
-    gdbmi_error(gdbmi_output, "Syntax error, expected 'gdb'");
+    gdbmi_error(yyscanner, gdbmi_output, "Syntax error, expected 'gdb'");
   }
   free($2);
 
@@ -211,67 +210,69 @@ async_record_class: EQUAL_SIGN {
 };
 
 result_class: STRING_LITERAL {
-  if (strcmp ("done", gdbmi_text) == 0)
+  char *text = gdbmi_get_text(yyscanner);
+  if (strcmp("done", text) == 0)
     $$ = GDBMI_DONE;
-  else if (strcmp ("running", gdbmi_text) == 0)
+  else if (strcmp("running", text) == 0)
     $$ = GDBMI_RUNNING;
-  else if (strcmp ("connected", gdbmi_text) == 0)
+  else if (strcmp("connected", text) == 0)
     $$ = GDBMI_CONNECTED;
-  else if (strcmp ("error", gdbmi_text) == 0)
+  else if (strcmp("error", text) == 0)
     $$ = GDBMI_ERROR;
-  else if (strcmp ("exit", gdbmi_text) == 0)
+  else if (strcmp("exit", text) == 0)
     $$ = GDBMI_EXIT;
   else
-    gdbmi_error(gdbmi_output,
+    gdbmi_error(yyscanner, gdbmi_output,
         "Syntax error, expected 'done|running|connected|error|exit");
 };
 
 async_class: STRING_LITERAL {
-  if (strcmp("download", gdbmi_text) == 0) {
+  char *text = gdbmi_get_text(yyscanner);
+  if (strcmp("download", text) == 0) {
       $$ = GDBMI_ASYNC_DOWNLOAD;
-  } else if (strcmp("stopped", gdbmi_text) == 0) {
+  } else if (strcmp("stopped", text) == 0) {
       $$ = GDBMI_ASYNC_STOPPED;
-  } else if (strcmp("running", gdbmi_text) == 0) {
+  } else if (strcmp("running", text) == 0) {
       $$ = GDBMI_ASYNC_RUNNING;
-  } else if (strcmp("thread-group-added", gdbmi_text) == 0) {
+  } else if (strcmp("thread-group-added", text) == 0) {
       $$ = GDBMI_ASYNC_THREAD_GROUP_ADDED;
-  } else if (strcmp("thread-group-removed", gdbmi_text) == 0) {
+  } else if (strcmp("thread-group-removed", text) == 0) {
       $$ = GDBMI_ASYNC_THREAD_GROUP_REMOVED;
-  } else if (strcmp("thread-group-started", gdbmi_text) == 0) {
+  } else if (strcmp("thread-group-started", text) == 0) {
       $$ = GDBMI_ASYNC_THREAD_GROUP_STARTED;
-  } else if (strcmp("thread-group-exited", gdbmi_text) == 0) {
+  } else if (strcmp("thread-group-exited", text) == 0) {
       $$ = GDBMI_ASYNC_THREAD_GROUP_EXITED;
-  } else if (strcmp("thread-created", gdbmi_text) == 0) {
+  } else if (strcmp("thread-created", text) == 0) {
       $$ = GDBMI_ASYNC_THREAD_CREATED;
-  } else if (strcmp("thread-exited", gdbmi_text) == 0) {
+  } else if (strcmp("thread-exited", text) == 0) {
       $$ = GDBMI_ASYNC_THREAD_EXITED;
-  } else if (strcmp("thread-selected", gdbmi_text) == 0) {
+  } else if (strcmp("thread-selected", text) == 0) {
       $$ = GDBMI_ASYNC_THREAD_SELECTED;
-  } else if (strcmp("library-loaded", gdbmi_text) == 0) {
+  } else if (strcmp("library-loaded", text) == 0) {
       $$ = GDBMI_ASYNC_LIBRARY_LOADED;
-  } else if (strcmp("library-unloaded", gdbmi_text) == 0) {
+  } else if (strcmp("library-unloaded", text) == 0) {
       $$ = GDBMI_ASYNC_LIBRARY_UNLOADED;
-  } else if (strcmp("traceframe-changed", gdbmi_text) == 0) {
+  } else if (strcmp("traceframe-changed", text) == 0) {
       $$ = GDBMI_ASYNC_TRACEFRAME_CHANGED;
-  } else if (strcmp("tsv-created", gdbmi_text) == 0) {
+  } else if (strcmp("tsv-created", text) == 0) {
       $$ = GDBMI_ASYNC_TSV_CREATED;
-  } else if (strcmp("tsv-modified", gdbmi_text) == 0) {
+  } else if (strcmp("tsv-modified", text) == 0) {
       $$ = GDBMI_ASYNC_TSV_MODIFIED;
-  } else if (strcmp("tsv-deleted", gdbmi_text) == 0) {
+  } else if (strcmp("tsv-deleted", text) == 0) {
       $$ = GDBMI_ASYNC_TSV_DELETED;
-  } else if (strcmp("breakpoint-created", gdbmi_text) == 0) {
+  } else if (strcmp("breakpoint-created", text) == 0) {
       $$ = GDBMI_ASYNC_BREAKPOINT_CREATED;
-  } else if (strcmp("breakpoint-modified", gdbmi_text) == 0) {
+  } else if (strcmp("breakpoint-modified", text) == 0) {
       $$ = GDBMI_ASYNC_BREAKPOINT_MODIFIED;
-  } else if (strcmp("breakpoint-deleted", gdbmi_text) == 0) {
+  } else if (strcmp("breakpoint-deleted", text) == 0) {
       $$ = GDBMI_ASYNC_BREAKPOINT_DELETED;
-  } else if (strcmp("record-started", gdbmi_text) == 0) {
+  } else if (strcmp("record-started", text) == 0) {
       $$ = GDBMI_ASYNC_RECORD_STARTED;
-  } else if (strcmp("record-stopped", gdbmi_text) == 0) {
+  } else if (strcmp("record-stopped", text) == 0) {
       $$ = GDBMI_ASYNC_RECORD_STOPPED;
-  } else if (strcmp("cmd-param-changed", gdbmi_text) == 0) {
+  } else if (strcmp("cmd-param-changed", text) == 0) {
       $$ = GDBMI_ASYNC_CMD_PARAM_CHANGED;
-  } else if (strcmp("memory-changed", gdbmi_text) == 0) {
+  } else if (strcmp("memory-changed", text) == 0) {
       $$ = GDBMI_ASYNC_MEMORY_CHANGED;
   } else {
       $$ = GDBMI_ASYNC_UNSUPPORTED;
@@ -316,11 +317,13 @@ result: opt_variable list {
 };
 
 variable: STRING_LITERAL {
-  $$ = strdup(gdbmi_text);
+  char *text = gdbmi_get_text(yyscanner);
+  $$ = strdup(text);
 };
 
 cstring: CSTRING {
-  $$ = gdbmi_unescape_cstring(gdbmi_text);
+  char *text = gdbmi_get_text(yyscanner);
+  $$ = gdbmi_unescape_cstring(text);
 };
 
 tuple: OPEN_BRACE CLOSED_BRACE {
@@ -374,5 +377,6 @@ opt_token: token {
 };
 
 token: INTEGER_LITERAL {
-  $$ = strdup(gdbmi_text);
+  char *text = gdbmi_get_text(yyscanner);
+  $$ = strdup(text);
 };
