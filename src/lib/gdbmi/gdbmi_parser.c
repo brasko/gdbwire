@@ -54,7 +54,7 @@ gdbmi_parser_create(struct gdbmi_parser_callbacks callbacks)
 
     /* Create a new lexer state instance */
     if (gdbmi_lex_init(&parser->mils) != 0) {
-        free(parser->buffer);
+        gdbwire_string_destroy(parser->buffer);
         free(parser);
         return NULL;
     }
@@ -63,7 +63,16 @@ gdbmi_parser_create(struct gdbmi_parser_callbacks callbacks)
     parser->mips = gdbmi_pstate_new();
     if (!parser->mips) {
         gdbmi_lex_destroy(parser->mils);
-        free(parser->buffer);
+        gdbwire_string_destroy(parser->buffer);
+        free(parser);
+        return NULL;
+    }
+
+    /* Ensure that the callbacks are non null */
+    if (!callbacks.gdbmi_output_callback) {
+        gdbmi_pstate_delete(parser->mips);
+        gdbmi_lex_destroy(parser->mils);
+        gdbwire_string_destroy(parser->buffer);
         free(parser);
         return NULL;
     }
