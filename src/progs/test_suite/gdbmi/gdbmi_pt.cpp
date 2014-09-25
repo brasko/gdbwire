@@ -1034,6 +1034,21 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit.mi)
 }
 
 /**
+ * Test the unsupported result class of a result record.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/unsupported.mi)
+{
+    std::string expected = "An unsupported result class can have a result!";
+    gdbmi_result *result;
+
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_UNSUPPORTED);
+    result = CHECK_RESULT_CSTRING(result, "msg", expected);
+    REQUIRE(!result);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
+}
+
+/**
  * Test the result record can have a NULL result field.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result/null.mi)

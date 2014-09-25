@@ -173,13 +173,9 @@ output_variant: result_record {
 }
 
 output_variant: OPEN_PAREN variable CLOSED_PAREN {
-  if (strcmp("gdb", $2) != 0) {
-    gdbmi_error(yyscanner, gdbmi_output, "Syntax error, expected 'gdb'");
-  }
-  free($2);
-
   $$ = gdbmi_output_alloc();
   $$->kind = GDBMI_OUTPUT_PROMPT;
+  free($2);
 }
 
 result_record: opt_token CARROT result_class result_list {
@@ -223,19 +219,19 @@ async_record_class: EQUAL_SIGN {
 
 result_class: STRING_LITERAL {
   char *text = gdbmi_get_text(yyscanner);
-  if (strcmp("done", text) == 0)
+  if (strcmp("done", text) == 0) {
     $$ = GDBMI_DONE;
-  else if (strcmp("running", text) == 0)
+  } else if (strcmp("running", text) == 0) {
     $$ = GDBMI_RUNNING;
-  else if (strcmp("connected", text) == 0)
+  } else if (strcmp("connected", text) == 0) {
     $$ = GDBMI_CONNECTED;
-  else if (strcmp("error", text) == 0)
+  } else if (strcmp("error", text) == 0) {
     $$ = GDBMI_ERROR;
-  else if (strcmp("exit", text) == 0)
+  } else if (strcmp("exit", text) == 0) {
     $$ = GDBMI_EXIT;
-  else
-    gdbmi_error(yyscanner, gdbmi_output,
-        "Syntax error, expected 'done|running|connected|error|exit");
+  } else {
+    $$ = GDBMI_UNSUPPORTED;
+  }
 };
 
 async_class: STRING_LITERAL {

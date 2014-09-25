@@ -131,7 +131,10 @@ enum gdbmi_result_class {
      * the front end should be prepared to have GDB exit and not provide
      * this information.
      */
-    GDBMI_EXIT
+    GDBMI_EXIT,
+
+    /// An unsupported result class
+    GDBMI_UNSUPPORTED
 };
 
 /**
