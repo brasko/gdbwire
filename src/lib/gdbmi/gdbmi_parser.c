@@ -173,12 +173,12 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
      * is done.
      */
 
+    // Check mi_status, will be 1 on parse error, and YYPUSH_MORE on success
+    GDBWIRE_ASSERT(mi_status == 1 || mi_status == YYPUSH_MORE);
+
     /* Each GDB/MI line should produce an output command */
     GDBWIRE_ASSERT(output);
     output->line = strdup(line);
-
-    // Check mi_status, will be 1 on parse error, and YYPUSH_MORE on success
-    GDBWIRE_ASSERT(mi_status == 1 || mi_status == YYPUSH_MORE);
 
     callbacks.gdbmi_output_callback(callbacks.context, output);
 
