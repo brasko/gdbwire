@@ -5,6 +5,25 @@
 extern "C" { 
 #endif 
 
+/**
+ * The position of a token in a GDB/MI line.
+ *
+ * Note that a string in C is zero based and the token column
+ * position is 1 based. For example,
+ *   char *str = "hello world";
+ * The "hello" token would have a start_column as 1 and an end
+ * column as 5.
+ *
+ * The start_column and end_column will be the same column number for
+ * a token of size 1.
+ */
+struct gdbmi_position {
+    /// The starting column position of the token
+    int start_column;
+    /// The ending column position of the token
+    int end_column;
+};
+
 /** The gdbmi output kinds. */
 enum gdbmi_output_kind {
     /**
@@ -32,7 +51,7 @@ enum gdbmi_output_kind {
     GDBMI_OUTPUT_PROMPT,
 
     /**
-     * A parse error occured.
+     * A parse error occurred.
      */
     GDBMI_OUTPUT_PARSE_ERROR
 };
@@ -51,6 +70,13 @@ struct gdbmi_output {
         struct gdbmi_oob_record *oob_record;
         /** When kind == GDBMI_OUTPUT_RESULT, never NULL. */
         struct gdbmi_result_record *result_record;
+        /** When kind == GDBMI_OUTPUT_PARSE_ERROR, never NULL. */
+        struct {
+            /** The token the error occurred on */
+            char *token;
+            /** The position of the token where the error occurred. */
+            struct gdbmi_position pos;
+        } error;
     } variant;
 
     /**

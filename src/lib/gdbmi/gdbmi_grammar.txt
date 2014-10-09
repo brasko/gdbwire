@@ -291,11 +291,48 @@ GDB/MI Bug Fixes
     oob-record-list     -> oob-record-list oob-record nl | epsilon
     opt-result-record   -> result-record nl | epsilon
 
+Error Handling in Bison
+-----------------------
+
+A bison error handler was written to ensure the parser can handle
+incorrect or unexpected GDB/MI commands and continue gracefully.
+
+There are two facilities within Bison that are used in the grammar
+to ensure error handling is done properly, 1) extending the grammar
+with new rules using the error symbol and 2) %destructor directives
+to free memory that was allocated in an action and then later
+determined to be unusable due to the new error rules.
+
+In order to support invalid GDB/MI input lines, a single high
+level error rule was added to the grammar.
+    output: error NEWLINE {
+      yyerrok;
+    };
+This takes into account the contents of any line that could not
+be parsed. The parser then resynchronize's itself on the NEWLINE
+token. This guarantees the parser will be ready the next time a token
+appears. The yyerrok; statement in the action ensures that at that
+rule, the parser understands that error recovery is at an acceptable
+location and the parser can continue in a non error state.
+
+Whenever an error does occur, the %destructor directives are used
+to tell Bison how to free memory that was allocated in a previous
+action but that is now no longer usable. I wrote a %destructor
+for any symbol that allocated memory in an action that was not
+the right most symbol in a rule. The right most symbol in a rule
+would never have it's action called and then fail to parse as it's
+the last symbol in the rule.
+
+With these two additions to the parser, along with the appropriate
+unit tests, the generated parser now appears to handle any kind
+of GDB/MI error line I've thrown at it.
+
 LR(1) Grammar
 -------------
 
 output-list         -> output-list output | epsilon
 output              -> output_variant nl
+output              -> error nl
 output_variant      -> oob-record | result-record | "(gdb)"
 result-record       -> opt-token "^" result-class result-list
 oob-record          -> async-record | stream-record

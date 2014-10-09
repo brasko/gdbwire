@@ -24,7 +24,10 @@ gdbmi_output_free(struct gdbmi_output *param)
                 param->variant.result_record = NULL;
                 break;
             case GDBMI_OUTPUT_PROMPT:
+                break;
             case GDBMI_OUTPUT_PARSE_ERROR:
+                free(param->variant.error.token);
+                param->variant.error.token = NULL;
                 break;
         }
 

@@ -58,7 +58,7 @@ int print_gdbmi_output(struct gdbmi_output *param)
                 printf("(gdb)\n");
                 break;
             case GDBMI_OUTPUT_PARSE_ERROR:
-                printf("%s", param->line);
+                printf("%s", param->variant.error.token);
                 break;
         }
 

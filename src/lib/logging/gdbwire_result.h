@@ -17,7 +17,7 @@ enum gdbwire_result {
     GDBWIRE_ASSERT,
 
     /**
-     * An internal logic error has occured.
+     * An internal logic error has occurred.
      *
      * In general, this should be used when a function can no
      * longer carry out it's contract and must abort.

@@ -11,29 +11,25 @@
 %{
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include "gdbmi_grammar.h"
 #include "src/lib/gdbmi/gdbmi_pt.h"
 #include "src/lib/gdbmi/gdbmi_pt_alloc.h"
 
 typedef void *yyscan_t;
 char *gdbmi_get_text(yyscan_t yyscanner);
+struct gdbmi_position gdbmi_get_extra(yyscan_t yyscanner);
 
 void gdbmi_error(yyscan_t yyscanner, struct gdbmi_output **gdbmi_output,
     const char *s)
 { 
-    // TODO: Save an error message for the client application
-    // line with parse error
-    // at column C
-    // at token T
-    // with bison string message S
-#if 0
     char *text = gdbmi_get_text(yyscanner);
-    fprintf (stderr, "%s:%d Error %s", __FILE__, __LINE__, s);
-    if (strcmp(text, "\n") == 0) {
-        fprintf(stderr, "%s:%d at end of line\n", __FILE__, __LINE__);
-    } else {
-        fprintf(stderr, "%s:%d at token(%s)\n", __FILE__, __LINE__, text);
-    }
-#endif
+    struct gdbmi_position pos = gdbmi_get_extra(yyscanner);
+
+    *gdbmi_output = gdbmi_output_alloc();
+    (*gdbmi_output)->kind = GDBMI_OUTPUT_PARSE_ERROR;
+    (*gdbmi_output)->variant.error.token = strdup(text);
+    (*gdbmi_output)->variant.error.pos = pos;
 }
 
 /**
@@ -128,19 +124,41 @@ static char *gdbmi_unescape_cstring(char *str)
 %type <u_result_record> result_record
 %type <u_result_class> result_class
 %type <u_async_record_kind> async_record_class
-%type <u_variable> opt_variable
+%type <u_variable> opt_variable variable
 %type <u_result> result_list
 %type <u_result> result
-%type <u_token> opt_token
-%type <u_token> token
+%type <u_token> opt_token token
 %type <u_async_record> async_record
 %type <u_stream_record> stream_record
 %type <u_async_class> async_class
-%type <u_variable> variable
 %type <u_cstring> cstring
 %type <u_tuple> tuple
 %type <u_list> list
 %type <u_stream_record_kind> stream_record_class
+
+/** 
+ * Some symbols in the grammar require destructor directives to free
+ * memory when bison goes into error recovery mode. The below symbols
+ * are only used as the right most symbol in a rule, making them
+ * not possible to be allocated and then later determined to be
+ * unnecessary through error recory. The destructor directive for
+ * these are omitted as adding them adds dead code.
+ *
+ * result_record
+ * oob_record
+ * async_record
+ * cstring
+ * tuple
+ * list
+ * stream_record
+ * token
+ */
+%destructor { gdbmi_output_free($$); } output_variant
+%destructor { gdbmi_result_free($$); } result_list
+%destructor { gdbmi_result_free($$); } result
+%destructor { free($$); } opt_variable
+%destructor { free($$); } variable
+%destructor { free($$); } opt_token
 
 %start output_list
 %%
@@ -156,8 +174,7 @@ output: output_variant NEWLINE {
 };
 
 output: error NEWLINE {
-  *gdbmi_output = gdbmi_output_alloc();
-  (*gdbmi_output)->kind = GDBMI_OUTPUT_PARSE_ERROR;
+  yyerrok;
 };
 
 output_variant: oob_record {

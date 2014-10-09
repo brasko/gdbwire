@@ -19,6 +19,7 @@ extern void gdbmi__delete_buffer(YY_BUFFER_STATE state, yyscan_t yyscanner);
 /* Lexer get token function */
 extern int gdbmi_lex(yyscan_t yyscanner);
 extern char *gdbmi_get_text(yyscan_t yyscanner);
+extern void gdbmi_set_column(int column_no, yyscan_t yyscanner);
 
 /* Lexer state create/destroy functions */
 extern int gdbmi_lex_init(yyscan_t *scanner);
@@ -143,6 +144,7 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
     /* Create a new input buffer for flex. */
     state = gdbmi__scan_string(line, parser->mils);
     GDBWIRE_ASSERT(state);
+    gdbmi_set_column(1, parser->mils);
 
     /* Iterate over all the tokens found in the scanner buffer */
     do {

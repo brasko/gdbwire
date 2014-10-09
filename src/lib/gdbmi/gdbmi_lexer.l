@@ -1,5 +1,6 @@
 %option prefix="gdbmi_"
 %option outfile="lex.yy.c"
+%option extra-type="struct gdbmi_position"
 %option reentrant
 %option noyywrap
 %option nounput
@@ -14,7 +15,26 @@ IDENTIFIER {L}+{T}*
 
 #include <stdio.h>
 #include "gdbmi_grammar.h"
+#include "src/lib/gdbmi/gdbmi_pt.h"
 
+/**
+ * This macro sets the beginning and ending column position of each
+ * token in the pure lexer. No global state is used.
+ *
+ * The parser can then use this position to determine the location
+ * of any token it desires.
+ *
+ * Currently only the column is stored as the parser only uses
+ * the lexer on a line at a time. Currently, the caller of the
+ * lexer sets the column position back to 1 each time a new
+ * line is set to be parsed in the lexer.
+ */
+#define YY_USER_ACTION \
+    { \
+    struct gdbmi_position pos = { yycolumn, yycolumn+yyleng-1 }; \
+    yyextra = pos; \
+    yycolumn += yyleng; \
+    }
 %}
 
 %%

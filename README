@@ -38,7 +38,7 @@ bothering you, you can set this environment variable to suppress
 libtools printing of the link line,
   LIBTOOLFLAGS=--silent
 
-Running the testsuite
+Running the test suite
 ---------------------
 
 If you want to run the test suite you have to tell the build system
@@ -47,6 +47,21 @@ to build it. This is done by passing --enable-tests on the configure line.
 After you have built the test suite, you can run all the unit tests with
 the command,
   ./test_suite
+
+Ensure that you introduce no memory leaks or memory errors in the test suite.
+You can do this with the command,
+    LD_LIBRARY_PATH=$PWD/.libs/ valgrind  --leak-check=full --tool=memcheck ./.libs/test_suite
+in the directory where the test_suite executable is created. You should
+expect to see valgrind output something like,
+ 
+    HEAP SUMMARY:
+        in use at exit: 0 bytes in 0 blocks
+        total heap usage: X allocs, X frees, Y bytes allocated
+
+        All heap blocks were freed -- no leaks are possible
+
+        For counts of detected and suppressed errors, rerun with: -v
+        ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 
 An overview of the source code
 ------------------------------

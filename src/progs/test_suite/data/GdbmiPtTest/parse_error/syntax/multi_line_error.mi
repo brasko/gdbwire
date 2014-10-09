@@ -1,0 +1,7 @@
+^error^
+(gdb)
+^
+^error abc
+(gdb)
+^error,msg="bogus"
+(gdb)

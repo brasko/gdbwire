@@ -1388,3 +1388,221 @@ TEST_CASE_METHOD_N(GdbmiPtTest, line/prompt.mi)
     REQUIRE(std::string(output->line) == "(gdb)\n");
     CHECK_OUTPUT_AT_FINAL_PROMPT(output);
 }
+
+/**
+ * Test that an empty MI command is an error.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/empty.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "\n");
+    REQUIRE(output->variant.error.pos.start_column == 1);
+    REQUIRE(output->variant.error.pos.end_column == 1);
+}
+
+/**
+ * Test the error at the front of the line.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/front.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "$error\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "$");
+    REQUIRE(output->variant.error.pos.start_column == 1);
+    REQUIRE(output->variant.error.pos.end_column == 1);
+}
+
+/**
+ * Test the error in the middle of the line.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/middle.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "*running, abc {}\n");
+    REQUIRE(std::string(output->variant.error.token) == "{");
+    REQUIRE(output->variant.error.pos.start_column == 15);
+    REQUIRE(output->variant.error.pos.end_column == 15);
+}
+
+/**
+ * Test the error at the end of the line.
+ *
+ * Extra tokens exist on the line at the end in this case.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/end.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "^error abc\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "abc");
+    REQUIRE(output->variant.error.pos.start_column == 8);
+    REQUIRE(output->variant.error.pos.end_column == 10);
+}
+
+/**
+ * Test the error when there is missing information on a line.
+ *
+ * There are missing tokens on the line at the end.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/end_missing.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "^\n");
+    REQUIRE(std::string(output->variant.error.token) == "\n");
+    REQUIRE(output->variant.error.pos.start_column == 2);
+    REQUIRE(output->variant.error.pos.end_column == 2);
+}
+
+/**
+ * Test the error in a list grammar rule.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/list_of_2_cstring.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) ==
+        "*stopped,[key=\"value\", key2= \" \"value2\"]\n");
+    REQUIRE(std::string(output->variant.error.token) == "value2");
+    REQUIRE(output->variant.error.pos.start_column == 33);
+    REQUIRE(output->variant.error.pos.end_column == 38);
+}
+
+/**
+ * Test that the same parser can handle errors on many lines.
+ *
+ * This test proves the parser can have errors on some lines and
+ * then recover on other lines after that successfully.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/multi_line_error.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "^error^\n");
+    REQUIRE(std::string(output->variant.error.token) == "^");
+    REQUIRE(output->variant.error.pos.start_column == 7);
+    REQUIRE(output->variant.error.pos.end_column == 7);
+
+    REQUIRE(output->next);
+    output = output->next;
+
+    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+    REQUIRE(output->next);
+    output = output->next;
+
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "^\n");
+    REQUIRE(std::string(output->variant.error.token) == "\n");
+    REQUIRE(output->variant.error.pos.start_column == 2);
+    REQUIRE(output->variant.error.pos.end_column == 2);
+
+    REQUIRE(output->next);
+    output = output->next;
+
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "^error abc\n");
+    REQUIRE(std::string(output->variant.error.token) == "abc");
+    REQUIRE(output->variant.error.pos.start_column == 8);
+    REQUIRE(output->variant.error.pos.end_column == 10);
+
+    REQUIRE(output->next);
+    output = output->next;
+
+    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+
+    REQUIRE(output->next);
+    output = output->next;
+
+    {
+        gdbmi_result *result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR);
+        result = CHECK_RESULT_CSTRING(result, "msg", "bogus");
+        REQUIRE(!result);
+    }
+
+    REQUIRE(output->next);
+    output = output->next;
+
+    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+    REQUIRE(!output->next);
+}
+
+/**
+ * Test the token destructor functionality (verify with gcov).
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/token.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "543#\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "#");
+    REQUIRE(output->variant.error.pos.start_column == 4);
+    REQUIRE(output->variant.error.pos.end_column == 4);
+}
+
+/**
+ * Test the variable destructor functionality (verify with gcov).
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/variable.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "(gdb#\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "#");
+    REQUIRE(output->variant.error.pos.start_column == 5);
+    REQUIRE(output->variant.error.pos.end_column == 5);
+}
+
+/**
+ * Test the opt_variable destructor functionality (verify with gcov).
+ *
+ * This also triggers result_list. There is no way to isolate these two
+ * at this point in time.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/opt_variable.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "*stopped,reason=#\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "#");
+    REQUIRE(output->variant.error.pos.start_column == 17);
+    REQUIRE(output->variant.error.pos.end_column == 17);
+}
+
+/**
+ * Test the result destructor functionality (verify with gcov).
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/result.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "*stopped,{\"abc\",^\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "^");
+    REQUIRE(output->variant.error.pos.start_column == 17);
+    REQUIRE(output->variant.error.pos.end_column == 17);
+}
+
+/**
+ * Test the result_list destructor functionality (verify with gcov).
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/result_list.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "*stopped,{\"abc\",\"def\"^\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "^");
+    REQUIRE(output->variant.error.pos.start_column == 22);
+    REQUIRE(output->variant.error.pos.end_column == 22);
+}
+
+/**
+ * Test the output_variant destructor functionality (verify with gcov).
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/output_variant.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "^error^\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "^");
+    REQUIRE(output->variant.error.pos.start_column == 7);
+    REQUIRE(output->variant.error.pos.end_column == 7);
+}
