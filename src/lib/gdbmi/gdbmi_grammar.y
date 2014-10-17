@@ -1,12 +1,13 @@
 %name-prefix "gdbmi_"
-%define api.pure full
-%define api.push-pull push
+%define api.pure
+%define api.push_pull "push"
 %defines
 %code requires {
     typedef void *yyscan_t;
     struct gdbmi_output;
 }
-%parse-param {yyscan_t yyscanner}{struct gdbmi_output **gdbmi_output}
+%parse-param {yyscan_t yyscanner}
+%parse-param {struct gdbmi_output **gdbmi_output}
 
 %{
 #include <string.h>
