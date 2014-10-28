@@ -1474,6 +1474,10 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/list_of_2_cstring.mi)
  *
  * This test proves the parser can have errors on some lines and
  * then recover on other lines after that successfully.
+ *
+ * I've added an error which is forced manually in the bison grammar
+ * and then expecting the next line to parse successfully. The error
+ * I'm talking about is '(not_gdb)' which is a gdb prompt line.
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/multi_line_error.mi)
 {
@@ -1523,7 +1527,34 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/multi_line_error.mi)
     output = output->next;
 
     REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+
+    REQUIRE(output->next);
+    output = output->next;
+
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "(not_gdb)\n");
+    REQUIRE(std::string(output->variant.error.token) == "not_gdb");
+    REQUIRE(output->variant.error.pos.start_column == 2);
+    REQUIRE(output->variant.error.pos.end_column == 8);
+
+    REQUIRE(output->next);
+    output = output->next;
+
+    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
     REQUIRE(!output->next);
+}
+
+/**
+ * Test that the GDB prompt says 'gdb'.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/prompt.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "(not_gdb)\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "not_gdb");
+    REQUIRE(output->variant.error.pos.start_column == 2);
+    REQUIRE(output->variant.error.pos.end_column == 8);
 }
 
 /**
@@ -1550,6 +1581,25 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/variable.mi)
     REQUIRE(std::string(output->variant.error.token) == "#");
     REQUIRE(output->variant.error.pos.start_column == 5);
     REQUIRE(output->variant.error.pos.end_column == 5);
+}
+
+/**
+ * Test the variable destructor functionality (verify with gcov).
+ *
+ * This is testing an edge case in the parser. The gdb prompt rule looks
+ * like this: ( variable ). The rule in the grammar has a mid rule action
+ * that asserts that the variable is "gdb". If it is not "gdb" it manually
+ * raises an error. This ensures that the manual error is handled by the
+ * destructor to ensure no memory is lost.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/mid_action_variable.mi)
+{
+    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(std::string(output->line) == "(not_gdb)\n");
+    REQUIRE(output->variant.error.token);
+    REQUIRE(std::string(output->variant.error.token) == "not_gdb");
+    REQUIRE(output->variant.error.pos.start_column == 2);
+    REQUIRE(output->variant.error.pos.end_column == 8);
 }
 
 /**

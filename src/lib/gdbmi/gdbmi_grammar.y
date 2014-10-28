@@ -190,11 +190,17 @@ output_variant: result_record {
   $$->variant.result_record = $1;
 }
 
-output_variant: OPEN_PAREN variable CLOSED_PAREN {
-  $$ = gdbmi_output_alloc();
-  $$->kind = GDBMI_OUTPUT_PROMPT;
-  free($2);
-}
+output_variant: OPEN_PAREN variable {
+      if (strcmp("gdb", $2) != 0) {
+          /* Destructor will be called to free $2 on error */
+          yyerror(yyscanner, gdbmi_output, "");
+          YYERROR;
+      }
+    } CLOSED_PAREN {
+      $$ = gdbmi_output_alloc();
+      $$->kind = GDBMI_OUTPUT_PROMPT;
+      free($2);
+    }
 
 result_record: opt_token CARROT result_class result_list {
   $$ = gdbmi_result_record_alloc();

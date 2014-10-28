@@ -5,3 +5,5 @@
 (gdb)
 ^error,msg="bogus"
 (gdb)
+(not_gdb)
+(gdb)
