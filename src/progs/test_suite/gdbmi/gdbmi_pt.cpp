@@ -1126,6 +1126,24 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/key_null.mi)
 }
 
 /**
+ * Test a tuple result record with no key and only a value, ie. {"value"}.
+ *
+ * Tuples are required to have keys, although gdbwire allows them
+ * to not have keys as this has been reported in the field as
+ * being possible.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/no_key.mi)
+{
+    gdbmi_result *result = GET_RESULT(output);
+    REQUIRE(!result->next);
+
+    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
+    result = CHECK_RESULT_CSTRING(result, "", "value");
+    REQUIRE(!result);
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
+}
+
+/**
  * Test a tuple result record with a cstring element
  */
 TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_cstring.mi)

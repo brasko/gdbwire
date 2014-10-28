@@ -600,12 +600,17 @@ struct gdbmi_result {
     union {
         /** When kind is GDBMI_CSTRING */
         char *cstring;
+
         /**
          * When kind is GDBMI_TUPLE or GDBMI_LIST.
          *
          * If kind is GDBMI_TUPLE, each result in the tuple should have a
          * valid key according to the GDB/MI specification. That is, for
          * each result, result->variable should not be NULL.
+         *   Note: GDBWIRE currently relaxes the above rule. It allows tuple's
+         *   with out a key in each member. For instance, {key="value"}
+         *   is what the GDB/MI specification advocates for, but some
+         *   variations of GDB emit {"value"} and so GDBWIRE allows it.
          *
          * If kind is GDBMI_LIST, the GDB/MI specification allows results in
          * this list to not have keys. That is, for each result,
