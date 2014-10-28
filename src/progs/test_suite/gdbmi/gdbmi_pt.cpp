@@ -3,7 +3,6 @@
 #include "catch.hpp"
 #include "fixture.h"
 #include "gdbmi/gdbmi_pt.h"
-#include "gdbmi/gdbmi_pt_print.h"
 #include "gdbmi/gdbmi_parser.h"
 
 /**
@@ -343,11 +342,6 @@ namespace {
         gdbmi_parser *parser;
         gdbmi_output *output;
     };
-}
-
-TEST_CASE_METHOD_N(GdbmiPtTest, temporary_manual_compare_test/input.mi)
-{
-    //REQUIRE(print_gdbmi_output(output) == 0);
 }
 
 /**
