@@ -3,12 +3,6 @@
 
 #include "logging/gdbwire_result.h"
 
-/**
- * Open, close and write to a log file.
- *
- * Currently a single log file is supported per application.
- */
-
 #ifdef __cplusplus 
 extern "C" { 
 #endif 
@@ -19,43 +13,6 @@ enum gdbwire_logger_level {
     GDBWIRE_LOGGER_WARN,
     GDBWIRE_LOGGER_ERROR
 };
-
-/**
- * Initialize the logger.
- *
- * Currently, this will blast the log file if it is currently on
- * disk and will recreate it opening it with write privledges.
- *
- * @param path
- * The path to write the logging information to.
- *
- * @return
- * GDBWIRE_OK on success, otherwise the appropriate error result.
- */
-enum gdbwire_result gdbwire_logger_open(const char *path);
-
-/**
- * Shut down the logging.
- *
- * If a NULL pointer is passed to this function it will ignore it
- * and successfully return.
- *
- *   clog_info(CLOG(MY_LOGGER), "Hello, world!");
- */
-void gdbwire_logger_close();
-
-/**
- * Set the minimum level of messages that should be written to the log.
- * Messages below this level will not be written.  By default, loggers are
- * created with level == GDBWIRE_LOGGER_DEBUG.
- *
- * @param level
- * The new minimum log level.
- *
- * @return
- * GDBWIRE_OK on success, otherwise the appropriate error result.
- */
-enum gdbwire_result gdbwire_logger_set_level(enum gdbwire_logger_level level);
 
 /**
  * Log a statement to the logger.
