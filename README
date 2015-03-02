@@ -26,7 +26,7 @@ You can run ./configure from within the source tree, however I usually run
 configure from outside the source tree like so,
   mkdir ../build
   cd ../build
-  YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror" CXXFLAGS="-g -Wall -Werror" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests
+  YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror" CXXFLAGS="-g -Wall -Werror" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples
   make -srj4
   make install
 

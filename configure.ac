@@ -33,6 +33,15 @@ GDBWIRE_ARG_ENABLE_DEFAULT_OFF([tests], [automated testing])
 dnl Build the test suite if enable tests is true
 AM_CONDITIONAL([WANT_TESTS], [test x$enable_tests = xyes])
 
+dnl Add support for building example programs
+dnl
+dnl This allows example programs to be built which are useful
+dnl for demonstrating how the library operates.
+GDBWIRE_ARG_ENABLE_DEFAULT_OFF([examples], [example programs])
+
+dnl Build the examples if enable tests is true
+AM_CONDITIONAL([WANT_EXAMPLES], [test x$enable_examples = xyes])
+
 dnl Find the absolute srcdir and builddir directories.
 dnl Put those in the Makefile and config.h.
 GDBWIRE_DIRECTORIES()
@@ -62,5 +71,6 @@ $PACKAGE_NAME configuration summary:
 
     Enabled options:
     --enable-tests ........... : ${enable_tests}
+    --enable-examples ........ : ${enable_examples}
 
 EOF
