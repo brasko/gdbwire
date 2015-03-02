@@ -66,7 +66,7 @@ struct gdbmi_parser *gdbmi_parser_create(
 void gdbmi_parser_destroy(struct gdbmi_parser *parser);
 
 /**
- * Push some parse data onto the parser.
+ * Push a null terminated string onto the parser.
  *
  * During this function, if a gdbmi output command is discovered by
  * the parser (or any other useful GDB/MI notification), it will invoke
@@ -77,12 +77,32 @@ void gdbmi_parser_destroy(struct gdbmi_parser *parser);
  *
  * @param data
  * The parse data to push onto the parser.
- *
+ * 
  * @return
  * GDBWIRE_OK on success or appropriate error result on failure.
  */
 enum gdbwire_result gdbmi_parser_push(struct gdbmi_parser *parser,
         const char *data);
+
+/**
+ * Push some parse data onto the parser.
+ *
+ * See gdbmi_parser_push for details on function behavior.
+ *
+ * @param parser
+ * The gdbmi parser context to operate on.
+ *
+ * @param data
+ * The parse data to push onto the parser.
+ *
+ * @param size
+ * The size of the data to push onto the parser.
+ *
+ * @return
+ * GDBWIRE_OK on success or appropriate error result on failure.
+ */
+enum gdbwire_result gdbmi_parser_push_data(struct gdbmi_parser *parser,
+        const char *data, size_t size);
 
 #ifdef __cplusplus 
 }

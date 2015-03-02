@@ -264,11 +264,18 @@ cleanup:
 enum gdbwire_result
 gdbmi_parser_push(struct gdbmi_parser *parser, const char *data)
 {
+    return gdbmi_parser_push_data(parser, data, strlen(data));
+}
+
+enum gdbwire_result
+gdbmi_parser_push_data(struct gdbmi_parser *parser, const char *data,
+    size_t size)
+{
     struct gdbwire_string *line = 0;
     enum gdbwire_result result = GDBWIRE_OK;
 
     GDBWIRE_ASSERT(parser && data);
-    GDBWIRE_ASSERT(gdbwire_string_append_cstr(parser->buffer, data) == 0);
+    GDBWIRE_ASSERT(gdbwire_string_append_data(parser->buffer, data, size) == 0);
 
     // Loop until no more lines available
     for (;;) {

@@ -212,8 +212,7 @@ TEST_CASE_METHOD_N(GdbmiParserTest, push/char_at_a_time)
     std::string::iterator it;
 
     for (it = data.begin(); it != data.end(); ++it) {
-        char c[2] = { *it, 0 };
-        result = gdbmi_parser_push(parser, c);
+        result = gdbmi_parser_push_data(parser, &*it, 1);
         REQUIRE(result == GDBWIRE_OK);
     }
 
