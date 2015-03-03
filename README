@@ -69,6 +69,7 @@ An overview of the source code
 src/                    # All source code is in here
 src/progs               # All programs go here
 src/progs/test_suite    # The unit test executable
+src/progs/examples      # Example programs using the gdbwire interfaces
 src/lib                 # All libraries go here
 src/lib/containers      # All containers go here (string, list, etc)
 src/lib/logging         # A logging library based on clog
