@@ -35,13 +35,6 @@ parser_callback(void *context, struct gdbmi_output *output)
  *
  * The main loop is responsible for reading data from stdin and sending it
  * to the gdbmi parser. This happens until stdin is closed and EOF is read.
- * This program is particularly useful if run from the command line as
- * follows:
- *   gdb -i=mi <gdb arguments> | examples/gdbmi
- *
- * This allows a user to interact with gdb in arbitrary ways from the 
- * command line. At the same time, the user can determine if the gdbmi
- * parser is able to handle the gdbmi output created by gdb.
  *
  * @param parser
  * The gdbmi parser.
@@ -62,8 +55,6 @@ main_loop(struct gdbmi_parser *parser)
 
 /**
  * The gdbmi main function.
- *
- * This function demonstrates using the gdbmi parser interface.
  *
  * This function is responsible for allocating the gdbmi parser, calling the
  * main loop which uses the parser and then deleting the gdbmi parser.
