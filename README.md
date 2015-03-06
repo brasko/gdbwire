@@ -10,7 +10,8 @@ core features that make it unique.
 
 - Portable - Written in C and runs on Linux, Windows (mingw or cygwin) and Mac
 - Efficient - Written using Bison and Flex
-- Asychronous - Uses a Bison push parser which will not block your main loop
+- Asynchronous - Uses a Bison push parser which will not block your main loop
+- Reentrant - Supports the use of threads in your application code
 - Tested - Has a robust test suite with 100% parser code coverage
 - Low Level - You provide GDB output characters, GDBWIRE provides parse trees
 - High Level - TODO: You provide GDB output characters, GDBWIRE provides events
