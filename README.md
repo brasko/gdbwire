@@ -44,6 +44,13 @@ You must have the following packages installed.
 - flex
 - bison
 - gcc/g++
+- libtool
+
+Under Ubuntu, you can install all the dependencies using the following command:
+
+```
+sudo apt-get install autoconf automake flex bison build-essential libtool
+```
 
 ### Preparing the configure
 
@@ -53,12 +60,15 @@ script.
 ### Running configure, make and make install
 
 You can run ./configure from within the source tree, however I usually run
-configure from outside the source tree like so,
+configure from outside the source tree like so:
+
+```
 >  mkdir ../build
 >  cd ../build
 >  YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror" CXXFLAGS="-g -Wall -Werror" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples
 >  make -srj4
 >  make install
+``
 
 The make install rule is optional. You can simply run make and the executables
 will be in there respective build directories. 
