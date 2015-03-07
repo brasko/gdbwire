@@ -41,6 +41,7 @@ You must have the following packages installed.
 - automake
 - aclocal
 - autoheader
+- libtool
 - flex
 - bison
 - gcc/g++
@@ -54,14 +55,17 @@ script.
 
 You can run ./configure from within the source tree, however I usually run
 configure from outside the source tree like so,
->  mkdir ../build
->  cd ../build
->  YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror" CXXFLAGS="-g -Wall -Werror" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples
->  make -srj4
->  make install
+```
+mkdir ../build
+cd ../build
+../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples
+make -srj4
+make install
+```
 
-The make install rule is optional. You can simply run make and the executables
-will be in there respective build directories. 
+I typically enable more error checking with the build tools like so,
+
+> YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror" CXXFLAGS="-g -Wall -Werror" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples
 
 If you like to have a silent build, and the libtool link lines are bothering
 you, you can set this environment variable to suppress libtools printing of
