@@ -1,4 +1,3 @@
-#include <errno.h>
 #include <stdio.h>
 #include "catch.hpp"
 #include "fixture.h"
