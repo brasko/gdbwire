@@ -17,7 +17,6 @@
 #include "src/lib/gdbmi/gdbmi_pt.h"
 #include "src/lib/gdbmi/gdbmi_pt_alloc.h"
 
-typedef void *yyscan_t;
 char *gdbmi_get_text(yyscan_t yyscanner);
 struct gdbmi_position gdbmi_get_extra(yyscan_t yyscanner);
 
