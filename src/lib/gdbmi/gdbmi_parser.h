@@ -7,6 +7,7 @@ extern "C" {
 
 #include "logging/gdbwire_result.h"
 #include "gdbmi_pt.h"
+#include "stddef.h"
 
 /// The opaque GDB/MI parser context
 struct gdbmi_parser;
