@@ -67,11 +67,7 @@ static char *gdbmi_unescape_cstring(char *str)
     //assert(length >= 2);
 
     for (r = 0, s = 1; s < length - 1; ++s) {
-        if (str[s] == '\\') {
-            result[r++] = str[++s];
-        } else {
-            result[r++] = str[s];
-        }
+        result[r++] = str[s];
     }
 
     result[r] = 0;
