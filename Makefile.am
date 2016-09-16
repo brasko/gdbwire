@@ -37,8 +37,10 @@ libgdbwire_la_CFLAGS= \
 	-I@GDBWIRE_ABS_TOP_BUILDDIR@/src 
 
 # The test suite configuration
-nodist_test_suite_SOURCES = \
+test_suite_SOURCES = \
+    src/progs/test_suite/catch.hpp \
     src/progs/test_suite/gdbwire_string.cpp \
+    src/progs/test_suite/fixture.h \
     src/progs/test_suite/fixture.cpp \
     src/progs/test_suite/gdbmi_parser.cpp \
     src/progs/test_suite/gdbmi_pt.cpp \
@@ -49,6 +51,7 @@ test_suite_CPPFLAGS = \
     -I@GDBWIRE_ABS_TOP_SRCDIR@/src
 test_suite_LDFLAGS =
 test_suite_LDADD = libgdbwire.la
+EXTRA_DIST = src/progs/test_suite/data
 
 # The gdbmi example configuration
 examples_gdbmi_SOURCES = src/progs/examples/gdbmi_example.c

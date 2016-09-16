@@ -1624,7 +1624,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/variable.mi)
  * raises an error. This ensures that the manual error is handled by the
  * destructor to ensure no memory is lost.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/mid_action_variable.mi)
+TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/mid_action_var.mi)
 {
     REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "(not_gdb)\n");
