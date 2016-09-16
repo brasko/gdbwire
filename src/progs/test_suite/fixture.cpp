@@ -5,7 +5,7 @@
 std::string
 Fixture::testName()
 {
-    return Catch::getCurrentContext().getResultCapture().getCurrentTestName();
+    return Catch::getCurrentContext().getResultCapture()->getCurrentTestName();
 }
 
 std::string
