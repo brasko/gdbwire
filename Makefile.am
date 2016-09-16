@@ -19,6 +19,8 @@ lib_LTLIBRARIES=libgdbwire.la
 
 # The gdbwire configuration
 libgdbwire_la_SOURCES= \
+    src/gdbwire_mi_command.h \
+    src/gdbwire_mi_command.c \
     src/gdbwire_mi_grammar.h \
     src/gdbwire_mi_grammar.y \
     src/gdbwire_mi_lexer.l \
@@ -47,6 +49,7 @@ test_suite_SOURCES = \
     src/progs/test_suite/gdbwire_string.cpp \
     src/progs/test_suite/fixture.h \
     src/progs/test_suite/fixture.cpp \
+    src/progs/test_suite/gdbwire_mi_command.cpp \
     src/progs/test_suite/gdbwire_mi_parser.cpp \
     src/progs/test_suite/gdbwire_mi_pt.cpp \
     src/progs/test_suite/gdbwire.cpp \

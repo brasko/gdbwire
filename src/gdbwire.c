@@ -93,7 +93,10 @@ gdbwire_create(struct gdbwire_callbacks callbacks)
 void
 gdbwire_destroy(struct gdbwire *gdbwire)
 {
-    free(gdbwire);
+    if (gdbwire) {
+        gdbwire_mi_parser_destroy(gdbwire->parser);
+        free(gdbwire);
+    }
 }
 
 enum gdbwire_result

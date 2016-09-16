@@ -49,6 +49,7 @@ header_files = [
     'gdbwire_mi_pt.h',
     'gdbwire_mi_pt_alloc.h',
     'gdbwire_mi_parser.h',
+    'gdbwire_mi_command.h',
     'gdbwire_mi_grammar.h',
     'gdbwire.h']
 
@@ -60,6 +61,7 @@ source_files = [
     'gdbwire_mi_parser.c',
     'gdbwire_mi_pt_alloc.c',
     'gdbwire_mi_pt.c',
+    'gdbwire_mi_command.c',
 
     'gdbwire_mi_lexer.c',
     'gdbwire_mi_grammar.c',
