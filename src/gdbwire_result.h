@@ -25,7 +25,14 @@ enum gdbwire_result {
      * This happens, for instance, when a called function returns
      * an error status, or when invalid input was provided, etc.
      */
-    GDBWIRE_LOGIC
+    GDBWIRE_LOGIC,
+
+    /**
+     * The system is out of memory.
+     *
+     * Will occur when malloc, strdup, calloc, etc fail to allocate memory.
+     */
+    GDBWIRE_NOMEM
 };
 
 #endif /* GDBWIRE_RESULT_H */

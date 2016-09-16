@@ -171,6 +171,70 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/no_macro_inf
 }
 
 /**
+ * The file list exec source file command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/fail_line.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!com);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The file list exec source file command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/fail_file.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!com);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The file list exec source file command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/fail_fullname.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!com);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The file list exec source file command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/fail_macro_info.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!com);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
  * The file list exec source files command. Check the case with no files.
  */
 TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/empty.mi)

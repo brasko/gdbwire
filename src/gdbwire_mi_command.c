@@ -22,10 +22,13 @@ file_list_exec_source_file(
     struct gdbwire_mi_command **out)
 {
     struct gdbwire_mi_result *mi_result;
+    struct gdbwire_mi_command *mi_command = 0;
 
     char *line, *file, *fullname, *macro_info;
     int macro_info_exists = 0;
     int fullname_exists = 0;
+
+    *out = 0;
 
     GDBWIRE_ASSERT(result_record->result_class == GDBWIRE_MI_DONE);
     GDBWIRE_ASSERT(result_record->result);
@@ -66,18 +69,33 @@ file_list_exec_source_file(
 
     GDBWIRE_ASSERT(!mi_result->next);
 
-    (*out) = calloc(1, sizeof(struct gdbwire_mi_command));
-    (*out)->kind = GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE;
-    (*out)->variant.file_list_exec_source_file.line = atoi(line);
-    (*out)->variant.file_list_exec_source_file.file = strdup(file);
-    (*out)->variant.file_list_exec_source_file.fullname =
+    mi_command = calloc(1, sizeof(struct gdbwire_mi_command));
+    if (!mi_command) {
+        return GDBWIRE_NOMEM;
+    }
+
+    mi_command->kind = GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE;
+    mi_command->variant.file_list_exec_source_file.line = atoi(line);
+    mi_command->variant.file_list_exec_source_file.file = strdup(file);
+    if (!mi_command->variant.file_list_exec_source_file.file) {
+        gdbwire_mi_command_free(mi_command);
+        return GDBWIRE_NOMEM;
+    }
+    mi_command->variant.file_list_exec_source_file.fullname =
         (fullname_exists)?strdup(fullname):0;
-    (*out)->variant.file_list_exec_source_file.macro_info_exists =
+    if (fullname_exists &&
+        !mi_command->variant.file_list_exec_source_file.fullname) {
+        gdbwire_mi_command_free(mi_command);
+        return GDBWIRE_NOMEM;
+    }
+    mi_command->variant.file_list_exec_source_file.macro_info_exists =
         macro_info_exists;
     if (macro_info_exists) {
-        (*out)->variant.file_list_exec_source_file.macro_info =
+        mi_command->variant.file_list_exec_source_file.macro_info =
             atoi(macro_info);
     }
+
+    *out = mi_command;
 
     return GDBWIRE_OK;
 }
