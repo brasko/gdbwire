@@ -7,11 +7,15 @@
 namespace {
     struct GdbwireCallbacks {
         GdbwireCallbacks() {
-            callbacks.context = (void*)this;
-            callbacks.gdbwire_console = GdbwireCallbacks::gdbwire_console;
-            callbacks.gdbwire_target = GdbwireCallbacks::gdbwire_target;
-            callbacks.gdbwire_log = GdbwireCallbacks::gdbwire_log;
-            callbacks.gdbwire_prompt = GdbwireCallbacks::gdbwire_prompt;
+            const static gdbwire_callbacks init_callbacks = {
+                (void*)this,
+                GdbwireCallbacks::gdbwire_console,
+                GdbwireCallbacks::gdbwire_target,
+                GdbwireCallbacks::gdbwire_log,
+                GdbwireCallbacks::gdbwire_prompt
+            };
+
+            callbacks = init_callbacks;
         }
 
         static void gdbwire_console(void *context, const char *str) {

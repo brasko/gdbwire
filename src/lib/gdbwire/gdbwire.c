@@ -20,8 +20,8 @@ gdbmi_output_callback(void *context, struct gdbmi_output *output) {
     struct gdbmi_output *cur = output;
     while (cur) {
         if (cur->kind == GDBMI_OUTPUT_PROMPT) {
-            if (wire->callbacks.gdbwire_prompt) {
-                wire->callbacks.gdbwire_prompt(
+            if (wire->callbacks.gdbwire_prompt_fn) {
+                wire->callbacks.gdbwire_prompt_fn(
                     wire->callbacks.context, cur->line);
             }
         }
@@ -33,20 +33,20 @@ gdbmi_output_callback(void *context, struct gdbmi_output *output) {
                     cur->variant.oob_record->variant.stream_record;
             switch (stream->kind) {
                 case GDBMI_CONSOLE:
-                    if (wire->callbacks.gdbwire_console) {
-                        wire->callbacks.gdbwire_console(
+                    if (wire->callbacks.gdbwire_console_fn) {
+                        wire->callbacks.gdbwire_console_fn(
                             wire->callbacks.context, stream->cstring);
                     }
                     break;
                 case GDBMI_TARGET:
-                    if (wire->callbacks.gdbwire_target) {
-                        wire->callbacks.gdbwire_target(
+                    if (wire->callbacks.gdbwire_target_fn) {
+                        wire->callbacks.gdbwire_target_fn(
                             wire->callbacks.context, stream->cstring);
                     }
                     break;
                 case GDBMI_LOG:
-                    if (wire->callbacks.gdbwire_log) {
-                        wire->callbacks.gdbwire_log(
+                    if (wire->callbacks.gdbwire_log_fn) {
+                        wire->callbacks.gdbwire_log_fn(
                             wire->callbacks.context, stream->cstring);
                     }
                     break;
