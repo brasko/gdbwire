@@ -1,27 +1,27 @@
-#ifndef __GDBMI_PARSER_H__
-#define __GDBMI_PARSER_H__
+#ifndef GDBWIRE_MI_PARSER_H
+#define GDBWIRE_MI_PARSER_H
 
 #ifdef __cplusplus 
 extern "C" { 
 #endif 
 
 #include "gdbwire_result.h"
-#include "gdbmi_pt.h"
+#include "gdbwire_mi_pt.h"
 
 /// The opaque GDB/MI parser context
-struct gdbmi_parser;
+struct gdbwire_mi_parser;
 
 /**
  * The primary mechanism to alert users of GDB/MI notifications.
  *
  * The flow is like this:
- * - create a parser context (gdbmi_parser_create)
- * - push onto the parser arbitrary amounts of data (gdbmi_parser_push)
- *   - receive callbacks from inside gdbmi_parser_push when
+ * - create a parser context (gdbwire_mi_parser_create)
+ * - push onto the parser arbitrary amounts of data (gdbwire_mi_parser_push)
+ *   - receive callbacks from inside gdbwire_mi_parser_push when
  *     it discovers callbacks the user will find interesting
- * - destroy the parser (gdbmi_parser_destroy)
+ * - destroy the parser (gdbwire_mi_parser_destroy)
  */
-struct gdbmi_parser_callbacks {
+struct gdbwire_mi_parser_callbacks {
     /**
      * An arbitrary pointer to associate with the callbacks.
      *
@@ -37,10 +37,11 @@ struct gdbmi_parser_callbacks {
      * The context pointer above.
      *
      * @param output
-     * The gdbmi output command. This output command is now owned by the
+     * The gdbwire_mi output command. This output command is now owned by the
      * function being invoked and should be destroyed when necessary.
      */
-    void (*gdbmi_output_callback)(void *context, struct gdbmi_output *output);
+    void (*gdbwire_mi_output_callback)(void *context,
+        struct gdbwire_mi_output *output);
 };
 
 /**
@@ -52,28 +53,28 @@ struct gdbmi_parser_callbacks {
  * @return
  * A new GDB/MI parser instance or NULL on error.
  */
-struct gdbmi_parser *gdbmi_parser_create(
-        struct gdbmi_parser_callbacks callbacks);
+struct gdbwire_mi_parser *gdbwire_mi_parser_create(
+        struct gdbwire_mi_parser_callbacks callbacks);
 
 /**
- * Destroy a gdbmi_parser context.
+ * Destroy a gdbwire_mi_parser context.
  *
  * This function will do nothing if parser is NULL.
  *
  * @param parser
  * The instance the parser to destroy
  */
-void gdbmi_parser_destroy(struct gdbmi_parser *parser);
+void gdbwire_mi_parser_destroy(struct gdbwire_mi_parser *parser);
 
 /**
  * Push a null terminated string onto the parser.
  *
- * During this function, if a gdbmi output command is discovered by
+ * During this function, if a gdbwire_mi output command is discovered by
  * the parser (or any other useful GDB/MI notification), it will invoke
  * the appropriate callbacks assigned during parser creation.
  *
  * @param parser
- * The gdbmi parser context to operate on.
+ * The gdbwire_mi parser context to operate on.
  *
  * @param data
  * The parse data to push onto the parser.
@@ -81,16 +82,16 @@ void gdbmi_parser_destroy(struct gdbmi_parser *parser);
  * @return
  * GDBWIRE_OK on success or appropriate error result on failure.
  */
-enum gdbwire_result gdbmi_parser_push(struct gdbmi_parser *parser,
+enum gdbwire_result gdbwire_mi_parser_push(struct gdbwire_mi_parser *parser,
         const char *data);
 
 /**
  * Push some parse data onto the parser.
  *
- * See gdbmi_parser_push for details on function behavior.
+ * See gdbwire_mi_parser_push for details on function behavior.
  *
  * @param parser
- * The gdbmi parser context to operate on.
+ * The gdbwire_mi parser context to operate on.
  *
  * @param data
  * The parse data to push onto the parser.
@@ -101,8 +102,8 @@ enum gdbwire_result gdbmi_parser_push(struct gdbmi_parser *parser,
  * @return
  * GDBWIRE_OK on success or appropriate error result on failure.
  */
-enum gdbwire_result gdbmi_parser_push_data(struct gdbmi_parser *parser,
-        const char *data, size_t size);
+enum gdbwire_result gdbwire_mi_parser_push_data(
+        struct gdbwire_mi_parser *parser, const char *data, size_t size);
 
 #ifdef __cplusplus 
 }

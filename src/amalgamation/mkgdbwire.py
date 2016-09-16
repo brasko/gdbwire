@@ -46,10 +46,10 @@ header_files = [
     'gdbwire_assert.h',
     'gdbwire_result.h',
     'gdbwire_logger.h',
-    'gdbmi_pt.h',
-    'gdbmi_pt_alloc.h',
-    'gdbmi_parser.h',
-    'gdbmi_grammar.h',
+    'gdbwire_mi_pt.h',
+    'gdbwire_mi_pt_alloc.h',
+    'gdbwire_mi_parser.h',
+    'gdbwire_mi_grammar.h',
     'gdbwire.h']
 
 # These are the soruce files used by gdbwire
@@ -57,19 +57,19 @@ source_files = [
     'gdbwire_string.c',
 
     'gdbwire_logger.c',
-    'gdbmi_parser.c',
-    'gdbmi_pt_alloc.c',
-    'gdbmi_pt.c',
+    'gdbwire_mi_parser.c',
+    'gdbwire_mi_pt_alloc.c',
+    'gdbwire_mi_pt.c',
 
-    'gdbmi_lexer.c',
-    'gdbmi_grammar.c',
+    'gdbwire_mi_lexer.c',
+    'gdbwire_mi_grammar.c',
 
     'gdbwire.c',
 ]
 
 def comment(out, text):
-    end_stars = '*' * (61 - len(text))
-    out.write('/************** ' + text + ' ' + end_stars + '/\n')
+    end_stars = '*' * (70 - len(text))
+    out.write('/***** ' + text + ' ' + end_stars + '/\n')
 
 # include and line directive regular expressions
 include_regex = re.compile('\s*#\s*include\s+"([^"]+)"')

@@ -1,6 +1,6 @@
-%option prefix="gdbmi_"
+%option prefix="gdbwire_mi_"
 %option outfile="lex.yy.c"
-%option extra-type="struct gdbmi_position"
+%option extra-type="struct gdbwire_mi_position"
 %option reentrant
 %option noyywrap
 %option nounput
@@ -14,8 +14,8 @@ IDENTIFIER {L}+{T}*
 %{
 
 #include <stdio.h>
-#include "gdbmi_grammar.h"
-#include "gdbmi_pt.h"
+#include "gdbwire_mi_grammar.h"
+#include "gdbwire_mi_pt.h"
 
 /**
  * This macro sets the beginning and ending column position of each
@@ -31,7 +31,7 @@ IDENTIFIER {L}+{T}*
  */
 #define YY_USER_ACTION \
     { \
-    struct gdbmi_position pos = { yycolumn, yycolumn+yyleng-1 }; \
+    struct gdbwire_mi_position pos = { yycolumn, yycolumn+yyleng-1 }; \
     yyextra = pos; \
     yycolumn += yyleng; \
     }

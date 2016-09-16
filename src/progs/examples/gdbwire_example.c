@@ -6,13 +6,14 @@
  * The gdbwire stream record event.
  *
  * @param context
- * The context passed to gdbwire in gdbmi_parser_create.
+ * The context passed to gdbwire in gdbwire_mi_parser_create.
  *
  * @param stream_record
  * The stream record to display to the user.
  */
 void
-gdbwire_stream_record(void *context, struct gdbmi_stream_record *stream_record)
+gdbwire_stream_record(void *context,
+    struct gdbwire_mi_stream_record *stream_record)
 {
     assert(!context && stream_record);
     printf("%s", stream_record->cstring);
@@ -23,7 +24,7 @@ gdbwire_stream_record(void *context, struct gdbmi_stream_record *stream_record)
  * The gdbwire prompt event.
  *
  * @param context
- * The context passed to gdbwire in gdbmi_parser_create.
+ * The context passed to gdbwire in gdbwire_mi_parser_create.
  *
  * @param prompt
  * The prompt to display to the user.
@@ -40,12 +41,12 @@ gdbwire_prompt(void *context, const char *prompt)
  * The gdbwire parse error event.
  *
  * @param context
- * The context passed to gdbwire in gdbmi_parser_create.
+ * The context passed to gdbwire in gdbwire_mi_parser_create.
  *
  */
 void
 gdbwire_parse_error(void *context, const char *mi, const char *token,
-    struct gdbmi_position position)
+    struct gdbwire_mi_position position)
 {
     assert(!context && mi && token);
     printf("Parse error:\n");
@@ -57,13 +58,13 @@ gdbwire_parse_error(void *context, const char *mi, const char *token,
 }
 
 /**
- * The main loop in the gdbmi example.
+ * The main loop in the gdbwire_mi example.
  *
  * The main loop is responsible for reading data from stdin and sending it
  * to gdbwire. This happens until stdin is closed and EOF is read.
  *
  * @param parser
- * The gdbmi parser.
+ * The gdbwire_mi parser.
  */
 void
 main_loop(struct gdbwire *wire)

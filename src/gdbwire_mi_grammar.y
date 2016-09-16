@@ -1,35 +1,35 @@
-%name-prefix "gdbmi_"
+%name-prefix "gdbwire_mi_"
 %define api.pure
 %define api.push_pull "push"
 %defines
 %code requires {
     typedef void *yyscan_t;
-    struct gdbmi_output;
+    struct gdbwire_mi_output;
 }
 %parse-param {yyscan_t yyscanner}
-%parse-param {struct gdbmi_output **gdbmi_output}
+%parse-param {struct gdbwire_mi_output **gdbwire_mi_output}
 
 %{
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "gdbmi_grammar.h"
-#include "gdbmi_pt.h"
-#include "gdbmi_pt_alloc.h"
+#include "gdbwire_mi_grammar.h"
+#include "gdbwire_mi_pt.h"
+#include "gdbwire_mi_pt_alloc.h"
 
-char *gdbmi_get_text(yyscan_t yyscanner);
-struct gdbmi_position gdbmi_get_extra(yyscan_t yyscanner);
+char *gdbwire_mi_get_text(yyscan_t yyscanner);
+struct gdbwire_mi_position gdbwire_mi_get_extra(yyscan_t yyscanner);
 
-void gdbmi_error(yyscan_t yyscanner, struct gdbmi_output **gdbmi_output,
-    const char *s)
+void gdbwire_mi_error(yyscan_t yyscanner,
+    struct gdbwire_mi_output **gdbwire_mi_output, const char *s)
 { 
-    char *text = gdbmi_get_text(yyscanner);
-    struct gdbmi_position pos = gdbmi_get_extra(yyscanner);
+    char *text = gdbwire_mi_get_text(yyscanner);
+    struct gdbwire_mi_position pos = gdbwire_mi_get_extra(yyscanner);
 
-    *gdbmi_output = gdbmi_output_alloc();
-    (*gdbmi_output)->kind = GDBMI_OUTPUT_PARSE_ERROR;
-    (*gdbmi_output)->variant.error.token = strdup(text);
-    (*gdbmi_output)->variant.error.pos = pos;
+    *gdbwire_mi_output = gdbwire_mi_output_alloc();
+    (*gdbwire_mi_output)->kind = GDBWIRE_MI_OUTPUT_PARSE_ERROR;
+    (*gdbwire_mi_output)->variant.error.token = strdup(text);
+    (*gdbwire_mi_output)->variant.error.pos = pos;
 }
 
 /**
@@ -46,7 +46,7 @@ void gdbmi_error(yyscan_t yyscanner, struct gdbmi_output **gdbmi_output,
  *   \n -> new line
  *   \r -> carriage return
  *
- * See gdbmi_grammar.txt (GDB/MI Clarifications) for more information.
+ * See gdbwire_mi_grammar.txt (GDB/MI Clarifications) for more information.
  *
  * @param str
  * The escaped GDB/MI c-string data.
@@ -54,7 +54,7 @@ void gdbmi_error(yyscan_t yyscanner, struct gdbmi_output **gdbmi_output,
  * @return
  * An allocated strng representing str with the escaping undone.
  */
-static char *gdbmi_unescape_cstring(char *str)
+static char *gdbwire_mi_unescape_cstring(char *str)
 {
     char *result;
     size_t r, s, length;
@@ -119,20 +119,20 @@ static char *gdbmi_unescape_cstring(char *str)
 %token CARROT		/* ^ */
 
 %union {
-  struct gdbmi_output *u_output;
-  struct gdbmi_oob_record *u_oob_record;
-  struct gdbmi_result_record *u_result_record;
+  struct gdbwire_mi_output *u_output;
+  struct gdbwire_mi_oob_record *u_oob_record;
+  struct gdbwire_mi_result_record *u_result_record;
   int u_result_class;
   int u_async_record_kind;
-  struct gdbmi_result *u_result;
+  struct gdbwire_mi_result *u_result;
   char *u_token;
-  struct gdbmi_async_record *u_async_record;
-  struct gdbmi_stream_record *u_stream_record;
+  struct gdbwire_mi_async_record *u_async_record;
+  struct gdbwire_mi_stream_record *u_stream_record;
   int u_async_class;
   char *u_variable;
   char *u_cstring;
-  struct gdbmi_result *u_tuple;
-  struct gdbmi_result *u_list;
+  struct gdbwire_mi_result *u_tuple;
+  struct gdbwire_mi_result *u_list;
   int u_stream_record_kind;
 }
 
@@ -171,9 +171,9 @@ static char *gdbmi_unescape_cstring(char *str)
  * stream_record
  * token
  */
-%destructor { gdbmi_output_free($$); } output_variant
-%destructor { gdbmi_result_free($$); } result_list
-%destructor { gdbmi_result_free($$); } result
+%destructor { gdbwire_mi_output_free($$); } output_variant
+%destructor { gdbwire_mi_result_free($$); } result_list
+%destructor { gdbwire_mi_result_free($$); } result
 %destructor { free($$); } opt_variable
 %destructor { free($$); } variable
 %destructor { free($$); } opt_token
@@ -188,7 +188,7 @@ output_list: output_list output {
 };
 
 output: output_variant NEWLINE {
-  *gdbmi_output = $1;
+  *gdbwire_mi_output = $1;
 };
 
 output: error NEWLINE {
@@ -196,50 +196,50 @@ output: error NEWLINE {
 };
 
 output_variant: oob_record {
-  $$ = gdbmi_output_alloc();
-  $$->kind = GDBMI_OUTPUT_OOB;
+  $$ = gdbwire_mi_output_alloc();
+  $$->kind = GDBWIRE_MI_OUTPUT_OOB;
   $$->variant.oob_record = $1;
 }
 
 output_variant: result_record {
-  $$ = gdbmi_output_alloc();
-  $$->kind = GDBMI_OUTPUT_RESULT;
+  $$ = gdbwire_mi_output_alloc();
+  $$->kind = GDBWIRE_MI_OUTPUT_RESULT;
   $$->variant.result_record = $1;
 }
 
 output_variant: OPEN_PAREN variable {
       if (strcmp("gdb", $2) != 0) {
           /* Destructor will be called to free $2 on error */
-          yyerror(yyscanner, gdbmi_output, "");
+          yyerror(yyscanner, gdbwire_mi_output, "");
           YYERROR;
       }
     } CLOSED_PAREN {
-      $$ = gdbmi_output_alloc();
-      $$->kind = GDBMI_OUTPUT_PROMPT;
+      $$ = gdbwire_mi_output_alloc();
+      $$->kind = GDBWIRE_MI_OUTPUT_PROMPT;
       free($2);
     }
 
 result_record: opt_token CARROT result_class result_list {
-  $$ = gdbmi_result_record_alloc();
+  $$ = gdbwire_mi_result_record_alloc();
   $$->token = $1;
   $$->result_class = $3;
   $$->result = $4;
 };
 
 oob_record: async_record {
-  $$ = gdbmi_oob_record_alloc();
-  $$->kind = GDBMI_ASYNC;
+  $$ = gdbwire_mi_oob_record_alloc();
+  $$->kind = GDBWIRE_MI_ASYNC;
   $$->variant.async_record = $1;
 };
 
 oob_record: stream_record {
-  $$ = gdbmi_oob_record_alloc();
-  $$->kind = GDBMI_STREAM;
+  $$ = gdbwire_mi_oob_record_alloc();
+  $$->kind = GDBWIRE_MI_STREAM;
   $$->variant.stream_record = $1;
 };
 
 async_record: opt_token async_record_class async_class result_list {
-  $$ = gdbmi_async_record_alloc();
+  $$ = gdbwire_mi_async_record_alloc();
   $$->token = $1;
   $$->kind = $2;
   $$->async_class = $3;
@@ -247,84 +247,84 @@ async_record: opt_token async_record_class async_class result_list {
 };
 
 async_record_class: MULT_OP {
-  $$ = GDBMI_EXEC;
+  $$ = GDBWIRE_MI_EXEC;
 };
 
 async_record_class: ADD_OP {
-  $$ = GDBMI_STATUS;
+  $$ = GDBWIRE_MI_STATUS;
 };
 
 async_record_class: EQUAL_SIGN {
-  $$ = GDBMI_NOTIFY;	
+  $$ = GDBWIRE_MI_NOTIFY;	
 };
 
 result_class: STRING_LITERAL {
-  char *text = gdbmi_get_text(yyscanner);
+  char *text = gdbwire_mi_get_text(yyscanner);
   if (strcmp("done", text) == 0) {
-    $$ = GDBMI_DONE;
+    $$ = GDBWIRE_MI_DONE;
   } else if (strcmp("running", text) == 0) {
-    $$ = GDBMI_RUNNING;
+    $$ = GDBWIRE_MI_RUNNING;
   } else if (strcmp("connected", text) == 0) {
-    $$ = GDBMI_CONNECTED;
+    $$ = GDBWIRE_MI_CONNECTED;
   } else if (strcmp("error", text) == 0) {
-    $$ = GDBMI_ERROR;
+    $$ = GDBWIRE_MI_ERROR;
   } else if (strcmp("exit", text) == 0) {
-    $$ = GDBMI_EXIT;
+    $$ = GDBWIRE_MI_EXIT;
   } else {
-    $$ = GDBMI_UNSUPPORTED;
+    $$ = GDBWIRE_MI_UNSUPPORTED;
   }
 };
 
 async_class: STRING_LITERAL {
-  char *text = gdbmi_get_text(yyscanner);
+  char *text = gdbwire_mi_get_text(yyscanner);
   if (strcmp("download", text) == 0) {
-      $$ = GDBMI_ASYNC_DOWNLOAD;
+      $$ = GDBWIRE_MI_ASYNC_DOWNLOAD;
   } else if (strcmp("stopped", text) == 0) {
-      $$ = GDBMI_ASYNC_STOPPED;
+      $$ = GDBWIRE_MI_ASYNC_STOPPED;
   } else if (strcmp("running", text) == 0) {
-      $$ = GDBMI_ASYNC_RUNNING;
+      $$ = GDBWIRE_MI_ASYNC_RUNNING;
   } else if (strcmp("thread-group-added", text) == 0) {
-      $$ = GDBMI_ASYNC_THREAD_GROUP_ADDED;
+      $$ = GDBWIRE_MI_ASYNC_THREAD_GROUP_ADDED;
   } else if (strcmp("thread-group-removed", text) == 0) {
-      $$ = GDBMI_ASYNC_THREAD_GROUP_REMOVED;
+      $$ = GDBWIRE_MI_ASYNC_THREAD_GROUP_REMOVED;
   } else if (strcmp("thread-group-started", text) == 0) {
-      $$ = GDBMI_ASYNC_THREAD_GROUP_STARTED;
+      $$ = GDBWIRE_MI_ASYNC_THREAD_GROUP_STARTED;
   } else if (strcmp("thread-group-exited", text) == 0) {
-      $$ = GDBMI_ASYNC_THREAD_GROUP_EXITED;
+      $$ = GDBWIRE_MI_ASYNC_THREAD_GROUP_EXITED;
   } else if (strcmp("thread-created", text) == 0) {
-      $$ = GDBMI_ASYNC_THREAD_CREATED;
+      $$ = GDBWIRE_MI_ASYNC_THREAD_CREATED;
   } else if (strcmp("thread-exited", text) == 0) {
-      $$ = GDBMI_ASYNC_THREAD_EXITED;
+      $$ = GDBWIRE_MI_ASYNC_THREAD_EXITED;
   } else if (strcmp("thread-selected", text) == 0) {
-      $$ = GDBMI_ASYNC_THREAD_SELECTED;
+      $$ = GDBWIRE_MI_ASYNC_THREAD_SELECTED;
   } else if (strcmp("library-loaded", text) == 0) {
-      $$ = GDBMI_ASYNC_LIBRARY_LOADED;
+      $$ = GDBWIRE_MI_ASYNC_LIBRARY_LOADED;
   } else if (strcmp("library-unloaded", text) == 0) {
-      $$ = GDBMI_ASYNC_LIBRARY_UNLOADED;
+      $$ = GDBWIRE_MI_ASYNC_LIBRARY_UNLOADED;
   } else if (strcmp("traceframe-changed", text) == 0) {
-      $$ = GDBMI_ASYNC_TRACEFRAME_CHANGED;
+      $$ = GDBWIRE_MI_ASYNC_TRACEFRAME_CHANGED;
   } else if (strcmp("tsv-created", text) == 0) {
-      $$ = GDBMI_ASYNC_TSV_CREATED;
+      $$ = GDBWIRE_MI_ASYNC_TSV_CREATED;
   } else if (strcmp("tsv-modified", text) == 0) {
-      $$ = GDBMI_ASYNC_TSV_MODIFIED;
+      $$ = GDBWIRE_MI_ASYNC_TSV_MODIFIED;
   } else if (strcmp("tsv-deleted", text) == 0) {
-      $$ = GDBMI_ASYNC_TSV_DELETED;
+      $$ = GDBWIRE_MI_ASYNC_TSV_DELETED;
   } else if (strcmp("breakpoint-created", text) == 0) {
-      $$ = GDBMI_ASYNC_BREAKPOINT_CREATED;
+      $$ = GDBWIRE_MI_ASYNC_BREAKPOINT_CREATED;
   } else if (strcmp("breakpoint-modified", text) == 0) {
-      $$ = GDBMI_ASYNC_BREAKPOINT_MODIFIED;
+      $$ = GDBWIRE_MI_ASYNC_BREAKPOINT_MODIFIED;
   } else if (strcmp("breakpoint-deleted", text) == 0) {
-      $$ = GDBMI_ASYNC_BREAKPOINT_DELETED;
+      $$ = GDBWIRE_MI_ASYNC_BREAKPOINT_DELETED;
   } else if (strcmp("record-started", text) == 0) {
-      $$ = GDBMI_ASYNC_RECORD_STARTED;
+      $$ = GDBWIRE_MI_ASYNC_RECORD_STARTED;
   } else if (strcmp("record-stopped", text) == 0) {
-      $$ = GDBMI_ASYNC_RECORD_STOPPED;
+      $$ = GDBWIRE_MI_ASYNC_RECORD_STOPPED;
   } else if (strcmp("cmd-param-changed", text) == 0) {
-      $$ = GDBMI_ASYNC_CMD_PARAM_CHANGED;
+      $$ = GDBWIRE_MI_ASYNC_CMD_PARAM_CHANGED;
   } else if (strcmp("memory-changed", text) == 0) {
-      $$ = GDBMI_ASYNC_MEMORY_CHANGED;
+      $$ = GDBWIRE_MI_ASYNC_MEMORY_CHANGED;
   } else {
-      $$ = GDBMI_ASYNC_UNSUPPORTED;
+      $$ = GDBWIRE_MI_ASYNC_UNSUPPORTED;
   }
 };
 
@@ -341,38 +341,38 @@ result_list: {
 };
 
 result_list: result_list COMMA result {
-  $$ = append_gdbmi_result ($1, $3);
+  $$ = append_gdbwire_mi_result ($1, $3);
 };
 
 result: opt_variable cstring {
-  $$ = gdbmi_result_alloc();
+  $$ = gdbwire_mi_result_alloc();
   $$->variable = $1;
-  $$->kind = GDBMI_CSTRING;
+  $$->kind = GDBWIRE_MI_CSTRING;
   $$->variant.cstring = $2;
 };
 
 result: opt_variable tuple {
-  $$ = gdbmi_result_alloc();
+  $$ = gdbwire_mi_result_alloc();
   $$->variable = $1;
-  $$->kind = GDBMI_TUPLE;
+  $$->kind = GDBWIRE_MI_TUPLE;
   $$->variant.result = $2;
 };
 
 result: opt_variable list {
-  $$ = gdbmi_result_alloc();
+  $$ = gdbwire_mi_result_alloc();
   $$->variable = $1;
-  $$->kind = GDBMI_LIST;
+  $$->kind = GDBWIRE_MI_LIST;
   $$->variant.result = $2;
 };
 
 variable: STRING_LITERAL {
-  char *text = gdbmi_get_text(yyscanner);
+  char *text = gdbwire_mi_get_text(yyscanner);
   $$ = strdup(text);
 };
 
 cstring: CSTRING {
-  char *text = gdbmi_get_text(yyscanner);
-  $$ = gdbmi_unescape_cstring(text);
+  char *text = gdbwire_mi_get_text(yyscanner);
+  $$ = gdbwire_mi_unescape_cstring(text);
 };
 
 tuple: OPEN_BRACE CLOSED_BRACE {
@@ -381,7 +381,7 @@ tuple: OPEN_BRACE CLOSED_BRACE {
 
 tuple: OPEN_BRACE result result_list CLOSED_BRACE {
     if ($3) {
-        $$ = append_gdbmi_result($2, $3);
+        $$ = append_gdbwire_mi_result($2, $3);
     } else {
         $$ = $2;
     }
@@ -393,28 +393,28 @@ list: OPEN_BRACKET CLOSED_BRACKET {
 
 list: OPEN_BRACKET result result_list CLOSED_BRACKET {
     if ($3) {
-        $$ = append_gdbmi_result($2, $3);
+        $$ = append_gdbwire_mi_result($2, $3);
     } else {
         $$ = $2;
     }
 };
 
 stream_record: stream_record_class cstring {
-  $$ = gdbmi_stream_record_alloc();
+  $$ = gdbwire_mi_stream_record_alloc();
   $$->kind = $1;
   $$->cstring = $2;
 };
 
 stream_record_class: TILDA {
-  $$ = GDBMI_CONSOLE;
+  $$ = GDBWIRE_MI_CONSOLE;
 };
 
 stream_record_class: AT_SYMBOL {
-  $$ = GDBMI_TARGET;
+  $$ = GDBWIRE_MI_TARGET;
 };
 
 stream_record_class: AMPERSAND {
-  $$ = GDBMI_LOG;
+  $$ = GDBWIRE_MI_LOG;
 };
 
 opt_token: {
@@ -426,6 +426,6 @@ opt_token: token {
 };
 
 token: INTEGER_LITERAL {
-  char *text = gdbmi_get_text(yyscanner);
+  char *text = gdbwire_mi_get_text(yyscanner);
   $$ = strdup(text);
 };

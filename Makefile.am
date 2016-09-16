@@ -7,7 +7,7 @@ noinst_PROGRAMS += test_suite
 endif
 
 if WANT_EXAMPLES
-noinst_PROGRAMS += examples/gdbmi
+noinst_PROGRAMS += examples/gdbwire_mi
 noinst_PROGRAMS += examples/gdbwire
 
 if WANT_AMALGAMATION
@@ -19,15 +19,15 @@ lib_LTLIBRARIES=libgdbwire.la
 
 # The gdbwire configuration
 libgdbwire_la_SOURCES= \
-    src/gdbmi_grammar.h \
-    src/gdbmi_grammar.y \
-    src/gdbmi_lexer.l \
-    src/gdbmi_parser.h \
-    src/gdbmi_parser.c \
-    src/gdbmi_pt.h \
-    src/gdbmi_pt.c \
-    src/gdbmi_pt_alloc.h \
-    src/gdbmi_pt_alloc.c \
+    src/gdbwire_mi_grammar.h \
+    src/gdbwire_mi_grammar.y \
+    src/gdbwire_mi_lexer.l \
+    src/gdbwire_mi_parser.h \
+    src/gdbwire_mi_parser.c \
+    src/gdbwire_mi_pt.h \
+    src/gdbwire_mi_pt.c \
+    src/gdbwire_mi_pt_alloc.h \
+    src/gdbwire_mi_pt_alloc.c \
     src/gdbwire.h \
     src/gdbwire.c \
     src/gdbwire_assert.h \
@@ -47,8 +47,8 @@ test_suite_SOURCES = \
     src/progs/test_suite/gdbwire_string.cpp \
     src/progs/test_suite/fixture.h \
     src/progs/test_suite/fixture.cpp \
-    src/progs/test_suite/gdbmi_parser.cpp \
-    src/progs/test_suite/gdbmi_pt.cpp \
+    src/progs/test_suite/gdbwire_mi_parser.cpp \
+    src/progs/test_suite/gdbwire_mi_pt.cpp \
     src/progs/test_suite/gdbwire.cpp \
     src/progs/test_suite/main.cpp
 test_suite_CPPFLAGS = \
@@ -58,11 +58,11 @@ test_suite_LDFLAGS =
 test_suite_LDADD = libgdbwire.la
 EXTRA_DIST += src/progs/test_suite/data
 
-# The gdbmi example configuration
-examples_gdbmi_SOURCES = src/progs/examples/gdbmi_example.c
-examples_gdbmi_CFLAGS = -I@GDBWIRE_ABS_TOP_SRCDIR@/src
-examples_gdbmi_LDFLAGS =
-examples_gdbmi_LDADD = libgdbwire.la
+# The gdbwire_mi example configuration
+examples_gdbwire_mi_SOURCES = src/progs/examples/gdbwire_mi_example.c
+examples_gdbwire_mi_CFLAGS = -I@GDBWIRE_ABS_TOP_SRCDIR@/src
+examples_gdbwire_mi_LDFLAGS =
+examples_gdbwire_mi_LDADD = libgdbwire.la
 
 # The gdbwire example configuration
 examples_gdbwire_SOURCES = src/progs/examples/gdbwire_example.c
@@ -71,8 +71,8 @@ examples_gdbwire_LDFLAGS =
 examples_gdbwire_LDADD = libgdbwire.la
 
 BUILT_SOURCES = \
-    src/gdbmi_grammar.c \
-    src/gdbmi_lexer.c
+    src/gdbwire_mi_grammar.c \
+    src/gdbwire_mi_lexer.c
 
 if WANT_AMALGAMATION
 
@@ -92,8 +92,8 @@ BUILT_SOURCES += src/amalgamation/gdbwire.c
 EXTRA_DIST += src/amalgamation/mkgdbwire.py
 
 src/amalgamation/gdbwire.c: \
-	src/gdbmi_grammar.c \
-	src/gdbmi_lexer.c \
+	src/gdbwire_mi_grammar.c \
+	src/gdbwire_mi_lexer.c \
 	src/amalgamation/mkgdbwire.py
 	mkdir -p src/amalgamation && \
 	cd src/amalgamation && \

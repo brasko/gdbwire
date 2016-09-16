@@ -1,5 +1,5 @@
-#ifndef __GDBMI_PT_H__
-#define __GDBMI_PT_H__
+#ifndef GDBWIRE_MI_PT_H
+#define GDBWIRE_MI_PT_H
 
 #ifdef __cplusplus 
 extern "C" { 
@@ -17,30 +17,30 @@ extern "C" {
  * The start_column and end_column will be the same column number for
  * a token of size 1.
  */
-struct gdbmi_position {
+struct gdbwire_mi_position {
     /// The starting column position of the token
     int start_column;
     /// The ending column position of the token
     int end_column;
 };
 
-/** The gdbmi output kinds. */
-enum gdbmi_output_kind {
+/** The gdbwire_mi output kinds. */
+enum gdbwire_mi_output_kind {
     /**
      * The GDB/MI output contains an out of band record.
      *
      * The out of band record is not necessarily associated with any
      * particular GDB/MI input command.
      */
-    GDBMI_OUTPUT_OOB,
+    GDBWIRE_MI_OUTPUT_OOB,
 
     /**
-     * The GDB/MI output contains a gdbmi result record.
+     * The GDB/MI output contains a gdbwire_mi result record.
      *
      * This record typically contains the result data from a request
      * made by the client in a previous GDB/MI input command.
      */
-    GDBMI_OUTPUT_RESULT,
+    GDBWIRE_MI_OUTPUT_RESULT,
 
     /**
      * The GDB/MI output represents a prompt. (ie. (gdb) )
@@ -48,12 +48,12 @@ enum gdbmi_output_kind {
      * TODO: Document when GDB is ready to receive a command. Only if
      * the prompt is received and at *stopped?
      */
-    GDBMI_OUTPUT_PROMPT,
+    GDBWIRE_MI_OUTPUT_PROMPT,
 
     /**
      * A parse error occurred.
      */
-    GDBMI_OUTPUT_PARSE_ERROR
+    GDBWIRE_MI_OUTPUT_PARSE_ERROR
 };
 
 /**
@@ -62,27 +62,27 @@ enum gdbmi_output_kind {
  * A GDB/MI output command is the main mechanism in which GDB
  * corresponds with a front end.
  */
-struct gdbmi_output {
-    enum gdbmi_output_kind kind;
+struct gdbwire_mi_output {
+    enum gdbwire_mi_output_kind kind;
 
     union {
-        /** When kind == GDBMI_OUTPUT_OOB, never NULL. */
-        struct gdbmi_oob_record *oob_record;
-        /** When kind == GDBMI_OUTPUT_RESULT, never NULL. */
-        struct gdbmi_result_record *result_record;
-        /** When kind == GDBMI_OUTPUT_PARSE_ERROR, never NULL. */
+        /** When kind == GDBWIRE_MI_OUTPUT_OOB, never NULL. */
+        struct gdbwire_mi_oob_record *oob_record;
+        /** When kind == GDBWIRE_MI_OUTPUT_RESULT, never NULL. */
+        struct gdbwire_mi_result_record *result_record;
+        /** When kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR, never NULL. */
         struct {
             /** The token the error occurred on */
             char *token;
             /** The position of the token where the error occurred. */
-            struct gdbmi_position pos;
+            struct gdbwire_mi_position pos;
         } error;
     } variant;
 
     /**
      * The GDB/MI output line that was used to create this output instance.
      *
-     * Each gdbmi output structure is created from exactly one line of
+     * Each gdbwire_mi output structure is created from exactly one line of
      * MI output from GDB. This field represents the line that created 
      * this particular output structure.
      *
@@ -91,7 +91,7 @@ struct gdbmi_output {
     char *line;
 
     /** The next GDB/MI output command or NULL if none */
-    struct gdbmi_output *next;
+    struct gdbwire_mi_output *next;
 };
 
 /**
@@ -100,19 +100,19 @@ struct gdbmi_output {
  * A string made up of one or more digits.
  * The regular expression [0-9]+ will match this types contents.
  */
-typedef char *gdbmi_token_t;
+typedef char *gdbwire_mi_token_t;
 
 /**
  * A GDB/MI output command may contain one of the following result indications.
  */
-enum gdbmi_result_class {
+enum gdbwire_mi_result_class {
     /**
      * The synchronous operation was successful (^done).
      */
-    GDBMI_DONE,
+    GDBWIRE_MI_DONE,
 
     /**
-     * Equivalent to GDBMI_DONE (^running).
+     * Equivalent to GDBWIRE_MI_DONE (^running).
      *
      * Historically, was output by GDB instead of ^done if the command
      * resumed the target.
@@ -124,7 +124,7 @@ enum gdbmi_result_class {
      * TODO: Ensure that early versions of GDB can depend on the async
      * *running or if front ends DO have to rely on ^running.
      */
-    GDBMI_RUNNING,
+    GDBWIRE_MI_RUNNING,
 
     /**
      * GDB has connected to a remote target (^connected).
@@ -135,10 +135,10 @@ enum gdbmi_result_class {
      *   There's no particularly good reason why target-connect results
      *   in not ^done.  Should kill ^connected for MI3.
      *
-     * With this in mind, it makes sense to assume that GDBMI_CONNECTED and
-     * GDBMI_DONE are equivalent.
+     * With this in mind, it makes sense to assume that GDBWIRE_MI_CONNECTED
+     * and GDBWIRE_MI_DONE are equivalent.
      */
-    GDBMI_CONNECTED,
+    GDBWIRE_MI_CONNECTED,
 
     /**
      * An error has occurred (^error).
@@ -147,7 +147,7 @@ enum gdbmi_result_class {
      * In this case, the user will be provided the standard error output but
      * the front end will also be provided this information independently.
      */
-    GDBMI_ERROR,
+    GDBWIRE_MI_ERROR,
 
     /**
      * GDB has terminated (^exit).
@@ -157,10 +157,10 @@ enum gdbmi_result_class {
      * the front end should be prepared to have GDB exit and not provide
      * this information.
      */
-    GDBMI_EXIT,
+    GDBWIRE_MI_EXIT,
 
     /// An unsupported result class
-    GDBMI_UNSUPPORTED
+    GDBWIRE_MI_UNSUPPORTED
 };
 
 /**
@@ -170,7 +170,7 @@ enum gdbmi_result_class {
  * command sent by GDB. This typically contains the content the client
  * was requesting when it sent a GDB/MI input command to GDB.
  */
-struct gdbmi_result_record {
+struct gdbwire_mi_result_record {
     /**
      * The token associated with the corresponding GDB/MI input command.
      *
@@ -190,10 +190,10 @@ struct gdbmi_result_record {
      * This represents the token value the front end provided to the
      * corresponding GDB/MI input command or NULL if no token was provided.
      */
-    gdbmi_token_t token;
+    gdbwire_mi_token_t token;
 
     /** The result records result class. */
-    enum gdbmi_result_class result_class;
+    enum gdbwire_mi_result_class result_class;
 
     /**
      * An optional list of results for this result record.
@@ -203,11 +203,11 @@ struct gdbmi_result_record {
      * This is typically where the result data is that the client
      * is looking for.
      */
-    struct gdbmi_result *result;
+    struct gdbwire_mi_result *result;
 };
 
 /** The out of band record kinds. */
-enum gdbmi_oob_record_kind {
+enum gdbwire_mi_oob_record_kind {
     /**
      * An asyncronous out of band record.
      *
@@ -217,31 +217,31 @@ enum gdbmi_oob_record_kind {
      * For instance, if the inferior has stopped, or a new thread has
      * started.
      */
-    GDBMI_ASYNC,
+    GDBWIRE_MI_ASYNC,
 
     /**
      * A stream out of band record.
      *
      * This is the result of normal output from the console, target or GDB.
      */
-    GDBMI_STREAM
+    GDBWIRE_MI_STREAM
 };
 
 /* This is an out of band record.  */
-struct gdbmi_oob_record {
+struct gdbwire_mi_oob_record {
     /** The kind of out of band record. */
-    enum gdbmi_oob_record_kind kind;
+    enum gdbwire_mi_oob_record_kind kind;
 
     union {
-        /** When kind == GDBMI_ASYNC. */
-        struct gdbmi_async_record *async_record;
-        /** When kind == GDBMI_STREAM. */
-        struct gdbmi_stream_record *stream_record;
+        /** When kind == GDBWIRE_MI_ASYNC. */
+        struct gdbwire_mi_async_record *async_record;
+        /** When kind == GDBWIRE_MI_STREAM. */
+        struct gdbwire_mi_stream_record *stream_record;
     } variant;
 };
 
 /** The asynchronous out of band record kinds */
-enum gdbmi_async_record_kind {
+enum gdbwire_mi_async_record_kind {
     /**
      * The asynchronous status record kind.
      *
@@ -250,7 +250,7 @@ enum gdbmi_async_record_kind {
      *
      * This output is prepended by the + character.
      */
-    GDBMI_STATUS,
+    GDBWIRE_MI_STATUS,
 
     /**
      * The asynchronous exec record kind.
@@ -260,7 +260,7 @@ enum gdbmi_async_record_kind {
      *
      * This output is prepended by the * character.
      */
-    GDBMI_EXEC,
+    GDBWIRE_MI_EXEC,
 
     /**
      * The asyncronous notify record kind.
@@ -270,11 +270,11 @@ enum gdbmi_async_record_kind {
      *
      * This output is prepended by the = character.
      */
-    GDBMI_NOTIFY
+    GDBWIRE_MI_NOTIFY
 };
 
 /** The stream out of band record kinds */
-enum gdbmi_stream_record_kind {
+enum gdbwire_mi_stream_record_kind {
     /**
      * The console output.
      *
@@ -283,7 +283,7 @@ enum gdbmi_stream_record_kind {
      *
      * This output is prepended by the ~ character.
      */
-    GDBMI_CONSOLE,
+    GDBWIRE_MI_CONSOLE,
 
     /**
      * The target output.
@@ -292,7 +292,7 @@ enum gdbmi_stream_record_kind {
      *
      * This output is prepended by the @ character.
      */
-    GDBMI_TARGET,
+    GDBWIRE_MI_TARGET,
 
     /**
      * The GDB log output.
@@ -302,7 +302,7 @@ enum gdbmi_stream_record_kind {
      *
      * This output is prepended by the & character.
      */
-    GDBMI_LOG
+    GDBWIRE_MI_LOG
 };
 
 /**
@@ -310,29 +310,29 @@ enum gdbmi_stream_record_kind {
  *
  * 
  */
-enum gdbmi_async_class {
+enum gdbwire_mi_async_class {
     /**
      * Loading the executable onto the remote target.
      *
      * This was undocumented in the GDB manual as far as GDB 7.7.
      *
-     * This occurs if the async record is GDBMI_STATUS as +download.
+     * This occurs if the async record is GDBWIRE_MI_STATUS as +download.
      */
-    GDBMI_ASYNC_DOWNLOAD,
+    GDBWIRE_MI_ASYNC_DOWNLOAD,
 
     /**
      * The target has stopped.
      *
-     * This occurs if the async record is GDBMI_EXEC as *stopped.
+     * This occurs if the async record is GDBWIRE_MI_EXEC as *stopped.
      */
-    GDBMI_ASYNC_STOPPED,
+    GDBWIRE_MI_ASYNC_STOPPED,
 
     /**
      * The target is now running.
      *
-     * This occurs if the async record is GDBMI_EXEC as *running.
+     * This occurs if the async record is GDBWIRE_MI_EXEC as *running.
      */
-    GDBMI_ASYNC_RUNNING,
+    GDBWIRE_MI_ASYNC_RUNNING,
 
     /**
      * Reports that a thread group was added.
@@ -340,9 +340,10 @@ enum gdbmi_async_class {
      * When a thread group is added, it generally might not be associated
      * with a running process.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =thread-group-added.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =thread-group-added.
      */
-    GDBMI_ASYNC_THREAD_GROUP_ADDED,
+    GDBWIRE_MI_ASYNC_THREAD_GROUP_ADDED,
 
     /**
      * Reports that a thread group was removed.
@@ -350,90 +351,96 @@ enum gdbmi_async_class {
      * When a thread group is removed, its id becomes invalid and cannot be
      * used in any way. 
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =thread-group-removed.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =thread-group-removed.
      */
-    GDBMI_ASYNC_THREAD_GROUP_REMOVED,
+    GDBWIRE_MI_ASYNC_THREAD_GROUP_REMOVED,
 
     /**
      * Reports that a thread group was started.
      *
      * A thread group became associated with a running program.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =thread-group-started.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =thread-group-started.
      */
-    GDBMI_ASYNC_THREAD_GROUP_STARTED,
+    GDBWIRE_MI_ASYNC_THREAD_GROUP_STARTED,
 
     /**
      * Reports that a thread group was exited.
      *
      * A thread group is no longer associated with a running program.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =thread-group-exited.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =thread-group-exited.
      */
-    GDBMI_ASYNC_THREAD_GROUP_EXITED,
+    GDBWIRE_MI_ASYNC_THREAD_GROUP_EXITED,
 
     /**
      * Reports that a thread was created.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =thread-created.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =thread-created.
      */
-    GDBMI_ASYNC_THREAD_CREATED,
+    GDBWIRE_MI_ASYNC_THREAD_CREATED,
 
     /**
      * Reports that a thread was exited.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =thread-exited.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY as =thread-exited.
      */
-    GDBMI_ASYNC_THREAD_EXITED,
+    GDBWIRE_MI_ASYNC_THREAD_EXITED,
 
     /**
      * Reports that a thread was selected.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =thread-selected.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY as =thread-selected.
      */
-    GDBMI_ASYNC_THREAD_SELECTED,
+    GDBWIRE_MI_ASYNC_THREAD_SELECTED,
 
     /**
      * Reports that a new library was loaded.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =library-loaded.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY as =library-loaded.
      */
-    GDBMI_ASYNC_LIBRARY_LOADED,
+    GDBWIRE_MI_ASYNC_LIBRARY_LOADED,
 
     /**
      * Reports that a new library was unloaded.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =library-unloaded.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =library-unloaded.
      */
-    GDBMI_ASYNC_LIBRARY_UNLOADED,
+    GDBWIRE_MI_ASYNC_LIBRARY_UNLOADED,
 
     /**
      * Reports that a trace frame was changed.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =traceframe-changed.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =traceframe-changed.
      */
-    GDBMI_ASYNC_TRACEFRAME_CHANGED,
+    GDBWIRE_MI_ASYNC_TRACEFRAME_CHANGED,
 
     /**
      * Reports that a trace state variable was created.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =tsv-created.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY as =tsv-created.
      */
-    GDBMI_ASYNC_TSV_CREATED,
+    GDBWIRE_MI_ASYNC_TSV_CREATED,
 
     /**
      * Reports that a trace state variable was modified.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =tsv-modified.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY as =tsv-modified.
      */
-    GDBMI_ASYNC_TSV_MODIFIED,
+    GDBWIRE_MI_ASYNC_TSV_MODIFIED,
 
     /**
      * Reports that a trace state variable was deleted.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =tsv-deleted.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY as =tsv-deleted.
      */
-    GDBMI_ASYNC_TSV_DELETED,
+    GDBWIRE_MI_ASYNC_TSV_DELETED,
 
     /**
      * Reports that a breakpoint was created.
@@ -443,9 +450,10 @@ enum gdbmi_async_class {
      * If a breakpoint is emitted in the result record of a
      * command, then it will not also be emitted in an async record. 
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =breakpoint-created.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =breakpoint-created.
      */
-    GDBMI_ASYNC_BREAKPOINT_CREATED,
+    GDBWIRE_MI_ASYNC_BREAKPOINT_CREATED,
 
     /**
      * Reports that a breakpoint was modified.
@@ -455,9 +463,10 @@ enum gdbmi_async_class {
      * If a breakpoint is emitted in the result record of a
      * command, then it will not also be emitted in an async record. 
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =breakpoint-modified.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =breakpoint-modified.
      */
-    GDBMI_ASYNC_BREAKPOINT_MODIFIED,
+    GDBWIRE_MI_ASYNC_BREAKPOINT_MODIFIED,
 
     /**
      * Reports that a breakpoint was deleted.
@@ -467,23 +476,26 @@ enum gdbmi_async_class {
      * If a breakpoint is emitted in the result record of a
      * command, then it will not also be emitted in an async record. 
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =breakpoint-deleted.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =breakpoint-deleted.
      */
-    GDBMI_ASYNC_BREAKPOINT_DELETED,
+    GDBWIRE_MI_ASYNC_BREAKPOINT_DELETED,
 
     /**
      * Reports that execution log recording was started on an inferior.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =record-started.
+     * This occurs if the async record is GDBWIRE_MI_NOTIF
+     *  as =record-started.
      */
-    GDBMI_ASYNC_RECORD_STARTED,
+    GDBWIRE_MI_ASYNC_RECORD_STARTED,
 
     /**
      * Reports that execution log recording was stopped on an inferior.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =record-stopped.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =record-stopped.
      */
-    GDBMI_ASYNC_RECORD_STOPPED,
+    GDBWIRE_MI_ASYNC_RECORD_STOPPED,
 
     /**
      * Reports that a parameter of the command set param is changed to value.
@@ -492,19 +504,21 @@ enum gdbmi_async_class {
      * this async command will be invoked with the parameter reported as
      * 'print pretty' and the value as 'on'.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =cmd-param-changed.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =cmd-param-changed.
      */
-    GDBMI_ASYNC_CMD_PARAM_CHANGED,
+    GDBWIRE_MI_ASYNC_CMD_PARAM_CHANGED,
 
     /**
      * Reports that bytes from addr to data + len were written in an inferior.
      *
-     * This occurs if the async record is GDBMI_NOTIFY as =memory-changed.
+     * This occurs if the async record is GDBWIRE_MI_NOTIFY
+     * as =memory-changed.
      */
-    GDBMI_ASYNC_MEMORY_CHANGED,
+    GDBWIRE_MI_ASYNC_MEMORY_CHANGED,
 
     /// An unsupported async class
-    GDBMI_ASYNC_UNSUPPORTED
+    GDBWIRE_MI_ASYNC_UNSUPPORTED
 };
 
 /**
@@ -513,7 +527,7 @@ enum gdbmi_async_class {
  * An asyncronous record occurs when GDB would like to update the
  * client with information that it has not asked for.
  */
-struct gdbmi_async_record {
+struct gdbwire_mi_async_record {
     /**
      * The result record token.
      *
@@ -552,30 +566,30 @@ struct gdbmi_async_record {
      * This represents the token value the front end provided to the
      * corresponding GDB/MI input command or NULL if no token was provided.
      */
-    gdbmi_token_t token;
+    gdbwire_mi_token_t token;
 
     /** The kind of asynchronous record. */
-    enum gdbmi_async_record_kind kind;
+    enum gdbwire_mi_async_record_kind kind;
 
     /** The asynchronous output class */
-    enum gdbmi_async_class async_class;
+    enum gdbwire_mi_async_class async_class;
 
     /**
      * An optional list of results for this async output.
      *
      * Will be NULL if there is no results.
      */
-    struct gdbmi_result *result;
+    struct gdbwire_mi_result *result;
 };
 
 /** The GDB/MI result kind */
-enum gdbmi_result_kind {
+enum gdbwire_mi_result_kind {
     /** The result is a cstring */
-    GDBMI_CSTRING,
+    GDBWIRE_MI_CSTRING,
     /** The result is a tuple */
-    GDBMI_TUPLE,
+    GDBWIRE_MI_TUPLE,
     /** The result is a list */
-    GDBMI_LIST
+    GDBWIRE_MI_LIST
 };
 
 /**
@@ -590,21 +604,21 @@ enum gdbmi_result_kind {
  *
  * This can be thought of as a custom json object.
  */
-struct gdbmi_result {
+struct gdbwire_mi_result {
     /** The kind of result this represents. */
-    enum gdbmi_result_kind kind;
+    enum gdbwire_mi_result_kind kind;
 
     /** The key being described by the result. */
     char *variable;
 
     union {
-        /** When kind is GDBMI_CSTRING */
+        /** When kind is GDBWIRE_MI_CSTRING */
         char *cstring;
 
         /**
-         * When kind is GDBMI_TUPLE or GDBMI_LIST.
+         * When kind is GDBWIRE_MI_TUPLE or GDBWIRE_MI_LIST.
          *
-         * If kind is GDBMI_TUPLE, each result in the tuple should have a
+         * If kind is GDBWIRE_MI_TUPLE, each result in the tuple should have a
          * valid key according to the GDB/MI specification. That is, for
          * each result, result->variable should not be NULL.
          *   Note: GDBWIRE currently relaxes the above rule. It allows tuple's
@@ -612,17 +626,17 @@ struct gdbmi_result {
          *   is what the GDB/MI specification advocates for, but some
          *   variations of GDB emit {"value"} and so GDBWIRE allows it.
          *
-         * If kind is GDBMI_LIST, the GDB/MI specification allows results in
-         * this list to not have keys. That is, for each result,
+         * If kind is GDBWIRE_MI_LIST, the GDB/MI specification allows
+         * results in this list to not have keys. That is, for each result,
          * result->variable may be NULL.
          *
          * Will be NULL if the tuple or list is empty.
          */
-        struct gdbmi_result *result;
+        struct gdbwire_mi_result *result;
     } variant;
 
     /** The next result or NULL if none */
-    struct gdbmi_result *next;
+    struct gdbwire_mi_result *next;
 };
 
 /**
@@ -631,20 +645,20 @@ struct gdbmi_result {
  * A stream record is intended to provide the front end with information
  * from the console, the target or from GDB itself.
  */
-struct gdbmi_stream_record {
+struct gdbwire_mi_stream_record {
     /** The kind of stream record. */
-    enum gdbmi_stream_record_kind kind;
+    enum gdbwire_mi_stream_record_kind kind;
     /** The buffer provided in this stream record. */
     char *cstring;
 };
 
-void gdbmi_output_free(struct gdbmi_output *param);
+void gdbwire_mi_output_free(struct gdbwire_mi_output *param);
 
-struct gdbmi_output *append_gdbmi_output(struct gdbmi_output *list,
-        struct gdbmi_output *item);
+struct gdbwire_mi_output *append_gdbwire_mi_output(
+        struct gdbwire_mi_output *list, struct gdbwire_mi_output *item);
 
-struct gdbmi_result *append_gdbmi_result(struct gdbmi_result *list,
-        struct gdbmi_result *item);
+struct gdbwire_mi_result *append_gdbwire_mi_result(
+        struct gdbwire_mi_result *list, struct gdbwire_mi_result *item);
 
 #ifdef __cplusplus 
 }

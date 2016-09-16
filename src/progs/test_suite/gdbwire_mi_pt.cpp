@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include "catch.hpp"
 #include "fixture.h"
-#include "gdbmi_pt.h"
-#include "gdbmi_parser.h"
+#include "gdbwire_mi_pt.h"
+#include "gdbwire_mi_parser.h"
 
 /**
  * The GDB/MI parse tree unit tests.
@@ -12,7 +12,7 @@
  *
  * The goal of the following unit tests is to isolate testing as many
  * combinations of GDB/MI parse trees as possible. Hoping to achieve 100%
- * coverage on the gdbmi_grammar.y file.
+ * coverage on the gdbwire_mi_grammar.y file.
  *
  * These unit tests will not be concerned with the semantics of the parse
  * tree, but simply validating that all combinations of GDB/MI output
@@ -20,45 +20,47 @@
  */
 
 namespace {
-    struct GdbmiParserCallback {
-        GdbmiParserCallback() : m_output(0) {
+    struct GdbwireMiParserCallback {
+        GdbwireMiParserCallback() : m_output(0) {
             callbacks.context = (void*)this;
-            callbacks.gdbmi_output_callback =
-                    GdbmiParserCallback::gdbmi_output_callback;
+            callbacks.gdbwire_mi_output_callback =
+                    GdbwireMiParserCallback::gdbwire_mi_output_callback;
         }
 
-        ~GdbmiParserCallback() {
-            gdbmi_output_free(m_output);
+        ~GdbwireMiParserCallback() {
+            gdbwire_mi_output_free(m_output);
         }
 
-        static void gdbmi_output_callback(void *context, gdbmi_output *output) {
-            GdbmiParserCallback *callback = (GdbmiParserCallback *)context;
-            callback->gdbmi_output_callback(output);
+        static void gdbwire_mi_output_callback(void *context,
+            gdbwire_mi_output *output) {
+            GdbwireMiParserCallback *callback =
+                (GdbwireMiParserCallback *)context;
+            callback->gdbwire_mi_output_callback(output);
         }
 
-        void gdbmi_output_callback(gdbmi_output *output) {
-            m_output = append_gdbmi_output(m_output, output);
+        void gdbwire_mi_output_callback(gdbwire_mi_output *output) {
+            m_output = append_gdbwire_mi_output(m_output, output);
         }
 
-        gdbmi_parser_callbacks callbacks;
-        gdbmi_output *m_output;
+        gdbwire_mi_parser_callbacks callbacks;
+        gdbwire_mi_output *m_output;
     };
 
-    struct GdbmiPtTest : public Fixture {
-        GdbmiPtTest() {
-            parser = gdbmi_parser_create(parserCallback.callbacks);
+    struct GdbwireMiPtTest : public Fixture {
+        GdbwireMiPtTest() {
+            parser = gdbwire_mi_parser_create(parserCallback.callbacks);
             REQUIRE(parser);
             output = parse(parser, sourceTestPath());
             REQUIRE(output);
             REQUIRE(output->line);
         }
         
-        ~GdbmiPtTest() {
-            gdbmi_parser_destroy(parser);
+        ~GdbwireMiPtTest() {
+            gdbwire_mi_parser_destroy(parser);
         }
 
         /**
-         * Parse a GDB/MI file and return a gdbmi_output structure.
+         * Parse a GDB/MI file and return a gdbwire_mi_output structure.
          *
          * @param parser
          * The gdb mi parser to do the parsing
@@ -67,10 +69,11 @@ namespace {
          * The input file to parse
          *
          * @return
-         * A gdbmi_output structure representing the input file.
+         * A gdbwire_mi_output structure representing the input file.
          * You are responsible for destroying this memory.
          */
-        gdbmi_output *parse(gdbmi_parser *parser, const std::string &input) {
+        gdbwire_mi_output *parse(gdbwire_mi_parser *parser,
+            const std::string &input) {
             FILE *fd;
             int c;
 
@@ -79,7 +82,8 @@ namespace {
 
             while ((c = fgetc(fd)) != EOF) {
                 char ch = c;
-                REQUIRE(gdbmi_parser_push_data(parser, &ch, 1) == GDBWIRE_OK);
+                REQUIRE(gdbwire_mi_parser_push_data(
+                    parser, &ch, 1) == GDBWIRE_OK);
             }
             fclose(fd);
 
@@ -99,13 +103,15 @@ namespace {
          * The token to compare in the result record.
          *
          * @return
-         * The gdbmi result or NULL if none in the result record.
+         * The gdbwire_mi result or NULL if none in the result record.
          */
-        gdbmi_result *CHECK_OUTPUT_RESULT_RECORD(gdbmi_output *output,
-            gdbmi_result_class result_class, const std::string &token = "") {
+        gdbwire_mi_result *CHECK_OUTPUT_RESULT_RECORD(gdbwire_mi_output *output,
+            gdbwire_mi_result_class result_class,
+            const std::string &token = "") {
             REQUIRE(output);
-            REQUIRE(output->kind == GDBMI_OUTPUT_RESULT);
-            gdbmi_result_record *result_record = output->variant.result_record;
+            REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_RESULT);
+            gdbwire_mi_result_record *result_record =
+                output->variant.result_record;
             REQUIRE(result_record);
             if (token.empty()) {
                 REQUIRE(!result_record->token);
@@ -117,20 +123,21 @@ namespace {
             return result_record->result;
         }
 
-        gdbmi_oob_record *CHECK_OUTPUT_OOB_RECORD(gdbmi_output *output) {
+        gdbwire_mi_oob_record *CHECK_OUTPUT_OOB_RECORD(
+            gdbwire_mi_output *output) {
             REQUIRE(output);
-            REQUIRE(output->kind == GDBMI_OUTPUT_OOB);
+            REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_OOB);
             REQUIRE(output->variant.oob_record);
             return output->variant.oob_record;
         }
 
-        gdbmi_output *CHECK_OUTPUT_PROMPT(gdbmi_output *output) {
+        gdbwire_mi_output *CHECK_OUTPUT_PROMPT(gdbwire_mi_output *output) {
             REQUIRE(output);
-            REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+            REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PROMPT);
             return output->next;
         }
 
-        void CHECK_OUTPUT_AT_FINAL_PROMPT(gdbmi_output *output) {
+        void CHECK_OUTPUT_AT_FINAL_PROMPT(gdbwire_mi_output *output) {
             REQUIRE(output);
             output = CHECK_OUTPUT_PROMPT(output);
             REQUIRE(!output);
@@ -145,9 +152,10 @@ namespace {
          * @return
          * The stream record found inside the async out-of-band record.
          */
-        gdbmi_stream_record *CHECK_OOB_RECORD_STREAM(gdbmi_oob_record *oob) {
+        gdbwire_mi_stream_record *CHECK_OOB_RECORD_STREAM(
+            gdbwire_mi_oob_record *oob) {
             REQUIRE(oob);
-            REQUIRE(oob->kind == GDBMI_STREAM);
+            REQUIRE(oob->kind == GDBWIRE_MI_STREAM);
             REQUIRE(oob->variant.stream_record);
             return oob->variant.stream_record;
         }
@@ -161,20 +169,22 @@ namespace {
          * @return
          * The async record found inside the async out-of-band record.
          */
-        gdbmi_async_record *CHECK_OOB_RECORD_ASYNC(gdbmi_oob_record *oob) {
+        gdbwire_mi_async_record *CHECK_OOB_RECORD_ASYNC(
+            gdbwire_mi_oob_record *oob) {
             REQUIRE(oob);
-            REQUIRE(oob->kind == GDBMI_ASYNC);
+            REQUIRE(oob->kind == GDBWIRE_MI_ASYNC);
             REQUIRE(oob->variant.async_record);
             return oob->variant.async_record;
         }
 
         /**
-         * A utility function for checking the values in a gdbmi_stream_record.
+         * A utility function for checking the values in a
+         * gdbwire_mi_stream_record.
          *
          * If the values do not match the record, an assertion failure is made.
          *
          * @param record
-         * The gdbmi stream record to check the values of.
+         * The gdbwire_mi stream record to check the values of.
          *
          * @param kind
          * The kind of record to check for.
@@ -182,8 +192,8 @@ namespace {
          * @param expected
          * The expected cstring value to check for.
          */
-        void CHECK_STREAM_RECORD(gdbmi_stream_record *record,
-            gdbmi_stream_record_kind kind, const std::string &expected) {
+        void CHECK_STREAM_RECORD(gdbwire_mi_stream_record *record,
+            gdbwire_mi_stream_record_kind kind, const std::string &expected) {
             REQUIRE(record);
             REQUIRE(record->kind == kind);
             REQUIRE(expected == record->cstring);
@@ -205,11 +215,12 @@ namespace {
          * The token to compare in the result record.
          *
          * @return
-         * The gdbmi result of the async record (may be NULL);
+         * The gdbwire_mi result of the async record (may be NULL);
          */
-        gdbmi_result *CHECK_ASYNC_RECORD(
-            gdbmi_async_record *async_record,
-            gdbmi_async_record_kind kind, gdbmi_async_class async_class,
+        gdbwire_mi_result *CHECK_ASYNC_RECORD(
+            gdbwire_mi_async_record *async_record,
+            gdbwire_mi_async_record_kind kind,
+            gdbwire_mi_async_class async_class,
             const std::string &token = "") {
             REQUIRE(async_record);
 
@@ -232,13 +243,13 @@ namespace {
          * If the values do not match, an assertion failure is made.
          *
          * @param result
-         * The gdbmi result to check the variable value of.
+         * The gdbwire_mi result to check the variable value of.
          *
          * @param value
          * The expected variable value. If empty, the result's variable
          * should be NULL.
          */
-        void CHECK_RESULT_VARIABLE(gdbmi_result *result,
+        void CHECK_RESULT_VARIABLE(gdbwire_mi_result *result,
             const std::string &value = "") {
             REQUIRE(result);
 
@@ -256,7 +267,7 @@ namespace {
          * If the values do not match the result, an assertion failure is made.
          *
          * @param result
-         * The gdbmi result to check the values of.
+         * The gdbwire_mi result to check the values of.
          *
          * @param variable
          * The result variable name or empty string if none.
@@ -265,14 +276,14 @@ namespace {
          * The expected cstring value.
          *
          * @return
-         * Returns the next gdbmi_result pointer.
+         * Returns the next gdbwire_mi_result pointer.
          */
-        gdbmi_result *CHECK_RESULT_CSTRING(gdbmi_result *result,
+        gdbwire_mi_result *CHECK_RESULT_CSTRING(gdbwire_mi_result *result,
             const std::string &variable, const std::string &expected) {
 
             CHECK_RESULT_VARIABLE(result, variable);
 
-            REQUIRE(result->kind == GDBMI_CSTRING);
+            REQUIRE(result->kind == GDBWIRE_MI_CSTRING);
             REQUIRE(expected == result->variant.cstring);
 
             return result->next;
@@ -284,7 +295,7 @@ namespace {
          * If the values do not match the result, an assertion failure is made.
          *
          * @param result
-         * The gdbmi result to check the values of.
+         * The gdbwire_mi result to check the values of.
          *
          * @param kind
          * A tuple or list is allowed to be checked for.
@@ -293,12 +304,12 @@ namespace {
          * The result variable name or empty string if none.
          *
          * @return
-         * Returns the next gdbmi_result pointer.
+         * Returns the next gdbwire_mi_result pointer.
          */
-        gdbmi_result *CHECK_RESULT_VARIANT(gdbmi_result *result,
-            enum gdbmi_result_kind kind,
+        gdbwire_mi_result *CHECK_RESULT_VARIANT(gdbwire_mi_result *result,
+            enum gdbwire_mi_result_kind kind,
             const std::string &variable = "") {
-            REQUIRE((kind == GDBMI_TUPLE || kind == GDBMI_LIST));
+            REQUIRE((kind == GDBWIRE_MI_TUPLE || kind == GDBWIRE_MI_LIST));
 
             CHECK_RESULT_VARIABLE(result, variable);
 
@@ -324,37 +335,38 @@ namespace {
          * @return
          * The result associated with the async output record.
          */
-        gdbmi_result *GET_RESULT(gdbmi_output *output) {
-            gdbmi_oob_record *oob;
-            gdbmi_async_record *async;
-            gdbmi_result *result;
+        gdbwire_mi_result *GET_RESULT(gdbwire_mi_output *output) {
+            gdbwire_mi_oob_record *oob;
+            gdbwire_mi_async_record *async;
+            gdbwire_mi_result *result;
 
             oob = CHECK_OUTPUT_OOB_RECORD(output);
             async = CHECK_OOB_RECORD_ASYNC(oob);
 
-            result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+            result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+                GDBWIRE_MI_ASYNC_STOPPED);
             REQUIRE(result);
             return result;
         }
 
-        GdbmiParserCallback parserCallback;
-        gdbmi_parser *parser;
-        gdbmi_output *output;
+        GdbwireMiParserCallback parserCallback;
+        gdbwire_mi_parser *parser;
+        gdbwire_mi_output *output;
     };
 }
 
 /**
  * A simple console output parse tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/console/basic.mi)
 {
     std::string expected = "Hello World console output";
-    struct gdbmi_oob_record *oob;
-    struct gdbmi_stream_record *stream;
+    struct gdbwire_mi_oob_record *oob;
+    struct gdbwire_mi_stream_record *stream;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_CONSOLE, expected);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
@@ -362,7 +374,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic.mi)
 /**
  * A single console output with many newlines in it.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/manylines.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/console/manylines.mi)
 {
     std::string expected =
         "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
@@ -370,12 +382,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/manylines.mi)
         "There is NO WARRANTY, to the extent permitted by law.  Type \"show copying\"\n"
         "and \"show warranty\" for details.\n";
 
-    struct gdbmi_oob_record *oob;
-    struct gdbmi_stream_record *stream;
+    struct gdbwire_mi_oob_record *oob;
+    struct gdbwire_mi_stream_record *stream;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_CONSOLE, expected);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
@@ -394,7 +406,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/manylines.mi)
  * again to compare the values.
  * 
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/console/characters.mi)
 {
     std::string expected =
         "$1 = "
@@ -420,12 +432,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters.mi)
         "\\350\\351\\352\\353\\354\\355\\356\\357"
         "\\360\\361\\362\\363\\364\\365\\366\\367"
         "\\370\\371\\372\\373\\374\\375\\376\\377\"";
-    struct gdbmi_oob_record *oob;
-    struct gdbmi_stream_record *stream;
+    struct gdbwire_mi_oob_record *oob;
+    struct gdbwire_mi_stream_record *stream;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_CONSOLE, expected);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
@@ -433,15 +445,15 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters.mi)
 /**
  * A simple target output parse tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/target/basic.mi)
 {
     std::string expected = "Hello World target output";
-    struct gdbmi_oob_record *oob;
-    struct gdbmi_stream_record *stream;
+    struct gdbwire_mi_oob_record *oob;
+    struct gdbwire_mi_stream_record *stream;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_TARGET, expected);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_TARGET, expected);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
@@ -449,15 +461,15 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/target/basic.mi)
 /**
  * A simple log output parse tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/log/basic.mi)
 {
     std::string expected = "Hello World log output";
-    struct gdbmi_oob_record *oob;
-    struct gdbmi_stream_record *stream;
+    struct gdbwire_mi_oob_record *oob;
+    struct gdbwire_mi_stream_record *stream;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_LOG, expected);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_LOG, expected);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
@@ -468,7 +480,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/log/basic.mi)
  * This test is intended to show that multiple different stream records (in
  * any order) can be contained in a single out of band record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/combo/basic.mi)
 {
     std::string console1 = "console line 1";
     std::string console2 = "console line 2";
@@ -478,42 +490,42 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic.mi)
     std::string log2 = "log line 2";
     std::string console3 = "console line 3";
 
-    struct gdbmi_oob_record *oob;
-    struct gdbmi_stream_record *stream;
+    struct gdbwire_mi_oob_record *oob;
+    struct gdbwire_mi_stream_record *stream;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, console1);
-
-    output = output->next;
-    oob = CHECK_OUTPUT_OOB_RECORD(output);
-    stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, console2);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_CONSOLE, console1);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_TARGET, target1);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_CONSOLE, console2);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_LOG, log1);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_TARGET, target1);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_TARGET, target2);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_LOG, log1);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_LOG, log2);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_TARGET, target2);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, console3);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_LOG, log2);
+
+    output = output->next;
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_CONSOLE, console3);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
@@ -521,15 +533,16 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/combo/basic.mi)
 /**
  * Test the token field of an async record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/async/token/basic.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED, "111");
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+        GDBWIRE_MI_ASYNC_STOPPED, "111");
     REQUIRE(result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -550,21 +563,22 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/token/basic.mi)
  *   # Bunch of +download lines
  *   # Single ^done line.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/async/status/basic.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
 
     async = CHECK_OOB_RECORD_ASYNC(oob);
 
-    result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_STATUS,
+        GDBWIRE_MI_ASYNC_DOWNLOAD);
     REQUIRE(result);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE);
     REQUIRE(result);
     result = CHECK_RESULT_CSTRING(result, "section", ".interp");
     result = CHECK_RESULT_CSTRING(result, "section-size", "28");
@@ -580,21 +594,23 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/basic.mi)
  * Currently, +download is the only known async class for async status
  * records. This particular class is not documented in the latest manual.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/async_class.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/async/status/async_class.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_STATUS,
+        GDBWIRE_MI_ASYNC_DOWNLOAD);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_UNSUPPORTED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_STATUS,
+        GDBWIRE_MI_ASYNC_UNSUPPORTED);
     REQUIRE(result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -603,16 +619,17 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/status/async_class.mi)
 /**
  * A simple async exec output tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/async/exec/basic.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
 
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+        GDBWIRE_MI_ASYNC_RUNNING);
     result = CHECK_RESULT_CSTRING(result, "thread-id", "all");
 
     REQUIRE(!result);
@@ -623,27 +640,30 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/basic.mi)
 /**
  * All of the supported async class's for the exec kind.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/async_class.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/async/exec/async_class.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+        GDBWIRE_MI_ASYNC_STOPPED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+        GDBWIRE_MI_ASYNC_RUNNING);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_UNSUPPORTED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+        GDBWIRE_MI_ASYNC_UNSUPPORTED);
     REQUIRE(result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -652,21 +672,21 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/exec/async_class.mi)
 /**
  * A simple async notify output tree.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/async/notify/basic.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
 
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_BREAKPOINT_CREATED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_BREAKPOINT_CREATED);
     REQUIRE(result);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "bkpt");
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE, "bkpt");
     REQUIRE(result);
     result = CHECK_RESULT_CSTRING(result, "number", "2");
     result = CHECK_RESULT_CSTRING(result, "type", "breakpoint");
@@ -680,153 +700,156 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/basic.mi)
 /**
  * All of the supported async class's for the notify kind.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/async_class.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/async/notify/async_class.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_THREAD_GROUP_ADDED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_THREAD_GROUP_ADDED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_THREAD_GROUP_REMOVED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_THREAD_GROUP_REMOVED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_THREAD_GROUP_STARTED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_THREAD_GROUP_STARTED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_THREAD_GROUP_EXITED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_THREAD_GROUP_EXITED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_THREAD_CREATED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_THREAD_CREATED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_THREAD_EXITED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_THREAD_EXITED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_THREAD_SELECTED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_THREAD_SELECTED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_LIBRARY_LOADED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_LIBRARY_LOADED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_LIBRARY_UNLOADED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_LIBRARY_UNLOADED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_TRACEFRAME_CHANGED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_TRACEFRAME_CHANGED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_CREATED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+        GDBWIRE_MI_ASYNC_TSV_CREATED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_MODIFIED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+        GDBWIRE_MI_ASYNC_TSV_MODIFIED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_DELETED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+        GDBWIRE_MI_ASYNC_TSV_DELETED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_BREAKPOINT_CREATED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_BREAKPOINT_CREATED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_BREAKPOINT_MODIFIED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_BREAKPOINT_MODIFIED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_BREAKPOINT_DELETED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_BREAKPOINT_DELETED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_RECORD_STARTED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_RECORD_STARTED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_RECORD_STOPPED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_RECORD_STOPPED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_CMD_PARAM_CHANGED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_CMD_PARAM_CHANGED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_MEMORY_CHANGED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_MEMORY_CHANGED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_UNSUPPORTED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_UNSUPPORTED);
     REQUIRE(result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -838,41 +861,44 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/notify/async_class.mi)
  * This test is intended to show that multiple different async records (in
  * any order) can be contained in a single out of band record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/async/combo/basic.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+        GDBWIRE_MI_ASYNC_RUNNING);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_BREAKPOINT_CREATED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_BREAKPOINT_CREATED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_STATUS,
+        GDBWIRE_MI_ASYNC_DOWNLOAD);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_BREAKPOINT_CREATED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_BREAKPOINT_CREATED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+        GDBWIRE_MI_ASYNC_STOPPED);
     REQUIRE(result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -881,15 +907,16 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/combo/basic.mi)
 /**
  * Test the result record can have a NULL result field.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/result/null.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/async/result/null.mi)
 {
-    gdbmi_oob_record *oob;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY, GDBMI_ASYNC_TSV_DELETED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+        GDBWIRE_MI_ASYNC_TSV_DELETED);
     REQUIRE(!result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -901,7 +928,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/async/result/null.mi)
  * This test is intended to show that multiple different stream and async
  * records can be contained in a single out of band record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/combo/basic.mi)
 {
     std::string console1 = "console line 1";
     std::string console2 = "console line 2";
@@ -909,59 +936,62 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic.mi)
     std::string log1 = "log line 1";
     std::string log2 = "log line 2";
 
-    gdbmi_oob_record *oob;
-    gdbmi_stream_record *stream_record;
-    gdbmi_async_record *async;
-    gdbmi_result *result;
+    gdbwire_mi_oob_record *oob;
+    gdbwire_mi_stream_record *stream_record;
+    gdbwire_mi_async_record *async;
+    gdbwire_mi_result *result;
 
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream_record, GDBMI_CONSOLE, console1);
+    CHECK_STREAM_RECORD(stream_record, GDBWIRE_MI_CONSOLE, console1);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_RUNNING);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+        GDBWIRE_MI_ASYNC_RUNNING);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream_record, GDBMI_CONSOLE, console2);
+    CHECK_STREAM_RECORD(stream_record, GDBWIRE_MI_CONSOLE, console2);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream_record, GDBMI_TARGET, target1);
+    CHECK_STREAM_RECORD(stream_record, GDBWIRE_MI_TARGET, target1);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_STATUS, GDBMI_ASYNC_DOWNLOAD);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_STATUS,
+        GDBWIRE_MI_ASYNC_DOWNLOAD);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_NOTIFY,
-            GDBMI_ASYNC_BREAKPOINT_CREATED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_NOTIFY,
+            GDBWIRE_MI_ASYNC_BREAKPOINT_CREATED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream_record, GDBMI_LOG, log1);
+    CHECK_STREAM_RECORD(stream_record, GDBWIRE_MI_LOG, log1);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     async = CHECK_OOB_RECORD_ASYNC(oob);
-    result = CHECK_ASYNC_RECORD(async, GDBMI_EXEC, GDBMI_ASYNC_STOPPED);
+    result = CHECK_ASYNC_RECORD(async, GDBWIRE_MI_EXEC,
+        GDBWIRE_MI_ASYNC_STOPPED);
     REQUIRE(result);
 
     output = output->next;
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream_record = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream_record, GDBMI_LOG, log2);
+    CHECK_STREAM_RECORD(stream_record, GDBWIRE_MI_LOG, log2);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
@@ -969,11 +999,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/combo/basic.mi)
 /**
  * Test the token field of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token/basic.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result_record/token/basic.mi)
 {
-    gdbmi_result *result;
+    gdbwire_mi_result *result;
 
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR, "512");
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_ERROR, "512");
     REQUIRE(result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -982,11 +1012,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/token/basic.mi)
 /**
  * Test the done result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/done.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result_record/result_class/done.mi)
 {
-    gdbmi_result *result;
+    gdbwire_mi_result *result;
 
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_DONE);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_DONE);
     REQUIRE(result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -995,11 +1025,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/done.mi)
 /**
  * Test the running result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/running.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result_record/result_class/running.mi)
 {
-    gdbmi_result *result;
+    gdbwire_mi_result *result;
 
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_RUNNING);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_RUNNING);
     REQUIRE(!result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1008,11 +1038,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/running.mi)
 /**
  * Test the connected result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/connected.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result_record/result_class/connected.mi)
 {
-    gdbmi_result *result;
+    gdbwire_mi_result *result;
 
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_CONNECTED);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_CONNECTED);
     REQUIRE(!result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1021,13 +1051,13 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/connected.mi)
 /**
  * Test the error result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/error.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result_record/result_class/error.mi)
 {
     std::string expected =
         "Undefined command: \"null\".  Try \"help\".";
-    gdbmi_result *result;
+    gdbwire_mi_result *result;
 
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_ERROR);
     result = CHECK_RESULT_CSTRING(result, "msg", expected);
     REQUIRE(!result);
 
@@ -1037,11 +1067,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/error.mi)
 /**
  * Test the exit result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result_record/result_class/exit.mi)
 {
-    gdbmi_result *result;
+    gdbwire_mi_result *result;
 
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_EXIT);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_EXIT);
     REQUIRE(!result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1050,12 +1080,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/exit.mi)
 /**
  * Test the unsupported result class of a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/unsupported.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result_record/result_class/unsupported.mi)
 {
     std::string expected = "An unsupported result class can have a result!";
-    gdbmi_result *result;
+    gdbwire_mi_result *result;
 
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_UNSUPPORTED);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_UNSUPPORTED);
     result = CHECK_RESULT_CSTRING(result, "msg", expected);
     REQUIRE(!result);
 
@@ -1065,11 +1095,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result_class/unsupported.mi)
 /**
  * Test the result record can have a NULL result field.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result/null.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result_record/result/null.mi)
 {
-    gdbmi_result *result;
+    gdbwire_mi_result *result;
 
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_EXIT);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_EXIT);
     REQUIRE(!result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1078,9 +1108,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result_record/result/null.mi)
 /**
  * Test a value only cstring in a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/value.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/cstring/value.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
 
     result = CHECK_RESULT_CSTRING(result, "", "value");
     REQUIRE(!result);
@@ -1090,9 +1120,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/value.mi)
 /**
  * Test a key/value cstring in a result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/cstring/key_value.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
 
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
@@ -1104,9 +1134,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value.mi)
  *
  * Try spaces and tabs between the key, the equal sign and the value.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value_whitespace.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/cstring/key_value_whitespace.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
 
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
@@ -1116,12 +1146,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/cstring/key_value_whitespace.mi)
 /**
  * Test a null tuple result record, ie. {}.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/null.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/tuple/null.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE);
     REQUIRE(!result);
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
@@ -1129,12 +1159,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/null.mi)
 /**
  * Test a null tuple result record with a key, ie. {}.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/key_null.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/tuple/key_null.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key");
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE, "key");
     REQUIRE(!result);
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
 }
@@ -1146,12 +1176,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/key_null.mi)
  * to not have keys as this has been reported in the field as
  * being possible.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/no_key.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/tuple/no_key.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE);
     result = CHECK_RESULT_CSTRING(result, "", "value");
     REQUIRE(!result);
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1160,12 +1190,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/no_key.mi)
 /**
  * Test a tuple result record with a cstring element
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_cstring.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/tuple/of_cstring.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE);
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1174,12 +1204,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_cstring.mi)
 /**
  * Test a tuple result record with two cstring elements
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_2_cstring.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/tuple/of_2_cstring.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE);
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     REQUIRE(!result);
@@ -1189,12 +1219,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_2_cstring.mi)
 /**
  * Test a tuple result record with three cstring elements
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_3_cstring.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/tuple/of_3_cstring.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE);
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     result = CHECK_RESULT_CSTRING(result, "key3", "value3");
@@ -1205,15 +1235,15 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_3_cstring.mi)
 /**
  * Test a tuple result record of a null tuple.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_null_tuple.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/tuple/of_null_tuple.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key");
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE, "key");
     REQUIRE(!result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1222,12 +1252,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/tuple/of_null_tuple.mi)
 /**
  * Test a null list result record, ie. [].
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/list/null.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/list/null.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_LIST);
     REQUIRE(!result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1236,12 +1266,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/null.mi)
 /**
  * Test a null list result record with a key, ie. [].
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/list/key_null.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/list/key_null.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key");
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_LIST, "key");
     REQUIRE(!result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1250,12 +1280,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/key_null.mi)
 /**
  * Test a list result record with a cstring element
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_cstring.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/list/of_cstring.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_LIST);
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result);
 
@@ -1265,12 +1295,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_cstring.mi)
 /**
  * Test a list result record with two cstring elements
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_2_cstring.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/list/of_2_cstring.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_LIST);
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     REQUIRE(!result);
@@ -1281,12 +1311,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_2_cstring.mi)
 /**
  * Test a list result record with three cstring elements
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_3_cstring.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/list/of_3_cstring.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_LIST);
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     result = CHECK_RESULT_CSTRING(result, "", "value2");
     result = CHECK_RESULT_CSTRING(result, "key3", "value3");
@@ -1298,15 +1328,15 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_3_cstring.mi)
 /**
  * Test a list result record of a null list.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_null_list.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/list/of_null_list.mi)
 {
-    gdbmi_result *result = GET_RESULT(output);
+    gdbwire_mi_result *result = GET_RESULT(output);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST);
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_LIST);
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key");
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_LIST, "key");
     REQUIRE(!result);
 
     CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
@@ -1315,18 +1345,18 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/list/of_null_list.mi)
 /**
  * Test a result record with many next pointers.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/next.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/mixed/next.mi)
 {
-    gdbmi_result *top_result = GET_RESULT(output), *result;
+    gdbwire_mi_result *top_result = GET_RESULT(output), *result;
 
-    result = CHECK_RESULT_VARIANT(top_result, GDBMI_LIST, "key");
+    result = CHECK_RESULT_VARIANT(top_result, GDBWIRE_MI_LIST, "key");
     result = CHECK_RESULT_CSTRING(result, "key2", "value2");
     REQUIRE(!result);
 
     REQUIRE(top_result->next);
     top_result = top_result->next;
 
-    result = CHECK_RESULT_VARIANT(top_result, GDBMI_TUPLE, "key3");
+    result = CHECK_RESULT_VARIANT(top_result, GDBWIRE_MI_TUPLE, "key3");
     result = CHECK_RESULT_CSTRING(result, "key4", "value4");
     result = CHECK_RESULT_CSTRING(result, "key5", "value5");
     REQUIRE(!result);
@@ -1334,7 +1364,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/next.mi)
     REQUIRE(top_result->next);
     top_result = top_result->next;
 
-    result = CHECK_RESULT_VARIANT(top_result, GDBMI_LIST);
+    result = CHECK_RESULT_VARIANT(top_result, GDBWIRE_MI_LIST);
     result = CHECK_RESULT_CSTRING(result, "key6", "value6");
     result = CHECK_RESULT_CSTRING(result, "", "value7");
     REQUIRE(!result);
@@ -1347,18 +1377,19 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/next.mi)
 /**
  * Test a recursive result record.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/recursive.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, result/mixed/recursive.mi)
 {
-    gdbmi_result *top_result = GET_RESULT(output), *result, *inside_result;
+    gdbwire_mi_result *top_result = GET_RESULT(output),
+        *result, *inside_result;
     REQUIRE(!top_result->next);
 
-    result = CHECK_RESULT_VARIANT(top_result, GDBMI_TUPLE);
+    result = CHECK_RESULT_VARIANT(top_result, GDBWIRE_MI_TUPLE);
     result = CHECK_RESULT_CSTRING(result, "key", "value");
     REQUIRE(!result->next);
 
-    result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key2");
+    result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE, "key2");
 
-    inside_result = CHECK_RESULT_VARIANT(result, GDBMI_LIST, "key3");
+    inside_result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_LIST, "key3");
     inside_result = CHECK_RESULT_CSTRING(inside_result, "", "value3");
     inside_result = CHECK_RESULT_CSTRING(inside_result, "", "value4");
     REQUIRE(!inside_result);
@@ -1366,7 +1397,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/recursive.mi)
     REQUIRE(result->next);
     result = result->next;
 
-    inside_result = CHECK_RESULT_VARIANT(result, GDBMI_TUPLE, "key5");
+    inside_result = CHECK_RESULT_VARIANT(result, GDBWIRE_MI_TUPLE, "key5");
     inside_result = CHECK_RESULT_CSTRING(inside_result, "key6", "value6");
     inside_result = CHECK_RESULT_CSTRING(inside_result, "key7", "value7");
     REQUIRE(!inside_result);
@@ -1377,18 +1408,18 @@ TEST_CASE_METHOD_N(GdbmiPtTest, result/mixed/recursive.mi)
 }
 
 /**
- * Test the line field when the output kind is GDBMI_OUTPUT_OOB.
+ * Test the line field when the output kind is GDBWIRE_MI_OUTPUT_OOB.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, line/oob.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, line/oob.mi)
 {
     std::string expected = "Hello World console output";
-    struct gdbmi_oob_record *oob;
-    struct gdbmi_stream_record *stream;
+    struct gdbwire_mi_oob_record *oob;
+    struct gdbwire_mi_stream_record *stream;
 
-    REQUIRE(output->kind == GDBMI_OUTPUT_OOB);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_OOB);
     oob = CHECK_OUTPUT_OOB_RECORD(output);
     stream = CHECK_OOB_RECORD_STREAM(oob);
-    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_CONSOLE, expected);
 
     REQUIRE(std::string(output->line) == "~\"Hello World console output\"\n");
 
@@ -1396,14 +1427,14 @@ TEST_CASE_METHOD_N(GdbmiPtTest, line/oob.mi)
 }
 
 /**
- * Test the line field when the output kind is GDBMI_OUTPUT_RESULT.
+ * Test the line field when the output kind is GDBWIRE_MI_OUTPUT_RESULT.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, line/result.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, line/result.mi)
 {
-    gdbmi_result *result;
+    gdbwire_mi_result *result;
 
-    REQUIRE(output->kind == GDBMI_OUTPUT_RESULT);
-    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_EXIT);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_RESULT);
+    result = CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_EXIT);
     REQUIRE(!result);
 
     REQUIRE(std::string(output->line) == "^exit\n");
@@ -1412,11 +1443,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, line/result.mi)
 }
 
 /**
- * Test the line field when the output kind is GDBMI_OUTPUT_PROMPT.
+ * Test the line field when the output kind is GDBWIRE_MI_OUTPUT_PROMPT.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, line/prompt.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, line/prompt.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PROMPT);
     REQUIRE(std::string(output->line) == "(gdb)\n");
     CHECK_OUTPUT_AT_FINAL_PROMPT(output);
 }
@@ -1424,9 +1455,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, line/prompt.mi)
 /**
  * Test that an empty MI command is an error.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/empty.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/empty.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "\n");
@@ -1437,9 +1468,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/empty.mi)
 /**
  * Test the error at the front of the line.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/front.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/front.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "$error\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "$");
@@ -1450,9 +1481,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/front.mi)
 /**
  * Test the error in the middle of the line.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/middle.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/middle.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "*running, abc {}\n");
     REQUIRE(std::string(output->variant.error.token) == "{");
     REQUIRE(output->variant.error.pos.start_column == 15);
@@ -1464,9 +1495,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/middle.mi)
  *
  * Extra tokens exist on the line at the end in this case.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/end.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/end.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "^error abc\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "abc");
@@ -1479,9 +1510,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/end.mi)
  *
  * There are missing tokens on the line at the end.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/end_missing.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/end_missing.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "^\n");
     REQUIRE(std::string(output->variant.error.token) == "\n");
     REQUIRE(output->variant.error.pos.start_column == 2);
@@ -1491,9 +1522,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/end_missing.mi)
 /**
  * Test the error in a list grammar rule.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/list_of_2_cstring.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/list_of_2_cstring.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) ==
         "*stopped,[key=\"value\", key2= \" \"value2\"]\n");
     REQUIRE(std::string(output->variant.error.token) == "value2");
@@ -1511,9 +1542,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/list_of_2_cstring.mi)
  * and then expecting the next line to parse successfully. The error
  * I'm talking about is '(not_gdb)' which is a gdb prompt line.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/multi_line_error.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/multi_line_error.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "^error^\n");
     REQUIRE(std::string(output->variant.error.token) == "^");
     REQUIRE(output->variant.error.pos.start_column == 7);
@@ -1522,11 +1553,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/multi_line_error.mi)
     REQUIRE(output->next);
     output = output->next;
 
-    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PROMPT);
     REQUIRE(output->next);
     output = output->next;
 
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "^\n");
     REQUIRE(std::string(output->variant.error.token) == "\n");
     REQUIRE(output->variant.error.pos.start_column == 2);
@@ -1535,7 +1566,7 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/multi_line_error.mi)
     REQUIRE(output->next);
     output = output->next;
 
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "^error abc\n");
     REQUIRE(std::string(output->variant.error.token) == "abc");
     REQUIRE(output->variant.error.pos.start_column == 8);
@@ -1544,13 +1575,14 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/multi_line_error.mi)
     REQUIRE(output->next);
     output = output->next;
 
-    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PROMPT);
 
     REQUIRE(output->next);
     output = output->next;
 
     {
-        gdbmi_result *result = CHECK_OUTPUT_RESULT_RECORD(output, GDBMI_ERROR);
+        gdbwire_mi_result *result =
+            CHECK_OUTPUT_RESULT_RECORD(output, GDBWIRE_MI_ERROR);
         result = CHECK_RESULT_CSTRING(result, "msg", "bogus");
         REQUIRE(!result);
     }
@@ -1558,12 +1590,12 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/multi_line_error.mi)
     REQUIRE(output->next);
     output = output->next;
 
-    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PROMPT);
 
     REQUIRE(output->next);
     output = output->next;
 
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "(not_gdb)\n");
     REQUIRE(std::string(output->variant.error.token) == "not_gdb");
     REQUIRE(output->variant.error.pos.start_column == 2);
@@ -1572,16 +1604,16 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/multi_line_error.mi)
     REQUIRE(output->next);
     output = output->next;
 
-    REQUIRE(output->kind == GDBMI_OUTPUT_PROMPT);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PROMPT);
     REQUIRE(!output->next);
 }
 
 /**
  * Test that the GDB prompt says 'gdb'.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/prompt.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/prompt.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "(not_gdb)\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "not_gdb");
@@ -1592,9 +1624,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/prompt.mi)
 /**
  * Test the token destructor functionality (verify with gcov).
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/token.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/dtor/token.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "543#\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "#");
@@ -1605,9 +1637,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/token.mi)
 /**
  * Test the variable destructor functionality (verify with gcov).
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/variable.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/dtor/variable.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "(gdb#\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "#");
@@ -1624,9 +1656,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/variable.mi)
  * raises an error. This ensures that the manual error is handled by the
  * destructor to ensure no memory is lost.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/mid_action_var.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/dtor/mid_action_var.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "(not_gdb)\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "not_gdb");
@@ -1640,9 +1672,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/mid_action_var.mi)
  * This also triggers result_list. There is no way to isolate these two
  * at this point in time.
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/opt_variable.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/dtor/opt_variable.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "*stopped,reason=#\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "#");
@@ -1653,9 +1685,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/opt_variable.mi)
 /**
  * Test the result destructor functionality (verify with gcov).
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/result.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/dtor/result.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "*stopped,{\"abc\",^\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "^");
@@ -1666,9 +1698,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/result.mi)
 /**
  * Test the result_list destructor functionality (verify with gcov).
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/result_list.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/dtor/result_list.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "*stopped,{\"abc\",\"def\"^\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "^");
@@ -1679,9 +1711,9 @@ TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/result_list.mi)
 /**
  * Test the output_variant destructor functionality (verify with gcov).
  */
-TEST_CASE_METHOD_N(GdbmiPtTest, parse_error/syntax/destructor/output_variant.mi)
+TEST_CASE_METHOD_N(GdbwireMiPtTest, parse_error/syntax/dtor/output_variant.mi)
 {
-    REQUIRE(output->kind == GDBMI_OUTPUT_PARSE_ERROR);
+    REQUIRE(output->kind == GDBWIRE_MI_OUTPUT_PARSE_ERROR);
     REQUIRE(std::string(output->line) == "^error^\n");
     REQUIRE(output->variant.error.token);
     REQUIRE(std::string(output->variant.error.token) == "^");

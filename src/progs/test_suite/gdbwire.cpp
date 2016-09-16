@@ -24,19 +24,19 @@ namespace {
             };
 
             callbacks = init_callbacks;
-            streamRecordKind = (gdbmi_stream_record_kind)-1;
-            asyncRecordKind = (gdbmi_async_record_kind)-1;
-            asyncClass = GDBMI_ASYNC_UNSUPPORTED;
-            resultClass = GDBMI_UNSUPPORTED;
+            streamRecordKind = (gdbwire_mi_stream_record_kind)-1;
+            asyncRecordKind = (gdbwire_mi_async_record_kind)-1;
+            asyncClass = GDBWIRE_MI_ASYNC_UNSUPPORTED;
+            resultClass = GDBWIRE_MI_UNSUPPORTED;
         }
 
         static void gdbwire_stream_record(void *context,
-                gdbmi_stream_record *stream_record) {
+                gdbwire_mi_stream_record *stream_record) {
             GdbwireCallbacks *callback = (GdbwireCallbacks *)context;
-            callback->gdbmi_stream_record(stream_record);
+            callback->gdbwire_mi_stream_record(stream_record);
         }
 
-        void gdbmi_stream_record(gdbmi_stream_record *stream_record) {
+        void gdbwire_mi_stream_record(gdbwire_mi_stream_record *stream_record) {
             REQUIRE(stream_record);
             streamRecordKind = stream_record->kind;
             streamString = stream_record->cstring;
@@ -44,24 +44,24 @@ namespace {
         }
 
         static void gdbwire_async_record(void *context,
-                gdbmi_async_record *async_record) {
+                gdbwire_mi_async_record *async_record) {
             GdbwireCallbacks *callback = (GdbwireCallbacks *)context;
-            callback->gdbmi_async_record(async_record);
+            callback->gdbwire_mi_async_record(async_record);
         }
 
-        void gdbmi_async_record(gdbmi_async_record *async_record) {
+        void gdbwire_mi_async_record(gdbwire_mi_async_record *async_record) {
             REQUIRE(async_record);
             asyncRecordKind = async_record->kind;
             asyncClass = async_record->async_class;
         }
 
         static void gdbwire_result_record(void *context,
-                gdbmi_result_record *result_record) {
+                gdbwire_mi_result_record *result_record) {
             GdbwireCallbacks *callback = (GdbwireCallbacks *)context;
             callback->gdbwire_result_record(result_record);
         }
 
-        void gdbwire_result_record(gdbmi_result_record *result_record) {
+        void gdbwire_result_record(gdbwire_mi_result_record *result_record) {
             REQUIRE(result_record);
             resultClass = result_record->result_class;
         }
@@ -77,13 +77,14 @@ namespace {
         }
 
         static void gdbwire_parse_error(void *context,
-                const char *mi, const char *token, gdbmi_position position) {
+                const char *mi, const char *token,
+                gdbwire_mi_position position) {
             GdbwireCallbacks *callback = (GdbwireCallbacks *)context;
             callback->gdbwire_parse_error(mi, token, position);
         }
 
         void gdbwire_parse_error(const char *mi, const char *token,
-                gdbmi_position position) {
+                gdbwire_mi_position position) {
             REQUIRE(mi);
             REQUIRE(token);
             parseErrorToken = token;
@@ -92,15 +93,15 @@ namespace {
         gdbwire_callbacks callbacks;
 
         // Used for the stream callback
-        gdbmi_stream_record_kind streamRecordKind;
+        gdbwire_mi_stream_record_kind streamRecordKind;
         std::string streamString;
 
         // Used for the async callback
-        gdbmi_async_record_kind asyncRecordKind;
-        gdbmi_async_class asyncClass;
+        gdbwire_mi_async_record_kind asyncRecordKind;
+        gdbwire_mi_async_class asyncClass;
 
         // Used for result callback
-        gdbmi_result_class resultClass;
+        gdbwire_mi_result_class resultClass;
         
         // Used for prompt callback
         std::string promptString;
@@ -176,19 +177,19 @@ TEST_CASE_METHOD_N(GdbwireTest, callbacks/stream_record/console.mi)
 {
     std::string expected = "Hello World console output";
 
-    REQUIRE(wireCallbacks.streamRecordKind == GDBMI_CONSOLE);
+    REQUIRE(wireCallbacks.streamRecordKind == GDBWIRE_MI_CONSOLE);
     REQUIRE(wireCallbacks.streamString == expected);
 }
 
 TEST_CASE_METHOD_N(GdbwireTest, callbacks/async_record/exec.mi)
 {
-    REQUIRE(wireCallbacks.asyncRecordKind == GDBMI_EXEC);
-    REQUIRE(wireCallbacks.asyncClass == GDBMI_ASYNC_RUNNING);
+    REQUIRE(wireCallbacks.asyncRecordKind == GDBWIRE_MI_EXEC);
+    REQUIRE(wireCallbacks.asyncClass == GDBWIRE_MI_ASYNC_RUNNING);
 }
 
 TEST_CASE_METHOD_N(GdbwireTest, callbacks/result_record/done.mi)
 {
-    REQUIRE(wireCallbacks.resultClass == GDBMI_DONE);
+    REQUIRE(wireCallbacks.resultClass == GDBWIRE_MI_DONE);
 }
 
 TEST_CASE_METHOD_N(GdbwireTest, callbacks/prompt/basic.mi)

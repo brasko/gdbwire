@@ -3,8 +3,8 @@
 #include <string.h>
 
 #include "gdbwire_assert.h"
-#include "gdbmi_grammar.h"
-#include "gdbmi_parser.h"
+#include "gdbwire_mi_grammar.h"
+#include "gdbwire_mi_parser.h"
 #include "gdbwire_string.h"
 
 /* flex prototypes used in this unit */
@@ -12,36 +12,38 @@ typedef void *yyscan_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 
 /* Lexer set/destroy buffer to parse */
-extern YY_BUFFER_STATE gdbmi__scan_string(
+extern YY_BUFFER_STATE gdbwire_mi__scan_string(
     const char *yy_str, yyscan_t yyscanner);
-extern void gdbmi__delete_buffer(YY_BUFFER_STATE state, yyscan_t yyscanner);
+extern void gdbwire_mi__delete_buffer(YY_BUFFER_STATE state,
+    yyscan_t yyscanner);
 
 /* Lexer get token function */
-extern int gdbmi_lex(yyscan_t yyscanner);
-extern char *gdbmi_get_text(yyscan_t yyscanner);
-extern void gdbmi_set_column(int column_no, yyscan_t yyscanner);
+extern int gdbwire_mi_lex(yyscan_t yyscanner);
+extern char *gdbwire_mi_get_text(yyscan_t yyscanner);
+extern void gdbwire_mi_set_column(int column_no, yyscan_t yyscanner);
 
 /* Lexer state create/destroy functions */
-extern int gdbmi_lex_init(yyscan_t *scanner);
-extern int gdbmi_lex_destroy(yyscan_t scanner);
+extern int gdbwire_mi_lex_init(yyscan_t *scanner);
+extern int gdbwire_mi_lex_destroy(yyscan_t scanner);
 
-struct gdbmi_parser {
+struct gdbwire_mi_parser {
     /* The buffer pushed into the parser from the user */
     struct gdbwire_string *buffer;
     /* The GDB/MI lexer state */
     yyscan_t mils;
     /* The GDB/MI push parser state */
-    gdbmi_pstate *mips;
+    gdbwire_mi_pstate *mips;
     /* The client parser callbacks */
-    struct gdbmi_parser_callbacks callbacks;
+    struct gdbwire_mi_parser_callbacks callbacks;
 };
 
-struct gdbmi_parser *
-gdbmi_parser_create(struct gdbmi_parser_callbacks callbacks)
+struct gdbwire_mi_parser *
+gdbwire_mi_parser_create(struct gdbwire_mi_parser_callbacks callbacks)
 {
-    struct gdbmi_parser *parser;
+    struct gdbwire_mi_parser *parser;
 
-    parser = (struct gdbmi_parser *)calloc(1, sizeof(struct gdbmi_parser));
+    parser = (struct gdbwire_mi_parser *)calloc(1,
+        sizeof(struct gdbwire_mi_parser));
     if (!parser) {
         return NULL;
     }
@@ -54,25 +56,25 @@ gdbmi_parser_create(struct gdbmi_parser_callbacks callbacks)
     }
 
     /* Create a new lexer state instance */
-    if (gdbmi_lex_init(&parser->mils) != 0) {
+    if (gdbwire_mi_lex_init(&parser->mils) != 0) {
         gdbwire_string_destroy(parser->buffer);
         free(parser);
         return NULL;
     }
 
     /* Create a new push parser state instance */
-    parser->mips = gdbmi_pstate_new();
+    parser->mips = gdbwire_mi_pstate_new();
     if (!parser->mips) {
-        gdbmi_lex_destroy(parser->mils);
+        gdbwire_mi_lex_destroy(parser->mils);
         gdbwire_string_destroy(parser->buffer);
         free(parser);
         return NULL;
     }
 
     /* Ensure that the callbacks are non null */
-    if (!callbacks.gdbmi_output_callback) {
-        gdbmi_pstate_delete(parser->mips);
-        gdbmi_lex_destroy(parser->mils);
+    if (!callbacks.gdbwire_mi_output_callback) {
+        gdbwire_mi_pstate_delete(parser->mips);
+        gdbwire_mi_lex_destroy(parser->mils);
         gdbwire_string_destroy(parser->buffer);
         free(parser);
         return NULL;
@@ -83,7 +85,7 @@ gdbmi_parser_create(struct gdbmi_parser_callbacks callbacks)
     return parser;
 }
 
-void gdbmi_parser_destroy(struct gdbmi_parser *parser)
+void gdbwire_mi_parser_destroy(struct gdbwire_mi_parser *parser)
 {
     if (parser) {
         /* Free the parse buffer */
@@ -94,13 +96,13 @@ void gdbmi_parser_destroy(struct gdbmi_parser *parser)
 
         /* Free the lexer instance */
         if (parser->mils) {
-            gdbmi_lex_destroy(parser->mils);
+            gdbwire_mi_lex_destroy(parser->mils);
             parser->mils = 0;
         }
 
         /* Free the push parser instance */
         if (parser->mips) {
-            gdbmi_pstate_delete(parser->mips);
+            gdbwire_mi_pstate_delete(parser->mips);
             parser->mips = NULL;
         }
 
@@ -109,8 +111,8 @@ void gdbmi_parser_destroy(struct gdbmi_parser *parser)
     }
 }
 
-static struct gdbmi_parser_callbacks
-gdbmi_parser_get_callbacks(struct gdbmi_parser *parser)
+static struct gdbwire_mi_parser_callbacks
+gdbwire_mi_parser_get_callbacks(struct gdbwire_mi_parser *parser)
 {
     return parser->callbacks;
 }
@@ -131,32 +133,33 @@ gdbmi_parser_get_callbacks(struct gdbmi_parser *parser)
  * GDBWIRE_OK on success or appropriate error result on failure.
  */
 static enum gdbwire_result
-gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
+gdbwire_mi_parser_parse_line(struct gdbwire_mi_parser *parser,
+    const char *line)
 {
-    struct gdbmi_parser_callbacks callbacks =
-        gdbmi_parser_get_callbacks(parser);
-    struct gdbmi_output *output = 0;
+    struct gdbwire_mi_parser_callbacks callbacks =
+        gdbwire_mi_parser_get_callbacks(parser);
+    struct gdbwire_mi_output *output = 0;
     YY_BUFFER_STATE state = 0;
     int pattern, mi_status;
 
     GDBWIRE_ASSERT(parser && line);
 
     /* Create a new input buffer for flex. */
-    state = gdbmi__scan_string(line, parser->mils);
+    state = gdbwire_mi__scan_string(line, parser->mils);
     GDBWIRE_ASSERT(state);
-    gdbmi_set_column(1, parser->mils);
+    gdbwire_mi_set_column(1, parser->mils);
 
     /* Iterate over all the tokens found in the scanner buffer */
     do {
-        pattern = gdbmi_lex(parser->mils);
+        pattern = gdbwire_mi_lex(parser->mils);
         if (pattern == 0)
             break;
-        mi_status = gdbmi_push_parse(parser->mips, pattern, NULL,
+        mi_status = gdbwire_mi_push_parse(parser->mips, pattern, NULL,
             parser->mils, &output);
     } while (mi_status == YYPUSH_MORE);
 
     /* Free the scanners buffer */
-    gdbmi__delete_buffer(state, parser->mils);
+    gdbwire_mi__delete_buffer(state, parser->mils);
 
     /**
      * The push parser will return,
@@ -169,9 +172,9 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
      *
      * The grammar is designed to accept an infinate list of GDB/MI
      * output commands. For this reason, YYPUSH_MORE is the expected
-     * return value of all the calls to gdbmi_push_parse. However,
+     * return value of all the calls to gdbwire_mi_push_parse. However,
      * in reality, gdbwire only translates a line at a time from GDB.
-     * When the line is finished, gdbmi_lex returns 0, and the parsing
+     * When the line is finished, gdbwire_mi_lex returns 0, and the parsing
      * is done.
      */
 
@@ -182,7 +185,7 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
     GDBWIRE_ASSERT(output);
     output->line = strdup(line);
 
-    callbacks.gdbmi_output_callback(callbacks.context, output);
+    callbacks.gdbwire_mi_output_callback(callbacks.context, output);
 
     return GDBWIRE_OK;
 }
@@ -191,8 +194,8 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
  * Get the next line available in the buffer.
  *
  * @param buffer
- * The entire buffer the user has pushed onto the gdbmi parser
- * through gdbmi_parser_push. If a line is found, the returned line
+ * The entire buffer the user has pushed onto the gdbwire_mi parser
+ * through gdbwire_mi_parser_push. If a line is found, the returned line
  * will be removed from this buffer.
  *
  * @param line
@@ -205,7 +208,7 @@ gdbmi_parser_parse_line(struct gdbmi_parser *parser, const char *line)
  * GDBWIRE_OK on success or appropriate error result on failure.
  */
 static enum gdbwire_result
-gdbmi_parser_get_next_line(struct gdbwire_string *buffer,
+gdbwire_mi_parser_get_next_line(struct gdbwire_string *buffer,
         struct gdbwire_string **line)
 {
     enum gdbwire_result result = GDBWIRE_OK;
@@ -262,13 +265,13 @@ cleanup:
 }
 
 enum gdbwire_result
-gdbmi_parser_push(struct gdbmi_parser *parser, const char *data)
+gdbwire_mi_parser_push(struct gdbwire_mi_parser *parser, const char *data)
 {
-    return gdbmi_parser_push_data(parser, data, strlen(data));
+    return gdbwire_mi_parser_push_data(parser, data, strlen(data));
 }
 
 enum gdbwire_result
-gdbmi_parser_push_data(struct gdbmi_parser *parser, const char *data,
+gdbwire_mi_parser_push_data(struct gdbwire_mi_parser *parser, const char *data,
     size_t size)
 {
     struct gdbwire_string *line = 0;
@@ -279,11 +282,12 @@ gdbmi_parser_push_data(struct gdbmi_parser *parser, const char *data,
 
     // Loop until no more lines available
     for (;;) {
-        result = gdbmi_parser_get_next_line(parser->buffer, &line);
+        result = gdbwire_mi_parser_get_next_line(parser->buffer, &line);
         GDBWIRE_ASSERT_GOTO(result == GDBWIRE_OK, result, cleanup);
 
         if (line) {
-            result = gdbmi_parser_parse_line(parser, gdbwire_string_data(line));
+            result = gdbwire_mi_parser_parse_line(parser,
+                gdbwire_string_data(line));
             gdbwire_string_destroy(line);
             line = 0;
             GDBWIRE_ASSERT_GOTO(result == GDBWIRE_OK, result, cleanup);

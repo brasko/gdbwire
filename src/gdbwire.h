@@ -7,7 +7,7 @@ extern "C" {
 
 #include <stdlib.h>
 #include "gdbwire_result.h"
-#include "gdbmi_pt.h"
+#include "gdbwire_mi_pt.h"
 
 /* The opaque gdbwire context */
 struct gdbwire;
@@ -40,7 +40,7 @@ struct gdbwire_callbacks {
      * The stream record to display to the user.
      */
     void (*gdbwire_stream_record_fn)(void *context,
-            struct gdbmi_stream_record *stream_record);
+            struct gdbwire_mi_stream_record *stream_record);
 
     /**
      * An asynchronous output event.
@@ -52,7 +52,7 @@ struct gdbwire_callbacks {
      * The asychronous record output by GDB.
      */
     void (*gdbwire_async_record_fn)(void *context,
-            struct gdbmi_async_record *async_record);
+            struct gdbwire_mi_async_record *async_record);
 
     /**
      * A result output event.
@@ -64,7 +64,7 @@ struct gdbwire_callbacks {
      * The result record output by GDB.
      */
     void (*gdbwire_result_record_fn)(void *context,
-            struct gdbmi_result_record *result_record);
+            struct gdbwire_mi_result_record *result_record);
 
     /**
      * A prompt output event.
@@ -98,7 +98,7 @@ struct gdbwire_callbacks {
      * The position of the token the error occurred on.
      */
     void (*gdbwire_parse_error_fn)(void *context, const char *mi,
-            const char *token, struct gdbmi_position position);
+            const char *token, struct gdbwire_mi_position position);
 };
 
 /**
@@ -134,7 +134,7 @@ void gdbwire_destroy(struct gdbwire *wire);
  * Call this function with output from GDB when it is available.
  *
  * During this function, callback events may be invoked to alert the
- * caller of useful gdbmi events.
+ * caller of useful gdbwire_mi events.
  *
  * @param wire
  * The gdbwire context to operate on.
