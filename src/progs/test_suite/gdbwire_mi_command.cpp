@@ -124,6 +124,30 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/basic.mi)
 }
 
 /**
+ * The file list exec source file command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/no_fullname.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    std::string file = "test.cpp";
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE);
+    REQUIRE(com->variant.file_list_exec_source_file.line == 33);
+    REQUIRE(com->variant.file_list_exec_source_file.file == file);
+    REQUIRE(!com->variant.file_list_exec_source_file.fullname);
+    REQUIRE(!com->variant.file_list_exec_source_file.macro_info_exists);
+    REQUIRE(!com->variant.file_list_exec_source_file.macro_info);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
  * The file list exec source file command with no macro info in it.
  */
 TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/no_macro_info.mi)
@@ -145,3 +169,113 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/no_macro_inf
 
     gdbwire_mi_command_free(com);
 }
+
+/**
+ * The file list exec source files command. Check the case with no files.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/empty.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES);
+    REQUIRE(!com->variant.file_list_exec_source_files.files);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The file list exec source files command.
+ * Check the case with 1 pair of files.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/1_pair.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_source_file *files;
+    std::string file = "test.cpp", fullname = "/home/foo/test.cpp";
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES);
+    REQUIRE(com->variant.file_list_exec_source_files.files);
+
+    files = com->variant.file_list_exec_source_files.files;
+
+    REQUIRE(files->file == file);
+    REQUIRE(files->fullname == fullname);
+    REQUIRE(!files->next);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The file list exec source files command.
+ * Check the case with 2 pair of files.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/2_pair.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_source_file *files;
+    std::string file1= "a.cpp", fullname1= "/tmp/a.cpp";
+    std::string file2= "b.cpp", fullname2= "/tmp/b.cpp";
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES);
+    REQUIRE(com->variant.file_list_exec_source_files.files);
+
+    files = com->variant.file_list_exec_source_files.files;
+
+    REQUIRE(files->file == file1);
+    REQUIRE(files->fullname == fullname1);
+    REQUIRE(files->next);
+    files = files->next;
+
+    REQUIRE(files->file == file2);
+    REQUIRE(files->fullname == fullname2);
+    REQUIRE(!files->next);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The file list exec source files command.
+ * Ensure that fullname is not required. (for legacy versions of gdb)
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/no_full.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_source_file *files;
+    std::string file = "test.cpp";
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES);
+    REQUIRE(com->variant.file_list_exec_source_files.files);
+
+    files = com->variant.file_list_exec_source_files.files;
+
+    REQUIRE(files->file == file);
+    REQUIRE(!files->fullname);
+    REQUIRE(!files->next);
+
+    gdbwire_mi_command_free(com);
+}
+
