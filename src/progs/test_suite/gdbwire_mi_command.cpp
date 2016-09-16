@@ -182,8 +182,6 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/fail_line.mi
         result_record, &com);
     REQUIRE(result == GDBWIRE_ASSERT);
     REQUIRE(!com);
-
-    gdbwire_mi_command_free(com);
 }
 
 /**
@@ -198,8 +196,6 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/fail_file.mi
         result_record, &com);
     REQUIRE(result == GDBWIRE_ASSERT);
     REQUIRE(!com);
-
-    gdbwire_mi_command_free(com);
 }
 
 /**
@@ -343,3 +339,47 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/no_full.mi)
     gdbwire_mi_command_free(com);
 }
 
+/**
+ * The file list exec source files command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/1_pair_fail_file.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_source_file *files;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!com);
+}
+
+/**
+ * The file list exec source files command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/1_pair_fail_fullname.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_source_file *files;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!com);
+}
+
+/**
+ * The file list exec source files command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/2_pair_fail_fullname.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_source_file *files;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!com);
+}

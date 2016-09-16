@@ -117,6 +117,7 @@ file_list_exec_source_files(
     struct gdbwire_mi_result_record *result_record,
     struct gdbwire_mi_command **out)
 {
+    enum gdbwire_result result = GDBWIRE_OK;
     struct gdbwire_mi_result *mi_result;
     struct gdbwire_mi_source_file *files = 0, *cur_node, *new_node;
 
@@ -134,20 +135,21 @@ file_list_exec_source_files(
     while (mi_result) {
         struct gdbwire_mi_result *tuple;
         char *file = 0, *fullname = 0;
-        GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_TUPLE);
+        GDBWIRE_ASSERT_GOTO(mi_result->kind == GDBWIRE_MI_TUPLE, result, err);
         tuple = mi_result->variant.result;
 
         // file field
-        GDBWIRE_ASSERT(tuple->kind == GDBWIRE_MI_CSTRING);
-        GDBWIRE_ASSERT(strcmp(tuple->variable, "file") == 0);
+        GDBWIRE_ASSERT_GOTO(tuple->kind == GDBWIRE_MI_CSTRING, result, err);
+        GDBWIRE_ASSERT_GOTO(strcmp(tuple->variable, "file") == 0, result, err);
         file = tuple->variant.cstring;
 
         if (tuple->next) {
             tuple = tuple->next;
 
             // fullname field
-            GDBWIRE_ASSERT(tuple->kind == GDBWIRE_MI_CSTRING);
-            GDBWIRE_ASSERT(strcmp(tuple->variable, "fullname") == 0);
+            GDBWIRE_ASSERT_GOTO(tuple->kind == GDBWIRE_MI_CSTRING, result, err);
+            GDBWIRE_ASSERT_GOTO(strcmp(tuple->variable, "fullname") == 0,
+                result, err);
             fullname = tuple->variant.cstring;
         }
 
@@ -155,6 +157,8 @@ file_list_exec_source_files(
 
         // Create the new 
         new_node = calloc(1, sizeof(struct gdbwire_mi_source_file));
+        GDBWIRE_ASSERT_GOTO(new_node, result, err);
+
         new_node->file = strdup(file);
         new_node->fullname = (fullname)?strdup(fullname):0;
         new_node->next = 0;
@@ -167,14 +171,33 @@ file_list_exec_source_files(
             files = cur_node = new_node;
         }
 
+        GDBWIRE_ASSERT_GOTO(new_node->file && (new_node->fullname || !fullname),
+            result, err);
+
         mi_result = mi_result->next;
     }
 
     *out = calloc(1, sizeof(struct gdbwire_mi_command));
+    GDBWIRE_ASSERT_GOTO(*out, result, err);
     (*out)->kind = GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES;
     (*out)->variant.file_list_exec_source_files.files = files;
 
-    return GDBWIRE_OK;
+    return result;
+
+err:
+    {
+        struct gdbwire_mi_source_file *tmp, *cur = files;
+        while (cur) {
+            free(cur->file);
+            free(cur->fullname);
+            tmp = cur;
+            cur = cur->next;
+            free(tmp);
+        }
+    }
+    
+
+    return result;
 }
 
 enum gdbwire_result
@@ -213,8 +236,8 @@ void gdbwire_mi_command_free(struct gdbwire_mi_command *mi_command)
                 struct gdbwire_mi_source_file *tmp, *cur = 
                     mi_command->variant.file_list_exec_source_files.files;
                 while (cur) {
-                    free (cur->file);
-                    free (cur->fullname);
+                    free(cur->file);
+                    free(cur->fullname);
                     tmp = cur;
                     cur = cur->next;
                     free(tmp);
