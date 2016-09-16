@@ -37,7 +37,7 @@ struct gdbwire_callbacks {
      * @param str
      * The console output to display to the user.
      */
-    void (*gdbwire_console_output)(void *context, const char *str);
+    void (*gdbwire_console)(void *context, const char *str);
 
     /**
      * A target output event.
@@ -48,7 +48,7 @@ struct gdbwire_callbacks {
      * @param str
      * The target output to display to the user.
      */
-    void (*gdbwire_target_output)(void *context, const char *str);
+    void (*gdbwire_target)(void *context, const char *str);
 
     /**
      * A log output event.
@@ -59,7 +59,7 @@ struct gdbwire_callbacks {
      * @param str
      * The log output to display to the user.
      */
-    void (*gdbwire_log_output)(void *context, const char *str);
+    void (*gdbwire_log)(void *context, const char *str);
 
     /**
      * A prompt output event.
@@ -70,7 +70,7 @@ struct gdbwire_callbacks {
      * @param str
      * The prompt output to display to the user.
      */
-    void (*gdbwire_prompt_output)(void *context, const char *str);
+    void (*gdbwire_prompt)(void *context, const char *str);
 };
 
 /**

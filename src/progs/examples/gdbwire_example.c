@@ -12,7 +12,7 @@
  * The console string.
  */
 void
-gdbwire_console_output(void *context, const char *str)
+gdbwire_console(void *context, const char *str)
 {
     assert(!context && str);
     printf("%s", str);
@@ -29,7 +29,7 @@ gdbwire_console_output(void *context, const char *str)
  * The target string.
  */
 void
-gdbwire_target_output(void *context, const char *str)
+gdbwire_target(void *context, const char *str)
 {
     assert(!context && str);
     printf("%s", str);
@@ -46,7 +46,7 @@ gdbwire_target_output(void *context, const char *str)
  * The log string.
  */
 void
-gdbwire_log_output(void *context, const char *str)
+gdbwire_log(void *context, const char *str)
 {
     assert(!context && str);
     printf("%s", str);
@@ -63,7 +63,7 @@ gdbwire_log_output(void *context, const char *str)
  * The prompt string.
  */
 void
-gdbwire_prompt_output(void *context, const char *str)
+gdbwire_prompt(void *context, const char *str)
 {
     assert(!context && str);
     printf("%s", str);
@@ -99,10 +99,10 @@ int
 main(void) {
     struct gdbwire_callbacks callbacks = {
         0,
-        gdbwire_console_output,
-        gdbwire_target_output,
-        gdbwire_log_output,
-        gdbwire_prompt_output
+        gdbwire_console,
+        gdbwire_target,
+        gdbwire_log,
+        gdbwire_prompt
     };
     struct gdbwire *wire;
 
