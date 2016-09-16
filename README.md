@@ -16,6 +16,7 @@ core features that make it unique.
 - Low Level - You provide GDB output characters, GDBWIRE provides parse trees
 - High Level - TODO: You provide GDB output characters, GDBWIRE provides events
 - Error Handling - Unexpected GDB output will be handled gracefully
+- Amalgamation - Easily integrates into your existing build system
 
 ## Examples
 
@@ -82,7 +83,7 @@ make install
 
 I typically enable more error checking with the build tools like so,
 
-> YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror -O0" CXXFLAGS="-g -Wall -Werror -O0" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples --disable-shared
+> YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror -O0" CXXFLAGS="-g -Wall -Werror -O0" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples --disable-shared --enable-amalgamation
 
 If you like to have a silent build, and the libtool link lines are bothering
 you, you can set this environment variable to suppress libtools printing of
@@ -119,13 +120,33 @@ expect to see valgrind output something like,
 directory               | description
 ---                     | ---
 src                     | All source code is in here
+src/amalgamation        | The scripts to build the amalgamation
 src/progs               | All programs go here
 src/progs/test\_suite   | The unit test executable
 src/progs/examples      | Example programs using the gdbwire interfaces
-src/lib                 | All libraries go here
-src/lib/containers      | All containers go here (string, list, etc)
-src/lib/logging         | Error handling and potential logging of errors
-src/lib/gdbmi           | The gdbmi interface
+src                     | The gdbwire library source code
+
+## The amalgamation
+
+gdbwire supports creating an amalgamation of the source code. When passing
+--enable-amalgmation on the configure line, gdbwire will create two special
+files, gdbwire.h and gdbwire.c.
+
+gdbwire.h will contain all of the header files required in the gdbwire
+library. If you include this file in your source code you have the full
+programming interface to gdbwire at your disposal.
+
+gdbwire.c will contain all of the source code files required to build
+gdbwire. All you need to do is compile and link this into your application.
+
+If you would like to use gdbwire, you can copy the amalgamation into your
+source repository and commit it along with your source files. This will
+ensure that developers building your source code will not require also
+building gdbwire. It also allows you to commit a known working version
+of gdbwire along with your source code.
+
+To update gdbwire versions, simply get the newest amalgamation and save
+it in place of the one that you have.
 
 ## Developer Conventions
 
