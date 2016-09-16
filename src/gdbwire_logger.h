@@ -1,7 +1,7 @@
 #ifndef __GDBWIRE_LOGGER_H__
 #define __GDBWIRE_LOGGER_H__
 
-#include "logging/gdbwire_result.h"
+#include "gdbwire_result.h"
 
 #ifdef __cplusplus 
 extern "C" { 

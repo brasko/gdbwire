@@ -1,7 +1,7 @@
 #include <string.h>
 #include "catch.hpp"
 #include "fixture.h"
-#include "containers/gdbwire_string.h"
+#include "gdbwire_string.h"
 
 namespace {
     struct GdbwireStringTest : public Fixture {

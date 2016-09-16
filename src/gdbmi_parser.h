@@ -5,7 +5,7 @@
 extern "C" { 
 #endif 
 
-#include "logging/gdbwire_result.h"
+#include "gdbwire_result.h"
 #include "gdbmi_pt.h"
 
 /// The opaque GDB/MI parser context

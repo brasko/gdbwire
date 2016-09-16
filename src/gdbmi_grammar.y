@@ -14,8 +14,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "gdbmi_grammar.h"
-#include "src/lib/gdbmi/gdbmi_pt.h"
-#include "src/lib/gdbmi/gdbmi_pt_alloc.h"
+#include "gdbmi_pt.h"
+#include "gdbmi_pt_alloc.h"
 
 char *gdbmi_get_text(yyscan_t yyscanner);
 struct gdbmi_position gdbmi_get_extra(yyscan_t yyscanner);

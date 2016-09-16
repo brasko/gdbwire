@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
-#include "gdbmi/gdbmi_parser.h"
+#include "gdbmi_parser.h"
 
 /**
  * The gdbmi parser callback function.

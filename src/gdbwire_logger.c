@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "logging/gdbwire_logger.h"
+#include "gdbwire_logger.h"
 
 static const char *gdbwire_logger_level_str[GDBWIRE_LOGGER_ERROR+1] = {
     "DEBUG",

@@ -15,7 +15,7 @@ IDENTIFIER {L}+{T}*
 
 #include <stdio.h>
 #include "gdbmi_grammar.h"
-#include "src/lib/gdbmi/gdbmi_pt.h"
+#include "gdbmi_pt.h"
 
 /**
  * This macro sets the beginning and ending column position of each

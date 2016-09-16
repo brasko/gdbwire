@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include "catch.hpp"
 #include "fixture.h"
-#include "gdbmi/gdbmi_pt.h"
-#include "gdbmi/gdbmi_parser.h"
+#include "gdbmi_pt.h"
+#include "gdbmi_parser.h"
 
 namespace {
     struct GdbmiParserCallback {

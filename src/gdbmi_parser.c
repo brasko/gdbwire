@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "logging/gdbwire_assert.h"
+#include "gdbwire_assert.h"
 #include "gdbmi_grammar.h"
 #include "gdbmi_parser.h"
-#include "containers/gdbwire_string.h"
+#include "gdbwire_string.h"
 
 /* flex prototypes used in this unit */
 typedef void *yyscan_t;

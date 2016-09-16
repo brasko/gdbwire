@@ -2,7 +2,7 @@
 #include <string.h>
 #include "catch.hpp"
 #include "fixture.h"
-#include "gdbwire/gdbwire.h"
+#include "gdbwire.h"
 
 /**
  * These tests test that the callbacks work.

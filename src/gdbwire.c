@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
-#include "logging/gdbwire_assert.h"
-#include "gdbwire/gdbwire.h"
-#include "gdbmi/gdbmi_parser.h"
+#include "gdbwire_assert.h"
+#include "gdbwire.h"
+#include "gdbmi_parser.h"
 
 struct gdbwire
 {

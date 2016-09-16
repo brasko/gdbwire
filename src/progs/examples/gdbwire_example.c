@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
-#include "gdbwire/gdbwire.h"
+#include "gdbwire.h"
 
 /**
  * The gdbwire stream record event.

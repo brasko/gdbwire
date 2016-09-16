@@ -1,8 +1,8 @@
 #ifndef GDBWIRE_ERROR_H
 #define GDBWIRE_ERROR_H
 
-#include "logging/gdbwire_result.h"
-#include "logging/gdbwire_logger.h"
+#include "gdbwire_result.h"
+#include "gdbwire_logger.h"
 
 /**
  * Validate that the expression evaluates to true.
