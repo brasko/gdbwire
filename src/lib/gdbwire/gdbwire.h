@@ -1,11 +1,12 @@
 #ifndef GDBWIRE_H
 #define GDBWIRE_H
 
-#include <logging/gdbwire_result.h>
-
 #ifdef __cplusplus 
 extern "C" { 
 #endif 
+
+#include <logging/gdbwire_result.h>
+#include <gdbmi/gdbmi_pt.h>
 
 /* The opaque gdbwire context */
 struct gdbwire;
@@ -29,37 +30,40 @@ struct gdbwire_callbacks {
     void *context;
     
     /**
-     * A console output event.
+     * A console, target or log output event has occured.
      *
      * @param context
      * The context pointer above.
      *
-     * @param str
-     * The console output to display to the user.
+     * @param stream_record
+     * The stream record to display to the user.
      */
-    void (*gdbwire_console_fn)(void *context, const char *str);
+    void (*gdbwire_stream_record_fn)(void *context,
+            struct gdbmi_stream_record *stream_record);
 
     /**
-     * A target output event.
+     * An asynchronous output event.
      *
      * @param context
      * The context pointer above.
      *
-     * @param str
-     * The target output to display to the user.
+     * @param async_record
+     * The asychronous record output by GDB.
      */
-    void (*gdbwire_target_fn)(void *context, const char *str);
+    void (*gdbwire_async_record_fn)(void *context,
+            struct gdbmi_async_record *async_record);
 
     /**
-     * A log output event.
+     * A result output event.
      *
      * @param context
      * The context pointer above.
      *
-     * @param str
-     * The log output to display to the user.
+     * @param result_record
+     * The result record output by GDB.
      */
-    void (*gdbwire_log_fn)(void *context, const char *str);
+    void (*gdbwire_result_record_fn)(void *context,
+            struct gdbmi_result_record *result_record);
 
     /**
      * A prompt output event.
@@ -67,10 +71,33 @@ struct gdbwire_callbacks {
      * @param context
      * The context pointer above.
      *
-     * @param str
+     * @param prompt
      * The prompt output to display to the user.
      */
-    void (*gdbwire_prompt_fn)(void *context, const char *str);
+    void (*gdbwire_prompt_fn)(void *context, const char *prompt);
+
+    /**
+     * A gdbwire parse error occurred.
+     *
+     * If you receive this callback, that means the gdbwire parser
+     * failed to parse some gdb/mi coming out of gdb.
+     * Please send the parameters received in this callback to the
+     * gdbwire develpment team.
+     *
+     * @param context
+     * The context pointer above.
+     *
+     * @param mi
+     * The mi string that gdbwire could not parse.
+     *
+     * @param token
+     * The token the error occurred on.
+     *
+     * @param position
+     * The position of the token the error occurred on.
+     */
+    void (*gdbwire_parse_error_fn)(void *context, const char *mi,
+            const char *token, struct gdbmi_position position);
 };
 
 /**

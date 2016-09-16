@@ -18,39 +18,49 @@ gdbmi_output_callback(void *context, struct gdbmi_output *output) {
     struct gdbwire *wire = (struct gdbwire *)context;
 
     struct gdbmi_output *cur = output;
-    while (cur) {
-        if (cur->kind == GDBMI_OUTPUT_PROMPT) {
-            if (wire->callbacks.gdbwire_prompt_fn) {
-                wire->callbacks.gdbwire_prompt_fn(
-                    wire->callbacks.context, cur->line);
-            }
-        }
-    
 
-        if (cur->kind == GDBMI_OUTPUT_OOB &&
-            cur->variant.oob_record->kind == GDBMI_STREAM) {
-            struct gdbmi_stream_record *stream =
-                    cur->variant.oob_record->variant.stream_record;
-            switch (stream->kind) {
-                case GDBMI_CONSOLE:
-                    if (wire->callbacks.gdbwire_console_fn) {
-                        wire->callbacks.gdbwire_console_fn(
-                            wire->callbacks.context, stream->cstring);
-                    }
-                    break;
-                case GDBMI_TARGET:
-                    if (wire->callbacks.gdbwire_target_fn) {
-                        wire->callbacks.gdbwire_target_fn(
-                            wire->callbacks.context, stream->cstring);
-                    }
-                    break;
-                case GDBMI_LOG:
-                    if (wire->callbacks.gdbwire_log_fn) {
-                        wire->callbacks.gdbwire_log_fn(
-                            wire->callbacks.context, stream->cstring);
-                    }
-                    break;
-            };
+    while (cur) {
+        switch (cur->kind) {
+            case GDBMI_OUTPUT_OOB: {
+                struct gdbmi_oob_record *oob_record = cur->variant.oob_record;
+                switch (oob_record->kind) {
+                    case GDBMI_ASYNC:
+                        if (wire->callbacks.gdbwire_async_record_fn) {
+                            wire->callbacks.gdbwire_async_record_fn(
+                                wire->callbacks.context,
+                                    oob_record->variant.async_record);
+                        }
+                        break;
+                    case GDBMI_STREAM:
+                        if (wire->callbacks.gdbwire_stream_record_fn) {
+                            wire->callbacks.gdbwire_stream_record_fn(
+                                wire->callbacks.context,
+                                    oob_record->variant.stream_record);
+                        }
+                        break;
+                }
+                break;
+            }
+            case GDBMI_OUTPUT_RESULT:
+                if (wire->callbacks.gdbwire_result_record_fn) {
+                    wire->callbacks.gdbwire_result_record_fn(
+                        wire->callbacks.context, cur->variant.result_record);
+                }
+                break;
+            case GDBMI_OUTPUT_PROMPT:
+                if (wire->callbacks.gdbwire_prompt_fn) {
+                    wire->callbacks.gdbwire_prompt_fn(
+                        wire->callbacks.context, cur->line);
+                }
+                break;
+            case GDBMI_OUTPUT_PARSE_ERROR:
+                if (wire->callbacks.gdbwire_parse_error_fn) {
+                    wire->callbacks.gdbwire_parse_error_fn(
+                        wire->callbacks.context, cur->line,
+                            cur->variant.error.token,
+                                cur->variant.error.pos);
+                }
+                break;
         }
 
         cur = cur->next;

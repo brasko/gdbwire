@@ -3,53 +3,19 @@
 #include "gdbwire/gdbwire.h"
 
 /**
- * The gdbwire console event.
+ * The gdbwire stream record event.
  *
  * @param context
  * The context passed to gdbwire in gdbmi_parser_create.
  *
- * @param str
- * The console string.
+ * @param stream_record
+ * The stream record to display to the user.
  */
 void
-gdbwire_console(void *context, const char *str)
+gdbwire_stream_record(void *context, struct gdbmi_stream_record *stream_record)
 {
-    assert(!context && str);
-    printf("%s", str);
-    fflush(stdout);
-}
-
-/**
- * The gdbwire target event.
- *
- * @param context
- * The context passed to gdbwire in gdbmi_parser_create.
- *
- * @param str
- * The target string.
- */
-void
-gdbwire_target(void *context, const char *str)
-{
-    assert(!context && str);
-    printf("%s", str);
-    fflush(stdout);
-}
-
-/**
- * The gdbwire log event.
- *
- * @param context
- * The context passed to gdbwire in gdbmi_parser_create.
- *
- * @param str
- * The log string.
- */
-void
-gdbwire_log(void *context, const char *str)
-{
-    assert(!context && str);
-    printf("%s", str);
+    assert(!context && stream_record);
+    printf("%s", stream_record->cstring);
     fflush(stdout);
 }
 
@@ -59,14 +25,34 @@ gdbwire_log(void *context, const char *str)
  * @param context
  * The context passed to gdbwire in gdbmi_parser_create.
  *
- * @param str
- * The prompt string.
+ * @param prompt
+ * The prompt to display to the user.
  */
 void
-gdbwire_prompt(void *context, const char *str)
+gdbwire_prompt(void *context, const char *prompt)
 {
-    assert(!context && str);
-    printf("%s", str);
+    assert(!context && prompt);
+    printf("%s", prompt);
+    fflush(stdout);
+}
+
+/**
+ * The gdbwire parse error event.
+ *
+ * @param context
+ * The context passed to gdbwire in gdbmi_parser_create.
+ *
+ */
+void
+gdbwire_parse_error(void *context, const char *mi, const char *token,
+    struct gdbmi_position position)
+{
+    assert(!context && mi && token);
+    printf("Parse error:\n");
+    printf("  at token:[%s]\n", mi);
+    printf("  token start column:%d\n", position.start_column);
+    printf("  token end column:%d\n", position.end_column);
+    printf("  line:[%s]\n", mi);
     fflush(stdout);
 }
 
@@ -99,10 +85,11 @@ int
 main(void) {
     struct gdbwire_callbacks callbacks = {
         0,
-        gdbwire_console,
-        gdbwire_target,
-        gdbwire_log,
-        gdbwire_prompt
+        gdbwire_stream_record,
+        0,
+        0,
+        gdbwire_prompt,
+        gdbwire_parse_error
     };
     struct gdbwire *wire;
 
