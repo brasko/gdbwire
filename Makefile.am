@@ -18,6 +18,7 @@ libgdbwire_la_SOURCES= \
     src/lib/gdbmi/gdbmi_parser.c \
     src/lib/gdbmi/gdbmi_pt.c \
     src/lib/gdbmi/gdbmi_pt_alloc.c \
+    src/lib/gdbwire/gdbwire.c \
     src/lib/containers/gdbwire_string.c \
     src/lib/logging/gdbwire_logger.c
 
@@ -31,6 +32,7 @@ test_suite_SOURCES = \
     src/progs/test_suite/fixture.cpp \
     src/progs/test_suite/gdbmi/gdbmi_parser.cpp \
     src/progs/test_suite/gdbmi/gdbmi_pt.cpp \
+    src/progs/test_suite/gdbwire/gdbwire.cpp \
     src/progs/test_suite/main.cpp
 
 test_suite_CPPFLAGS = \
