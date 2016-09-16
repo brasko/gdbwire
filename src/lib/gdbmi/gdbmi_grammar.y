@@ -43,6 +43,8 @@ void gdbmi_error(yyscan_t yyscanner, struct gdbmi_output **gdbmi_output,
  * original characters that GDB was intending to transmit. So
  *   \" -> "
  *   \\ -> \
+ *   \n -> new line
+ *   \r -> carriage return
  *
  * See gdbmi_grammar.txt (GDB/MI Clarifications) for more information.
  *
@@ -68,7 +70,23 @@ static char *gdbmi_unescape_cstring(char *str)
 
     for (r = 0, s = 1; s < length - 1; ++s) {
         if (str[s] == '\\') {
-            result[r++] = str[++s];
+            switch (str[s+1]) {
+                case 'n':
+                    result[r++] = '\n';
+                    ++s;
+                    break;
+                case 'r':
+                    result[r++] = '\r';
+                    ++s;
+                    break;
+                case '"':
+                    break;
+                case '\\':
+                    break;
+                default:
+                    result[r++] = str[s];
+                    break;
+            }
         } else {
             result[r++] = str[s];
         }

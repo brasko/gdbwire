@@ -360,6 +360,27 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/basic.mi)
 }
 
 /**
+ * A single console output with many newlines in it.
+ */
+TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/manylines.mi)
+{
+    std::string expected =
+        "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
+        "This is free software: you are free to change and redistribute it.\n"
+        "There is NO WARRANTY, to the extent permitted by law.  Type \"show copying\"\n"
+        "and \"show warranty\" for details.\n";
+
+    struct gdbmi_oob_record *oob;
+    struct gdbmi_stream_record *stream;
+
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBMI_CONSOLE, expected);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
+}
+
+/**
  * All possible characters in the console output stream.
  *
  * The basic idea behind this test is to print a character array with
@@ -378,11 +399,11 @@ TEST_CASE_METHOD_N(GdbmiPtTest, oob_record/stream/console/characters.mi)
     std::string expected =
         "$1 = "
         "\"\\000\\001\\002\\003\\004\\005\\006\\a"
-        "\\b\\t\\n\\v\\f\\r\\016\\017"
+        "\\b\\t\n\\v\\f\r\\016\\017"
         "\\020\\021\\022\\023\\024\\025\\026\\027"
         "\\030\\031\\032\\033\\034\\035\\036\\037"
-        " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\\177"
+        " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\\177"
         "\\200\\201\\202\\203\\204\\205\\206\\207"
         "\\210\\211\\212\\213\\214\\215\\216\\217"
         "\\220\\221\\222\\223\\224\\225\\226\\227"

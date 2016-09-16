@@ -65,7 +65,7 @@ make install
 
 I typically enable more error checking with the build tools like so,
 
-> YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror" CXXFLAGS="-g -Wall -Werror" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples
+> YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror -O0" CXXFLAGS="-g -Wall -Werror -O0" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples --disable-shared
 
 If you like to have a silent build, and the libtool link lines are bothering
 you, you can set this environment variable to suppress libtools printing of
