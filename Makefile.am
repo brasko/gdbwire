@@ -14,20 +14,30 @@ lib_LTLIBRARIES=libgdbwire.la
 
 # The gdbwire configuration
 libgdbwire_la_SOURCES= \
+    src/gdbmi_grammar.h \
     src/gdbmi_grammar.y \
     src/gdbmi_lexer.l \
+    src/gdbmi_parser.h \
     src/gdbmi_parser.c \
+    src/gdbmi_pt.h \
     src/gdbmi_pt.c \
+    src/gdbmi_pt_alloc.h \
     src/gdbmi_pt_alloc.c \
+    src/gdbwire.h \
     src/gdbwire.c \
-    src/gdbwire_string.c \
-    src/gdbwire_logger.c
+    src/gdbwire_assert.h \
+    src/gdbwire_logger.h \
+    src/gdbwire_logger.c \
+    src/gdbwire_result.h \
+    src/gdbwire_string.h \
+    src/gdbwire_string.c
+
 libgdbwire_la_CFLAGS= \
 	-I@GDBWIRE_ABS_TOP_SRCDIR@/src \
 	-I@GDBWIRE_ABS_TOP_BUILDDIR@/src 
 
 # The test suite configuration
-test_suite_SOURCES = \
+nodist_test_suite_SOURCES = \
     src/progs/test_suite/gdbwire_string.cpp \
     src/progs/test_suite/fixture.cpp \
     src/progs/test_suite/gdbmi_parser.cpp \
