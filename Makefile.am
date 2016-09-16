@@ -7,6 +7,7 @@ endif
 
 if WANT_EXAMPLES
     noinst_PROGRAMS += examples/gdbmi
+    noinst_PROGRAMS += examples/gdbwire
 endif
 
 lib_LTLIBRARIES=libgdbwire.la
@@ -54,6 +55,18 @@ examples_gdbmi_CPPFLAGS = \
 examples_gdbmi_LDFLAGS =
 
 examples_gdbmi_LDADD = \
+    libgdbwire.la
+
+# The gdbwire example configuration
+examples_gdbwire_SOURCES = \
+    src/progs/examples/gdbwire_example.c
+
+examples_gdbwire_CPPFLAGS = \
+    -I@GDBWIRE_ABS_TOP_SRCDIR@/src/lib
+
+examples_gdbwire_LDFLAGS =
+
+examples_gdbwire_LDADD = \
     libgdbwire.la
 
 BUILT_SOURCES = \

@@ -7,16 +7,19 @@ namespace {
     struct GdbwireTest : public Fixture {};
 }
 
-TEST_CASE_METHOD_N(GdbwireTest, create)
+TEST_CASE_METHOD_N(GdbwireTest, create/normal)
 {
-    struct gdbwire *wire = gdbwire_create();
+    gdbwire_callbacks c = {};
+    struct gdbwire *wire = gdbwire_create(c);
     REQUIRE(wire);
     gdbwire_destroy(wire);
 }
 
 TEST_CASE_METHOD_N(GdbwireTest, destroy/normal)
 {
-    struct gdbwire *wire = gdbwire_create();
+    gdbwire_callbacks c = {};
+    struct gdbwire *wire = gdbwire_create(c);
+    REQUIRE(wire);
     gdbwire_destroy(wire);
 }
 

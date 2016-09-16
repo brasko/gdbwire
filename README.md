@@ -19,6 +19,8 @@ core features that make it unique.
 
 ## Examples
 
+### Low Level Interface
+
 GDBWIRE currently provides an example of the low level interface described
 above in the [gdbmi example](src/progs/examples/gdbmi_example.c) program.
 
@@ -30,6 +32,21 @@ This allows a user to interact with gdb in arbitrary ways from the
 command line. At the same time, the user can determine if the gdbmi
 parser is able to handle the gdbmi output created by gdb. If the GDBWIRE
 parser fails, it will output the GDB/MI line that it could not handle.
+
+### High Level Interface
+
+GDBWIRE currently provides an example of the high level interface described
+above in the [gdbwire example](src/progs/examples/gdbwire_example.c) program.
+
+This program is particularly useful when run from the command line, from the
+build directory, as follows,
+>   gdb -i=mi <gdb arguments> | examples/gdbwire
+
+This example is a work in progress. It will be modified in the future
+to invoke gdb itself, read gdb's output, send the output to gdbwire
+and handle the events that gdbwire creates. For now, this example
+demonstrates the ability of gdbwire to handle gdb's output and produce
+the appropriate events back to the caller.
 
 ## Build Instructions
 
