@@ -5,8 +5,9 @@
 extern "C" { 
 #endif 
 
-#include <logging/gdbwire_result.h>
-#include <gdbmi/gdbmi_pt.h>
+#include <stdlib.h>
+#include "logging/gdbwire_result.h"
+#include "gdbmi/gdbmi_pt.h"
 
 /* The opaque gdbwire context */
 struct gdbwire;

@@ -5,6 +5,8 @@
 extern "C" { 
 #endif 
 
+#include <stdlib.h>
+
 /**
  * A dynamic string representation.
  *
