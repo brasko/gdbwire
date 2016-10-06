@@ -102,9 +102,32 @@ namespace {
 }
 
 /**
+ * Test cases
+ * - [x] no breakpoints
+ * - [x] one breakpoint
+ * - [x] two breakpoints (to test next pointer)
+ * - [ ] multiple location breakpoints       
+ * -    [ ]
+ * - [ ] type field, null and not null
+ * - [ ] disposition field, all ways including unknown value
+ * - [ ] enabled: on and off
+ * - [ ] address, pending, multiple, address, null
+ * - [ ] func_name, null and valid
+ * - [ ] file, null and valid
+ * - [ ] fullname, null and valid
+ * - [ ] line, 0 or valid
+ * - [ ] times, 0 or valid
+ * - [ ] original_location, null and valid
+ * - [ ] pending, on and off
+ * - [ ] multi_breakpoint field
+ * - [ ] syntax errors and function response
+ * - [ ] invalid syntax with bkpt= not being there
+ */
+
+/**
  * The -break-info command. No breakpoints.
  */
-TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/no_breakpoints.mi)
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/no_bkpt.mi)
 {
     gdbwire_result result;
     gdbwire_mi_command *com = 0;
@@ -124,7 +147,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/no_breakpoints.mi)
  *
  * A normal breakpoint at main.
  */
-TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/normal_breakpoint.mi)
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/one_bkpt.mi)
 {
     gdbwire_result result;
     gdbwire_mi_command *com = 0;
@@ -171,7 +194,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/normal_breakpoint.mi)
  *
  * Two normal breakpoints.
  */
-TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/two_normal_breakpoints.mi)
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/two_bkpts.mi)
 {
     gdbwire_result result;
     gdbwire_mi_command *com = 0;
