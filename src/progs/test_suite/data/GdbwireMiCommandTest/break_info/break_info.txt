@@ -1,0 +1,76 @@
+The breakpoint model in GDB is fairly complicated. It helps to see what
+the MI output looks like for several different kinds of breakpoints in
+order to understand what a breakpoint is.
+
+Here is some MI output for GDB 7.11.1.
+
+/* A normal breakpoint on main (ie. b main) */
+    {
+        number="2",
+        type="breakpoint",
+        disp="keep",
+        enabled="y",
+        addr="0x00000000004004fa",
+        func="main()",
+        file="main.cpp",
+        fullname="/home/foo/main.cpp",
+        line="10",
+        thread-groups=["i1"],
+        times="0",
+        original-location="main"
+    }
+
+/* A multiple location breakpoint (ie. b foo) */
+    bkpt={
+        number="1",
+        type="breakpoint",
+        disp="keep",
+        enabled="y",
+        addr="<MULTIPLE>",
+        times="0",
+        original-location="foo"
+    },
+    {
+        number="1.1",
+        enabled="y",
+        addr="0x00000000004004dd",
+        func="foo(int)",
+        file="main.cpp",
+        fullname="/home/bob/rcs/git/cgdb/master/build/t/main.cpp",
+        line="2",
+        thread-groups=["i1"]
+    },
+    {
+        number="1.2",
+        enabled="y",
+        addr="0x00000000004004eb",
+        func="foo(double)",
+        file="main.cpp",
+        fullname="/home/bob/rcs/git/cgdb/master/build/t/main.cpp",
+        line="6",
+        thread-groups=["i1"]
+    },
+
+/* A watch point (ie. watch argv[0]) */
+    {
+        number="2",
+        type="hw watchpoint",
+        disp="keep",
+        enabled="y",
+        what="argv[0]",
+        times="0",
+        original-location="argv[0]"
+    }
+
+/* A catch throw (ie. catch throw) */
+{
+    number="3",
+    type="breakpoint",
+    disp="keep",
+    enabled="y",
+    addr="<PENDING>",
+    what="exception throw",
+    catch-type="throw",
+    times="0"
+}
+

@@ -1,8 +1,301 @@
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "gdbwire_assert.h"
 #include "gdbwire_mi_command.h"
+
+/**
+ * Free a source file list.
+ *
+ * @param files
+ * The source file list to free, OK to pass in NULL.
+ */
+static void
+gdbwire_mi_source_files_free(struct gdbwire_mi_source_file *files)
+{
+    struct gdbwire_mi_source_file *tmp, *cur = files;
+    while (cur) {
+        free(cur->file);
+        free(cur->fullname);
+        tmp = cur;
+        cur = cur->next;
+        free(tmp);
+    }
+}
+
+/**
+ * Free a breakpoint list.
+ *
+ * @param breakpoints
+ * The breakpoint list to free, OK to pass in NULL.
+ */
+static void
+gdbwire_mi_breakpoints_free(struct gdbwire_mi_breakpoint *breakpoints)
+{
+    struct gdbwire_mi_breakpoint *tmp, *cur = breakpoints;
+    while (cur) {
+        free(cur->original_location);
+        free(cur->fullname);
+        free(cur->file);
+        free(cur->func_name);
+        free(cur->address);
+        free(cur->type);
+        free(cur->number);
+
+        tmp = cur;
+        cur = cur->next;
+        free(tmp);
+    }
+}
+
+/**
+ * Convert a string to an unsigned long.
+ *
+ * @param str
+ * The string to convert.
+ *
+ * @param num
+ * If GDBWIRE_OK is returned, this will be returned as the number.
+ *
+ * @return
+ * GDBWIRE_OK on success, and num is valid, or GDBWIRE_LOGIC on failure.
+ */
+static enum gdbwire_result
+gdbwire_string_to_ulong(char *str, unsigned long *num)
+{
+    enum gdbwire_result result = GDBWIRE_LOGIC;
+    unsigned long int strtol_result;
+    char *end_ptr;
+
+    GDBWIRE_ASSERT(str);
+    GDBWIRE_ASSERT(num);
+
+    errno = 0;
+    strtol_result = strtoul(str, &end_ptr, 10);
+    if (errno == 0 && str != end_ptr && *end_ptr == '\0') {
+        *num = strtol_result;
+        result = GDBWIRE_OK;
+    }
+
+    return result;
+}
+
+/**
+ * Handle breakpoints from the -break-info command.
+ *
+ * @param mi_result
+ * The mi parse tree starting from bkpt={...}
+ *
+ * @param bkpt
+ * Allocated breakpoint on way out on success. Otherwise NULL on way out.
+ *
+ * @return
+ * GDBWIRE_OK on success and bkpt is an allocated breakpoint. Otherwise
+ * the appropriate error code and bkpt will be NULL.
+ */
+static enum gdbwire_result
+break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
+        struct gdbwire_mi_breakpoint **bkpt)
+{
+    enum gdbwire_result result = GDBWIRE_OK;
+
+    struct gdbwire_mi_breakpoint *breakpoint = 0;
+
+    char *number = 0;
+    int multi = 0;
+    int pending = 0;
+    int enabled = 0;
+    char *address = 0;
+    char *type = 0;
+    enum gdbwire_mi_breakpoint_disp_kind disp_kind;
+    char *func_name = 0;
+    char *file = 0;
+    char *fullname = 0;
+    unsigned long line = 0;
+    unsigned long times = 0;
+    char *original_location = 0;
+
+    GDBWIRE_ASSERT(mi_result);
+    GDBWIRE_ASSERT(bkpt);
+
+    *bkpt = 0;
+
+    while (mi_result) {
+        if (mi_result->kind == GDBWIRE_MI_CSTRING) {
+            if (strcmp(mi_result->variable, "number") == 0) {
+                number = mi_result->variant.cstring;
+            } else if (strcmp(mi_result->variable, "enabled") == 0) {
+                enabled = mi_result->variant.cstring[0] == 'y';
+            } else if (strcmp(mi_result->variable, "addr") == 0) {
+                multi = strcmp(mi_result->variant.cstring, "<MULTIPLE>") == 0;
+                pending = strcmp(mi_result->variant.cstring, "<PENDING>") == 0;
+                if (!multi && !pending) {
+                    address = mi_result->variant.cstring;
+                }
+            } else if (strcmp(mi_result->variable, "type") == 0) {
+                type = mi_result->variant.cstring;
+            } else if (strcmp(mi_result->variable, "disp") == 0) {
+                if (strcmp(mi_result->variant.cstring, "del") == 0) {
+                    disp_kind = GDBWIRE_MI_BP_DISP_DELETE;
+                } else if (strcmp(mi_result->variant.cstring, "dstp") == 0) {
+                    disp_kind = GDBWIRE_MI_BP_DISP_DELETE_NEXT_STOP;
+                } else if (strcmp(mi_result->variant.cstring, "dis") == 0) {
+                    disp_kind = GDBWIRE_MI_BP_DISP_DISABLE;
+                } else if (strcmp(mi_result->variant.cstring, "keep") == 0) {
+                    disp_kind = GDBWIRE_MI_BP_DISP_KEEP;
+                } else {
+                    return GDBWIRE_LOGIC;
+                }
+            } else if (strcmp(mi_result->variable, "func") == 0) {
+                func_name = mi_result->variant.cstring;
+            } else if (strcmp(mi_result->variable, "file") == 0) {
+                file = mi_result->variant.cstring;
+            } else if (strcmp(mi_result->variable, "fullname") == 0) {
+                fullname = mi_result->variant.cstring;
+            } else if (strcmp(mi_result->variable, "line") == 0) {
+                GDBWIRE_ASSERT(gdbwire_string_to_ulong(
+                        mi_result->variant.cstring, &line) == GDBWIRE_OK);
+            } else if (strcmp(mi_result->variable, "times") == 0) {
+                GDBWIRE_ASSERT(gdbwire_string_to_ulong(
+                        mi_result->variant.cstring, &times) == GDBWIRE_OK);
+            } else if (strcmp(mi_result->variable, "original-location") == 0) {
+                original_location = mi_result->variant.cstring;
+            }
+        }
+
+        mi_result = mi_result->next;
+    }
+
+    /* At this point, allocate a breakpoint */
+    breakpoint = calloc(1, sizeof(struct gdbwire_mi_breakpoint));
+    if (!breakpoint) {
+        return GDBWIRE_NOMEM;
+    }
+
+    breakpoint->multi = multi;
+    breakpoint->number = strdup(number);
+    breakpoint->type = (type)?strdup(type):0;
+    breakpoint->disposition = disp_kind;
+    breakpoint->enabled = enabled;
+    breakpoint->address = (address)?strdup(address):0;
+    breakpoint->func_name = (func_name)?strdup(func_name):0;
+    breakpoint->file = (file)?strdup(file):0;
+    breakpoint->fullname = (fullname)?strdup(fullname):0;
+    breakpoint->line = line;
+    breakpoint->times = times;
+    breakpoint->original_location =
+        (original_location)?strdup(original_location):0;
+    breakpoint->pending = pending;
+
+    /* Handle the out of memory situation */
+    if (!breakpoint->number ||
+        (type && !breakpoint->type) ||
+        (address && !breakpoint->address) ||
+        (func_name && !breakpoint->func_name) ||
+        (file && !breakpoint->file) ||
+        (fullname && !breakpoint->fullname) ||
+        (original_location && !breakpoint->original_location)) {
+        gdbwire_mi_breakpoints_free(breakpoint);
+        result = GDBWIRE_NOMEM;
+    }
+
+    *bkpt = breakpoint;
+
+    return result;
+}
+
+/**
+ * Handle the -break-info command.
+ *
+ * @param result_record
+ * The mi result record that makes up the command output from gdb.
+ *
+ * @param out
+ * The output command, null on error.
+ *
+ * @return
+ * GDBWIRE_OK on success, otherwise failure and out is NULL.
+ */
+static enum gdbwire_result
+break_info(
+    struct gdbwire_mi_result_record *result_record,
+    struct gdbwire_mi_command **out)
+{
+    enum gdbwire_result result = GDBWIRE_OK;
+    struct gdbwire_mi_result *mi_result;
+    struct gdbwire_mi_command *mi_command = 0;
+    struct gdbwire_mi_breakpoint *breakpoints = 0, *cur_bkpt;
+    int found_body = 0;
+
+    GDBWIRE_ASSERT(result_record);
+    GDBWIRE_ASSERT(out);
+
+    *out = 0;
+
+    GDBWIRE_ASSERT(result_record->result_class == GDBWIRE_MI_DONE);
+    GDBWIRE_ASSERT(result_record->result);
+
+    mi_result = result_record->result;
+
+    GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_TUPLE);
+    GDBWIRE_ASSERT(strcmp(mi_result->variable, "BreakpointTable") == 0);
+    GDBWIRE_ASSERT(mi_result->variant.result);
+    GDBWIRE_ASSERT(!mi_result->next);
+    mi_result = mi_result->variant.result;
+
+    /* Fast forward to the body */
+    while (mi_result) {
+        if (mi_result->kind == GDBWIRE_MI_LIST &&
+            strcmp(mi_result->variable, "body") == 0) {
+            found_body = 1;
+            break;
+        } else {
+            mi_result = mi_result->next;
+        }
+    }
+
+    GDBWIRE_ASSERT(found_body);
+    GDBWIRE_ASSERT(!mi_result->next);
+    mi_result = mi_result->variant.result;
+
+    while (mi_result) {
+        struct gdbwire_mi_breakpoint *bkpt;
+        GDBWIRE_ASSERT_GOTO(
+            mi_result->kind == GDBWIRE_MI_TUPLE, result, cleanup);
+        GDBWIRE_ASSERT_GOTO(
+            strcmp(mi_result->variable, "bkpt") == 0, result, cleanup);
+
+        result = break_info_for_breakpoint(mi_result->variant.result, &bkpt);
+        if (result != GDBWIRE_OK) {
+            goto cleanup;
+        }
+
+        if (breakpoints) {
+            cur_bkpt->next = bkpt;
+            cur_bkpt = cur_bkpt->next;
+        } else {
+            breakpoints = cur_bkpt = bkpt;
+        }
+
+        mi_result = mi_result->next;
+    }
+
+    mi_command = calloc(1, sizeof(struct gdbwire_mi_command));
+    if (!mi_command) {
+        result = GDBWIRE_NOMEM;
+        goto cleanup;
+    }
+    mi_command->variant.break_info.breakpoints = breakpoints;
+
+    *out = mi_command;
+
+    return result;
+
+cleanup:
+    gdbwire_mi_breakpoints_free(breakpoints);
+    return result;
+}
 
 /**
  * Handle the -file-list-exec-source-file command.
@@ -185,17 +478,7 @@ file_list_exec_source_files(
     return result;
 
 err:
-    {
-        struct gdbwire_mi_source_file *tmp, *cur = files;
-        while (cur) {
-            free(cur->file);
-            free(cur->fullname);
-            tmp = cur;
-            cur = cur->next;
-            free(tmp);
-        }
-    }
-    
+    gdbwire_mi_source_files_free(files); 
 
     return result;
 }
@@ -213,6 +496,9 @@ gdbwire_get_mi_command(enum gdbwire_mi_command_kind kind,
     *out = 0;
 
     switch (kind) {
+        case GDBWIRE_MI_BREAK_INFO:
+            result = break_info(result_record, out);
+            break;
         case GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE:
             result = file_list_exec_source_file(result_record, out);
             break;
@@ -228,22 +514,18 @@ void gdbwire_mi_command_free(struct gdbwire_mi_command *mi_command)
 {
     if (mi_command) {
         switch (mi_command->kind) {
+            case GDBWIRE_MI_BREAK_INFO:
+                gdbwire_mi_breakpoints_free(
+                    mi_command->variant.break_info.breakpoints);
+                break;
             case GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE:
                 free(mi_command->variant.file_list_exec_source_file.file);
                 free(mi_command->variant.file_list_exec_source_file.fullname);
                 break;
-            case GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES: {
-                struct gdbwire_mi_source_file *tmp, *cur = 
-                    mi_command->variant.file_list_exec_source_files.files;
-                while (cur) {
-                    free(cur->file);
-                    free(cur->fullname);
-                    tmp = cur;
-                    cur = cur->next;
-                    free(tmp);
-                }
+            case GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES:
+                gdbwire_mi_source_files_free(
+                    mi_command->variant.file_list_exec_source_files.files);
                 break;
-            }
         }
 
         free(mi_command);

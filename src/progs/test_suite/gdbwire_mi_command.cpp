@@ -13,6 +13,8 @@
  */
 
 namespace {
+    std::string typeBreakpoint = "breakpoint";
+
     struct GdbwireMiCommandCallback {
         GdbwireMiCommandCallback() : m_output(0) {
             callbacks.context = (void*)this;
@@ -97,6 +99,71 @@ namespace {
         gdbwire_mi_output *output;
         gdbwire_mi_result_record *result_record;
     };
+}
+
+/**
+ * The -break-info command. No breakpoints.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/no_breakpoints.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_BREAK_INFO);
+    REQUIRE(!com->variant.break_info.breakpoints);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The -break-info command.
+ *
+ * A normal breakpoint at main.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/normal_breakpoint.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_breakpoint *breakpoint;
+
+    std::string expectedNumber = "1";
+    std::string expectedAddress = "0x0000000000400501";
+    std::string expectedFuncName = "main(int, char**)";
+    std::string expectedFile = "main.cpp";
+    std::string expectedFullname = "/home/foo/main.cpp";
+    std::string expectedOriginalLocation = "main";
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_BREAK_INFO);
+    REQUIRE(com->variant.break_info.breakpoints);
+
+    breakpoint = com->variant.break_info.breakpoints;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == expectedNumber);
+    REQUIRE(!breakpoint->multi);
+    REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address == expectedAddress);
+    REQUIRE(breakpoint->func_name == expectedFuncName);
+    REQUIRE(breakpoint->file == expectedFile);
+    REQUIRE(breakpoint->fullname == expectedFullname);
+    REQUIRE(breakpoint->line == 10);
+    REQUIRE(breakpoint->times == 0);
+    REQUIRE(breakpoint->original_location == expectedOriginalLocation);
+    REQUIRE(!breakpoint->pending);
+    REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(!breakpoint->next);
+    
+
+    gdbwire_mi_command_free(com);
 }
 
 /**
