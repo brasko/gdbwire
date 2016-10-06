@@ -107,10 +107,10 @@ namespace {
  * - [x] one breakpoint
  * - [x] two breakpoints (to test next pointer)
  * - [ ] multiple location breakpoints       
- * -    [ ] normal
+ * -    [x] normal
  * -    [ ] child enabled/disabled
- * - [ ] type field, null and not null
- * - [ ] disposition field, all ways including unknown value
+ * - [x] type field, null and not null
+ * - [x] disposition field, all ways including unknown value
  * - [ ] enabled: on and off
  * - [ ] address, pending, multiple, address, null
  * - [ ] func_name, null and valid
