@@ -162,7 +162,78 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/normal_breakpoint.mi)
     REQUIRE(!breakpoint->multi_breakpoints);
     REQUIRE(!breakpoint->next);
     
+    gdbwire_mi_command_free(com);
+}
 
+
+/**
+ * The -break-info command.
+ *
+ * Two normal breakpoints.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/two_normal_breakpoints.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_breakpoint *breakpoint;
+
+    std::string expected1Number = "1";
+    std::string expected1Address = "0x0000000000400501";
+    std::string expected1FuncName = "main(int, char**)";
+    std::string expected1File = "main.cpp";
+    std::string expected1Fullname = "/home/foo/main.cpp";
+    std::string expected1OriginalLocation = "main";
+
+    std::string expected2Number = "2";
+    std::string expected2Address = "0x00000000004004eb";
+    std::string expected2FuncName = "foo(double)";
+    std::string expected2File = "main.cpp";
+    std::string expected2Fullname = "/home/foo/main.cpp";
+    std::string expected2OriginalLocation = "main.cpp:6";
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_BREAK_INFO);
+    REQUIRE(com->variant.break_info.breakpoints);
+
+    breakpoint = com->variant.break_info.breakpoints;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == expected1Number);
+    REQUIRE(!breakpoint->multi);
+    REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address == expected1Address);
+    REQUIRE(breakpoint->func_name == expected1FuncName);
+    REQUIRE(breakpoint->file == expected1File);
+    REQUIRE(breakpoint->fullname == expected1Fullname);
+    REQUIRE(breakpoint->line == 10);
+    REQUIRE(breakpoint->times == 0);
+    REQUIRE(breakpoint->original_location == expected1OriginalLocation);
+    REQUIRE(!breakpoint->pending);
+    REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(breakpoint->next);
+
+    breakpoint = breakpoint->next;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == expected2Number);
+    REQUIRE(!breakpoint->multi);
+    REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address == expected2Address);
+    REQUIRE(breakpoint->func_name == expected2FuncName);
+    REQUIRE(breakpoint->file == expected2File);
+    REQUIRE(breakpoint->fullname == expected2Fullname);
+    REQUIRE(breakpoint->line == 6);
+    REQUIRE(breakpoint->times == 0);
+    REQUIRE(breakpoint->original_location == expected2OriginalLocation);
+    REQUIRE(!breakpoint->pending);
+    REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(!breakpoint->next);
+    
     gdbwire_mi_command_free(com);
 }
 
