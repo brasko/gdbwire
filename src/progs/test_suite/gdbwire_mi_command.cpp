@@ -108,7 +108,7 @@ namespace {
  * - [x] two breakpoints (to test next pointer)
  * - [ ] multiple location breakpoints       
  * -    [x] normal
- * -    [ ] child enabled/disabled
+ * -    [x] child enabled/disabled
  * - [x] type field, null and not null
  * - [x] disposition field, all ways including unknown value
  * - [x] enabled: on and off
@@ -389,6 +389,66 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/enable.mi)
     REQUIRE(breakpoint->number);
     REQUIRE(breakpoint->number == std::string("2"));
     REQUIRE(!breakpoint->enabled);
+    REQUIRE(!breakpoint->next);
+    
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The -break-info command.
+ *
+ * The enable field for multiple location breakpoints.
+ *
+ * Show that the multiple location breakpoint can be enabled but a
+ * breakpoint created from the multiple location breakpoint can be disabled.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/enable_multi_loc.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_breakpoint *breakpoint;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_BREAK_INFO);
+    REQUIRE(com->variant.break_info.breakpoints);
+
+    /* The first multi-location breakpoint is enabled
+     * - the first child is enabled
+     * - the second child is disabled
+     */
+    breakpoint = com->variant.break_info.breakpoints;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("1"));
+    REQUIRE(breakpoint->multi);
+    REQUIRE(breakpoint->enabled);
+
+    REQUIRE(breakpoint->multi_breakpoints);
+    REQUIRE(breakpoint->multi_breakpoints->enabled);
+
+    REQUIRE(breakpoint->multi_breakpoints->next);
+    REQUIRE(!breakpoint->multi_breakpoints->next->enabled);
+
+    REQUIRE(breakpoint->next);
+
+    
+    /* The first multi-location breakpoint is disabled
+     * - the first child is disabled
+     * - the second child is enabled
+     */
+    breakpoint = breakpoint->next;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("2"));
+    REQUIRE(!breakpoint->enabled);
+
+    REQUIRE(breakpoint->multi_breakpoints);
+    REQUIRE(!breakpoint->multi_breakpoints->enabled);
+
+    REQUIRE(breakpoint->multi_breakpoints->next);
+    REQUIRE(breakpoint->multi_breakpoints->next->enabled);
+
     REQUIRE(!breakpoint->next);
     
     gdbwire_mi_command_free(com);
