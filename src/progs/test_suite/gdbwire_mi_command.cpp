@@ -112,7 +112,7 @@ namespace {
  * - [x] type field, null and not null
  * - [x] disposition field, all ways including unknown value
  * - [x] enabled: on and off
- * - [ ] address, pending, multiple, address, null
+ * - [x] address, pending, multiple, address, null
  * - [ ] func_name, null and valid
  * - [ ] file, null and valid
  * - [ ] fullname, null and valid
@@ -449,6 +449,53 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/enable_multi_loc.mi)
     REQUIRE(breakpoint->multi_breakpoints->next);
     REQUIRE(breakpoint->multi_breakpoints->next->enabled);
 
+    REQUIRE(!breakpoint->next);
+    
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The -break-info command.
+ *
+ * The address field. Show the cases that we know about,
+ * - a hexidecimal address
+ * - <MULTIPLE>
+ * - <PENDING>
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/address.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_breakpoint *breakpoint;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_BREAK_INFO);
+    REQUIRE(com->variant.break_info.breakpoints);
+
+    breakpoint = com->variant.break_info.breakpoints;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("1"));
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("0x0000000000400501"));
+    REQUIRE(breakpoint->next);
+
+    breakpoint = breakpoint->next;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("2"));
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("<MULTIPLE>"));
+    REQUIRE(breakpoint->multi);
+    REQUIRE(breakpoint->next);
+
+    breakpoint = breakpoint->next;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("3"));
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("<PENDING>"));
+    REQUIRE(breakpoint->pending);
     REQUIRE(!breakpoint->next);
     
     gdbwire_mi_command_free(com);
