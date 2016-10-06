@@ -173,6 +173,9 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
         mi_result = mi_result->next;
     }
 
+    /* Validate required fields before proceeding. */
+    GDBWIRE_ASSERT(number);
+
     /* At this point, allocate a breakpoint */
     breakpoint = calloc(1, sizeof(struct gdbwire_mi_breakpoint));
     if (!breakpoint) {

@@ -102,31 +102,6 @@ namespace {
 }
 
 /**
- * Test cases
- * - [x] no breakpoints
- * - [x] one breakpoint
- * - [x] two breakpoints (to test next pointer)
- * - [ ] multiple location breakpoints       
- * -    [x] normal
- * -    [x] child enabled/disabled
- * - [x] type field, null and not null
- * - [x] disposition field, all ways including unknown value
- * - [x] enabled: on and off
- * - [x] address, pending, multiple, address, null
- * - [ ] func_name, null and valid
- * - [ ] file, null and valid
- * - [ ] fullname, null and valid
- * - [ ] line, 0 or valid
- * - [ ] times, 0 or valid
- * - [ ] original_location, null and valid
- * - [ ] pending, on and off
- * - [ ] multi_breakpoints field
- * - [ ] multi_breakpoint field
- * - [ ] syntax errors and function response
- * - [ ] invalid syntax with bkpt= not being there
- */
-
-/**
  * The -break-info command. No breakpoints.
  */
 TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/no_bkpt.mi)
@@ -499,6 +474,22 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/address.mi)
     REQUIRE(!breakpoint->next);
     
     gdbwire_mi_command_free(com);
+}
+
+/**
+ * The -break-info command.
+ *
+ * Fail, no number field.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/no_number.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+
+    REQUIRE(!com);
 }
 
 /**
