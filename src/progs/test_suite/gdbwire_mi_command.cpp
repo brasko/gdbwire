@@ -479,7 +479,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/address.mi)
 /**
  * The -break-info command.
  *
- * A normal watchpoint.
+ * A normal watchpoint (ie. watch argv[0]).
  */
 TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/watchpoint.mi)
 {
@@ -509,8 +509,52 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/watchpoint.mi)
     REQUIRE(!breakpoint->fullname);
     REQUIRE(breakpoint->line == 0);
     REQUIRE(breakpoint->times == 0);
+    REQUIRE(breakpoint->original_location);
     REQUIRE(breakpoint->original_location == std::string("argv[0]"));
     REQUIRE(!breakpoint->pending);
+    REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(!breakpoint->multi_breakpoint);
+    REQUIRE(!breakpoint->next);
+    
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The -break-info command.
+ *
+ * A normal catch point (ie. catch throw).
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/catchpoint.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_breakpoint *breakpoint;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_BREAK_INFO);
+    REQUIRE(com->variant.break_info.breakpoints);
+
+    breakpoint = com->variant.break_info.breakpoints;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("1"));
+    REQUIRE(!breakpoint->multi);
+    REQUIRE(!breakpoint->from_multi);
+    REQUIRE(breakpoint->type);
+    REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("<PENDING>"));
+    REQUIRE(!breakpoint->func_name);
+    REQUIRE(!breakpoint->file);
+    REQUIRE(!breakpoint->fullname);
+    REQUIRE(breakpoint->line == 0);
+    REQUIRE(breakpoint->times == 0);
+    REQUIRE(!breakpoint->original_location);
+    REQUIRE(breakpoint->pending);
     REQUIRE(!breakpoint->multi_breakpoints);
     REQUIRE(!breakpoint->multi_breakpoint);
     REQUIRE(!breakpoint->next);
