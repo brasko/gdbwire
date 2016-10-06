@@ -36,7 +36,8 @@ enum gdbwire_mi_breakpoint_disp_kind {
     GDBWIRE_MI_BP_DISP_DELETE,           /** Delete on next hit */
     GDBWIRE_MI_BP_DISP_DELETE_NEXT_STOP, /** Delete on next stop, hit or not */
     GDBWIRE_MI_BP_DISP_DISABLE,          /** Disable on next hit */
-    GDBWIRE_MI_BP_DISP_KEEP              /** Leave the breakpoint in place */
+    GDBWIRE_MI_BP_DISP_KEEP,             /** Leave the breakpoint in place */
+    GDBWIRE_MI_BP_DISP_UNKNOWN           /** When GDB doesn't specify */
 };
 
 /**
@@ -83,9 +84,21 @@ struct gdbwire_mi_breakpoint {
      * Then gdb will only create a single breakpoint which would look like,
      *   1       breakpoint     keep y   0x4004fa in main() at main.cpp:3
      *
-     * When this is true, the address field will be "<MULTIPLE>".
+     * When this is true, the address field will be "<MULTIPLE>" and
+     * the field multi_breakpoints will represent the breakpoints that this
+     * multiple location breakpoint has created.
      */
     unsigned char multi:1;
+    
+    /**
+     * True for breakpoints of a multi-location breakpoint, otherwise false.
+     *
+     * For the example above, 1.1 and 1.2 would have this field set true.
+     *
+     * When this is true, the field multi_breakpoint will represent
+     * the multiple location breakpoint that has created this breakpoint.
+     */
+    unsigned char from_multi:1;
 
     /**
      * The breakpoint type.
@@ -95,10 +108,19 @@ struct gdbwire_mi_breakpoint {
      * to see all the different possibilities.
      *
      * This will be NULL for breakpoints of a multiple location breakpoint.
+     * In this circumstance, check the multi_breakpoint field for the
+     * multiple location breakpoint type field.
      */
     char *type;
 
-    /** The breakpoint disposition */
+    /**
+     * The breakpoint disposition.
+     *
+     * For multiple location breakpoints, this will be
+     * GDBWIRE_MI_BP_DISP_UNKNOWN. In this circumstance, check the
+     * multi_breakpoint field for the multiple location breakpoint
+     * disposition field.
+     */
     enum gdbwire_mi_breakpoint_disp_kind disposition;
 
     /** True if enabled or False if disabled. */
@@ -166,6 +188,18 @@ struct gdbwire_mi_breakpoint {
      * multiple location breakpoint. Otherwise will be NULL.
      */
     struct gdbwire_mi_breakpoint *multi_breakpoints;
+
+    /**
+     * A pointer to the multi location breakpoint that created this breakpoint.
+     *
+     * When the field from_multi is true, this will be a pointer to the
+     * multi-location breakpoint that created this breakpoint. Otherwise NULL.
+     *
+     * For the example above in the multi field, breakpoints 1.1 and 1.2
+     * would have this field pointing to the breakpoint 1.
+     */
+    struct gdbwire_mi_breakpoint *multi_breakpoint;
+
 
     /** The next breakpoint or NULL if no more. */
     struct gdbwire_mi_breakpoint *next;

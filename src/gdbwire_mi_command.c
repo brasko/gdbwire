@@ -43,6 +43,9 @@ gdbwire_mi_breakpoints_free(struct gdbwire_mi_breakpoint *breakpoints)
         free(cur->type);
         free(cur->number);
 
+        gdbwire_mi_breakpoints_free(cur->multi_breakpoints);
+        cur->multi_breakpoint = 0;
+
         tmp = cur;
         cur = cur->next;
         free(tmp);
@@ -104,11 +107,12 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
 
     char *number = 0;
     int multi = 0;
+    int from_multi = 0;
     int pending = 0;
     int enabled = 0;
     char *address = 0;
     char *type = 0;
-    enum gdbwire_mi_breakpoint_disp_kind disp_kind;
+    enum gdbwire_mi_breakpoint_disp_kind disp_kind = GDBWIRE_MI_BP_DISP_UNKNOWN;
     char *func_name = 0;
     char *file = 0;
     char *fullname = 0;
@@ -125,14 +129,16 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
         if (mi_result->kind == GDBWIRE_MI_CSTRING) {
             if (strcmp(mi_result->variable, "number") == 0) {
                 number = mi_result->variant.cstring;
+
+                if (strstr(number, ".") != NULL) {
+                    from_multi = 1;
+                }
             } else if (strcmp(mi_result->variable, "enabled") == 0) {
                 enabled = mi_result->variant.cstring[0] == 'y';
             } else if (strcmp(mi_result->variable, "addr") == 0) {
                 multi = strcmp(mi_result->variant.cstring, "<MULTIPLE>") == 0;
                 pending = strcmp(mi_result->variant.cstring, "<PENDING>") == 0;
-                if (!multi && !pending) {
-                    address = mi_result->variant.cstring;
-                }
+                address = mi_result->variant.cstring;
             } else if (strcmp(mi_result->variable, "type") == 0) {
                 type = mi_result->variant.cstring;
             } else if (strcmp(mi_result->variable, "disp") == 0) {
@@ -174,6 +180,7 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
     }
 
     breakpoint->multi = multi;
+    breakpoint->from_multi = from_multi;
     breakpoint->number = strdup(number);
     breakpoint->type = (type)?strdup(type):0;
     breakpoint->disposition = disp_kind;
@@ -263,19 +270,53 @@ break_info(
         struct gdbwire_mi_breakpoint *bkpt;
         GDBWIRE_ASSERT_GOTO(
             mi_result->kind == GDBWIRE_MI_TUPLE, result, cleanup);
-        GDBWIRE_ASSERT_GOTO(
-            strcmp(mi_result->variable, "bkpt") == 0, result, cleanup);
+
+        /**
+         * GDB emits non-compliant MI when sending breakpoint information.
+         *   https://sourceware.org/bugzilla/show_bug.cgi?id=9659
+         * In particular, instead of saying
+         *   bkpt={...},bkpt={...}
+         * it puts out,
+         *   bkpt={...},{...}
+         * skipping the additional bkpt for subsequent breakpoints. I've seen
+         * this output for multiple location breakpoints as the bug points to.
+         *
+         * For this reason, only check bkpt for the first breakpoint and
+         * assume it is true for the remaining.
+         */
+        if (mi_result->variable) {
+            GDBWIRE_ASSERT_GOTO(
+                strcmp(mi_result->variable, "bkpt") == 0, result, cleanup);
+        }
 
         result = break_info_for_breakpoint(mi_result->variant.result, &bkpt);
         if (result != GDBWIRE_OK) {
             goto cleanup;
         }
 
-        if (breakpoints) {
-            cur_bkpt->next = bkpt;
-            cur_bkpt = cur_bkpt->next;
+        if (bkpt->from_multi) {
+
+            bkpt->multi_breakpoint = cur_bkpt;
+
+            /* Append breakpoint to the multiple location breakpoints */
+            if (cur_bkpt->multi_breakpoints) {
+                struct gdbwire_mi_breakpoint *multi =
+                    cur_bkpt->multi_breakpoints;
+                while (multi->next) {
+                    multi = multi->next;
+                }
+                multi->next = bkpt;
+            } else {
+                cur_bkpt->multi_breakpoints = bkpt;
+            }
         } else {
-            breakpoints = cur_bkpt = bkpt;
+            /* Append breakpoint to the list of breakpoints */
+            if (breakpoints) {
+                cur_bkpt->next = bkpt;
+                cur_bkpt = cur_bkpt->next;
+            } else {
+                breakpoints = cur_bkpt = bkpt;
+            }
         }
 
         mi_result = mi_result->next;

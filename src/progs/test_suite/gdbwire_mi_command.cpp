@@ -107,7 +107,8 @@ namespace {
  * - [x] one breakpoint
  * - [x] two breakpoints (to test next pointer)
  * - [ ] multiple location breakpoints       
- * -    [ ]
+ * -    [ ] normal
+ * -    [ ] child enabled/disabled
  * - [ ] type field, null and not null
  * - [ ] disposition field, all ways including unknown value
  * - [ ] enabled: on and off
@@ -119,6 +120,7 @@ namespace {
  * - [ ] times, 0 or valid
  * - [ ] original_location, null and valid
  * - [ ] pending, on and off
+ * - [ ] multi_breakpoints field
  * - [ ] multi_breakpoint field
  * - [ ] syntax errors and function response
  * - [ ] invalid syntax with bkpt= not being there
@@ -153,12 +155,51 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/one_bkpt.mi)
     gdbwire_mi_command *com = 0;
     gdbwire_mi_breakpoint *breakpoint;
 
-    std::string expectedNumber = "1";
-    std::string expectedAddress = "0x0000000000400501";
-    std::string expectedFuncName = "main(int, char**)";
-    std::string expectedFile = "main.cpp";
-    std::string expectedFullname = "/home/foo/main.cpp";
-    std::string expectedOriginalLocation = "main";
+    result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_BREAK_INFO);
+    REQUIRE(com->variant.break_info.breakpoints);
+
+    breakpoint = com->variant.break_info.breakpoints;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("1"));
+    REQUIRE(!breakpoint->multi);
+    REQUIRE(!breakpoint->from_multi);
+    REQUIRE(breakpoint->type);
+    REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("0x0000000000400501"));
+    REQUIRE(breakpoint->func_name);
+    REQUIRE(breakpoint->func_name == std::string("main(int, char**)"));
+    REQUIRE(breakpoint->file);
+    REQUIRE(breakpoint->file == std::string("main.cpp"));
+    REQUIRE(breakpoint->fullname);
+    REQUIRE(breakpoint->fullname == std::string("/home/foo/main.cpp"));
+    REQUIRE(breakpoint->line == 10);
+    REQUIRE(breakpoint->times == 0);
+    REQUIRE(breakpoint->original_location == std::string("main"));
+    REQUIRE(!breakpoint->pending);
+    REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(!breakpoint->multi_breakpoint);
+    REQUIRE(!breakpoint->next);
+    
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The -break-info command.
+ *
+ * A multiple location breakpoint.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/multi_bkpt.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_breakpoint *breakpoint;
 
     result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
     REQUIRE(result == GDBWIRE_OK);
@@ -169,25 +210,83 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/one_bkpt.mi)
 
     breakpoint = com->variant.break_info.breakpoints;
     REQUIRE(breakpoint->number);
-    REQUIRE(breakpoint->number == expectedNumber);
-    REQUIRE(!breakpoint->multi);
+    REQUIRE(breakpoint->number == std::string("1"));
+    REQUIRE(breakpoint->multi);
+    REQUIRE(!breakpoint->from_multi);
+    REQUIRE(breakpoint->type);
     REQUIRE(breakpoint->type == typeBreakpoint);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
     REQUIRE(breakpoint->enabled);
-    REQUIRE(breakpoint->address == expectedAddress);
-    REQUIRE(breakpoint->func_name == expectedFuncName);
-    REQUIRE(breakpoint->file == expectedFile);
-    REQUIRE(breakpoint->fullname == expectedFullname);
-    REQUIRE(breakpoint->line == 10);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("<MULTIPLE>"));
+    REQUIRE(!breakpoint->func_name);
+    REQUIRE(!breakpoint->file);
+    REQUIRE(!breakpoint->fullname);
+    REQUIRE(breakpoint->line == 0);
+    REQUIRE(breakpoint->times == 3);
+    REQUIRE(breakpoint->original_location);
+    REQUIRE(breakpoint->original_location == std::string("foo"));
+    REQUIRE(!breakpoint->pending);
+    REQUIRE(breakpoint->multi_breakpoints);
+    REQUIRE(!breakpoint->multi_breakpoint);
+    REQUIRE(!breakpoint->next);
+
+    /* Multi breakpoint first child */
+    breakpoint = breakpoint->multi_breakpoints;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("1.1"));
+    REQUIRE(!breakpoint->multi);
+    REQUIRE(breakpoint->from_multi);
+    REQUIRE(!breakpoint->type);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_UNKNOWN);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("0x00000000004004dd"));
+    REQUIRE(breakpoint->func_name);
+    REQUIRE(breakpoint->func_name == std::string("foo(int)"));
+    REQUIRE(breakpoint->file);
+    REQUIRE(breakpoint->file == std::string("main.cpp"));
+    REQUIRE(breakpoint->fullname);
+    REQUIRE(breakpoint->fullname == std::string("/home/foo/main.cpp"));
+    REQUIRE(breakpoint->line == 2);
     REQUIRE(breakpoint->times == 0);
-    REQUIRE(breakpoint->original_location == expectedOriginalLocation);
+    REQUIRE(!breakpoint->original_location);
     REQUIRE(!breakpoint->pending);
     REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(breakpoint->multi_breakpoint);
+    REQUIRE(breakpoint->multi_breakpoint->number);
+    REQUIRE(breakpoint->multi_breakpoint->number == std::string("1"));
+    REQUIRE(breakpoint->next);
+
+    /* Multi breakpoint second child */
+    breakpoint = breakpoint->next;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("1.2"));
+    REQUIRE(!breakpoint->multi);
+    REQUIRE(breakpoint->from_multi);
+    REQUIRE(!breakpoint->type);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_UNKNOWN);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("0x00000000004004eb"));
+    REQUIRE(breakpoint->func_name);
+    REQUIRE(breakpoint->func_name == std::string("foo(double)"));
+    REQUIRE(breakpoint->file);
+    REQUIRE(breakpoint->file == std::string("main.cpp"));
+    REQUIRE(breakpoint->fullname);
+    REQUIRE(breakpoint->fullname == std::string("/home/foo/main.cpp"));
+    REQUIRE(breakpoint->line == 6);
+    REQUIRE(breakpoint->times == 0);
+    REQUIRE(!breakpoint->original_location);
+    REQUIRE(!breakpoint->pending);
+    REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(breakpoint->multi_breakpoint);
+    REQUIRE(breakpoint->multi_breakpoint->number);
+    REQUIRE(breakpoint->multi_breakpoint->number == std::string("1"));
     REQUIRE(!breakpoint->next);
     
     gdbwire_mi_command_free(com);
 }
-
 
 /**
  * The -break-info command.
@@ -200,20 +299,6 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/two_bkpts.mi)
     gdbwire_mi_command *com = 0;
     gdbwire_mi_breakpoint *breakpoint;
 
-    std::string expected1Number = "1";
-    std::string expected1Address = "0x0000000000400501";
-    std::string expected1FuncName = "main(int, char**)";
-    std::string expected1File = "main.cpp";
-    std::string expected1Fullname = "/home/foo/main.cpp";
-    std::string expected1OriginalLocation = "main";
-
-    std::string expected2Number = "2";
-    std::string expected2Address = "0x00000000004004eb";
-    std::string expected2FuncName = "foo(double)";
-    std::string expected2File = "main.cpp";
-    std::string expected2Fullname = "/home/foo/main.cpp";
-    std::string expected2OriginalLocation = "main.cpp:6";
-
     result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
     REQUIRE(result == GDBWIRE_OK);
 
@@ -223,38 +308,54 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/two_bkpts.mi)
 
     breakpoint = com->variant.break_info.breakpoints;
     REQUIRE(breakpoint->number);
-    REQUIRE(breakpoint->number == expected1Number);
+    REQUIRE(breakpoint->number == std::string("1"));
     REQUIRE(!breakpoint->multi);
+    REQUIRE(!breakpoint->from_multi);
+    REQUIRE(breakpoint->type);
     REQUIRE(breakpoint->type == typeBreakpoint);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
     REQUIRE(breakpoint->enabled);
-    REQUIRE(breakpoint->address == expected1Address);
-    REQUIRE(breakpoint->func_name == expected1FuncName);
-    REQUIRE(breakpoint->file == expected1File);
-    REQUIRE(breakpoint->fullname == expected1Fullname);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("0x0000000000400501"));
+    REQUIRE(breakpoint->func_name);
+    REQUIRE(breakpoint->func_name == std::string("main(int, char**)"));
+    REQUIRE(breakpoint->file);
+    REQUIRE(breakpoint->file == std::string("main.cpp"));
+    REQUIRE(breakpoint->fullname);
+    REQUIRE(breakpoint->fullname == std::string("/home/foo/main.cpp"));
     REQUIRE(breakpoint->line == 10);
     REQUIRE(breakpoint->times == 0);
-    REQUIRE(breakpoint->original_location == expected1OriginalLocation);
+    REQUIRE(breakpoint->original_location);
+    REQUIRE(breakpoint->original_location == std::string("main"));
     REQUIRE(!breakpoint->pending);
     REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(!breakpoint->multi_breakpoint);
     REQUIRE(breakpoint->next);
 
     breakpoint = breakpoint->next;
     REQUIRE(breakpoint->number);
-    REQUIRE(breakpoint->number == expected2Number);
+    REQUIRE(breakpoint->number == std::string("2"));
     REQUIRE(!breakpoint->multi);
+    REQUIRE(!breakpoint->from_multi);
+    REQUIRE(breakpoint->type);
     REQUIRE(breakpoint->type == typeBreakpoint);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
     REQUIRE(breakpoint->enabled);
-    REQUIRE(breakpoint->address == expected2Address);
-    REQUIRE(breakpoint->func_name == expected2FuncName);
-    REQUIRE(breakpoint->file == expected2File);
-    REQUIRE(breakpoint->fullname == expected2Fullname);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("0x00000000004004eb"));
+    REQUIRE(breakpoint->func_name);
+    REQUIRE(breakpoint->func_name == std::string("foo(double)"));
+    REQUIRE(breakpoint->file);
+    REQUIRE(breakpoint->file == std::string("main.cpp"));
+    REQUIRE(breakpoint->fullname);
+    REQUIRE(breakpoint->fullname == std::string("/home/foo/main.cpp"));
     REQUIRE(breakpoint->line == 6);
     REQUIRE(breakpoint->times == 0);
-    REQUIRE(breakpoint->original_location == expected2OriginalLocation);
+    REQUIRE(breakpoint->original_location);
+    REQUIRE(breakpoint->original_location == std::string("main.cpp:6"));
     REQUIRE(!breakpoint->pending);
     REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(!breakpoint->multi_breakpoint);
     REQUIRE(!breakpoint->next);
     
     gdbwire_mi_command_free(com);
