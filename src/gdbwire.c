@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "gdbwire_assert.h"
 #include "gdbwire.h"
@@ -105,5 +106,104 @@ gdbwire_push_data(struct gdbwire *wire, const char *data, size_t size)
     enum gdbwire_result result;
     GDBWIRE_ASSERT(wire);
     result = gdbwire_mi_parser_push_data(wire->parser, data, size);
+    return result;
+}
+
+
+enum gdbwire_result
+gdbwire_interpreter_exec(
+        const char *interpreter_exec_output,
+        enum gdbwire_mi_command_kind kind,
+        struct gdbwire_mi_command **out_mi_command)
+{
+    struct gdbwire_interpreter_exec_context {
+        enum gdbwire_result result;
+        enum gdbwire_mi_command_kind kind;
+        struct gdbwire_mi_command *mi_command;
+    };
+
+    void gdbwire_interpreter_exec_stream_record(void *context,
+        struct gdbwire_mi_stream_record *stream_record)
+    {
+        struct gdbwire_interpreter_exec_context *ctx =
+            (struct gdbwire_interpreter_exec_context*)context;
+        ctx->result = GDBWIRE_LOGIC;
+    }
+
+    void gdbwire_interpreter_exec_async_record(void *context,
+        struct gdbwire_mi_async_record *async_record)
+    {
+        struct gdbwire_interpreter_exec_context *ctx =
+            (struct gdbwire_interpreter_exec_context*)context;
+        ctx->result = GDBWIRE_LOGIC;
+    }
+
+    void gdbwire_interpreter_exec_result_record(void *context,
+        struct gdbwire_mi_result_record *result_record)
+    {
+        struct gdbwire_interpreter_exec_context *ctx =
+            (struct gdbwire_interpreter_exec_context*)context;
+
+        if (ctx->result == GDBWIRE_OK) {
+            ctx->result = gdbwire_get_mi_command(
+                ctx->kind, result_record, &ctx->mi_command);
+        }
+    }
+
+    void gdbwire_interpreter_exec_prompt(void *context, const char *prompt)
+    {
+        struct gdbwire_interpreter_exec_context *ctx =
+            (struct gdbwire_interpreter_exec_context*)context;
+        ctx->result = GDBWIRE_LOGIC;
+    }
+
+    void gdbwire_interpreter_exec_parse_error(void *context,
+            const char *mi, const char *token, struct gdbwire_mi_position
+            position)
+    {
+        struct gdbwire_interpreter_exec_context *ctx =
+            (struct gdbwire_interpreter_exec_context*)context;
+        ctx->result = GDBWIRE_LOGIC;
+    }
+
+    struct gdbwire_interpreter_exec_context context = {
+            GDBWIRE_OK, kind, 0 };
+    size_t len;
+    enum gdbwire_result result = GDBWIRE_OK;
+    struct gdbwire_callbacks callbacks = {
+        &context,
+        gdbwire_interpreter_exec_stream_record,
+        gdbwire_interpreter_exec_async_record,
+        gdbwire_interpreter_exec_result_record,
+        gdbwire_interpreter_exec_prompt,
+        gdbwire_interpreter_exec_parse_error
+    };
+    struct gdbwire *wire;
+
+    GDBWIRE_ASSERT(interpreter_exec_output);
+    GDBWIRE_ASSERT(out_mi_command);
+
+    len = strlen(interpreter_exec_output);
+
+    wire = gdbwire_create(callbacks);
+    GDBWIRE_ASSERT(wire);
+
+    result = gdbwire_push_data(wire, interpreter_exec_output, len);
+    if (result == GDBWIRE_OK) {
+        /* Honor function documentation,
+         * When it returns GDBWIRE_OK - the command will exist.
+         * Otherwise it will not. */
+        if (context.result == GDBWIRE_OK && !context.mi_command) {
+            result = GDBWIRE_LOGIC;
+        } else if (context.result != GDBWIRE_OK && context.mi_command) {
+            result = context.result;
+            gdbwire_mi_command_free(context.mi_command);
+        } else {
+            result = context.result;
+            *out_mi_command = context.mi_command;
+        }
+    }
+
+    gdbwire_destroy(wire);
     return result;
 }

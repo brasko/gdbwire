@@ -8,6 +8,7 @@ extern "C" {
 #include <stdlib.h>
 #include "gdbwire_result.h"
 #include "gdbwire_mi_pt.h"
+#include "gdbwire_mi_command.h"
 
 /* The opaque gdbwire context */
 struct gdbwire;
@@ -150,6 +151,44 @@ void gdbwire_destroy(struct gdbwire *wire);
  */
 enum gdbwire_result gdbwire_push_data(struct gdbwire *wire, const char *data,
         size_t size);
+
+/**
+ * Handle an interpreter-exec command.
+ *
+ * Typically, a front end would start gdb with the MI interface and create
+ * a corresponding gdbwire instance. The front end would feed the gdbwire
+ * instance all of the MI output. In this scenario, gdbwire triggers
+ * callbacks when interesting events occur.
+ *
+ * Some GDB front ends use the annotate interface with gdb, and will
+ * transition to using MI through the use of the interpreter-exec command.
+ * In this scenario, the front end will send GDB a single interpreter-exec
+ * command and will want to interpret the output of only that command.
+ * For this use case, a gdbwire instance is not necessary for the front end,
+ * nor any of the callbacks associated with that instance.
+ *
+ * This function provides a way for a front end to interpret the output
+ * of a single interpreter-exec command with out the need for creating
+ * a gdbwire instance or any gdbwire callbacks.
+ *
+ * @param interpreter_exec_output
+ * The MI output from GDB for the interpreter exec command.
+ *
+ * @param kind
+ * The interpreter-exec command kind.
+ *
+ * @param out_mi_command
+ * Will return an allocated gdbwire mi command if GDBWIRE_OK is returned
+ * from this function. You should free this memory with
+ * gdbwire_mi_command_free when you are done with it.
+ *
+ * @return
+ * The result of this function.
+ */
+enum gdbwire_result gdbwire_interpreter_exec(
+        const char *interpreter_exec_output,
+        enum gdbwire_mi_command_kind kind,
+        struct gdbwire_mi_command **out_mi_command);
 
 #ifdef __cplusplus 
 }

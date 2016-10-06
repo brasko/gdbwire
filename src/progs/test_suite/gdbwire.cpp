@@ -149,10 +149,26 @@ namespace {
             gdbwire *wire;
     };
 
-    struct GdbwireTestBasic: public Fixture {};
+    struct GdbwireBasicTest: public Fixture {};
+
+    std::string get_file_contents(const std::string &path) {
+        std::string result;
+        FILE *fd;
+        int c;
+
+        fd = fopen(path.c_str(), "r");
+        REQUIRE(fd);
+
+        while ((c = fgetc(fd)) != EOF) {
+            result.push_back((char)c);
+        }
+        fclose(fd);
+
+        return result;
+    }
 }
 
-TEST_CASE_METHOD_N(GdbwireTestBasic, create/normal)
+TEST_CASE_METHOD_N(GdbwireBasicTest, create/normal)
 {
     gdbwire_callbacks c = {};
     struct gdbwire *wire = gdbwire_create(c);
@@ -160,7 +176,7 @@ TEST_CASE_METHOD_N(GdbwireTestBasic, create/normal)
     gdbwire_destroy(wire);
 }
 
-TEST_CASE_METHOD_N(GdbwireTestBasic, destroy/normal)
+TEST_CASE_METHOD_N(GdbwireBasicTest, destroy/normal)
 {
     gdbwire_callbacks c = {};
     struct gdbwire *wire = gdbwire_create(c);
@@ -168,7 +184,7 @@ TEST_CASE_METHOD_N(GdbwireTestBasic, destroy/normal)
     gdbwire_destroy(wire);
 }
 
-TEST_CASE_METHOD_N(GdbwireTestBasic, destroy/null)
+TEST_CASE_METHOD_N(GdbwireBasicTest, destroy/null)
 {
     gdbwire_destroy(NULL);
 }
@@ -202,4 +218,65 @@ TEST_CASE_METHOD_N(GdbwireTest, callbacks/parse_error/basic.mi)
 {
     std::string expected = "$";
     REQUIRE(wireCallbacks.parseErrorToken == expected);
+}
+
+TEST_CASE_METHOD_N(GdbwireBasicTest, interpreter_exec/basic.mi)
+{
+    std::string mi = get_file_contents(sourceTestPath());
+    enum gdbwire_result result;
+    struct gdbwire_mi_command *mi_command = 0;
+
+    result = gdbwire_interpreter_exec(mi.c_str(),
+        GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE, &mi_command);
+    REQUIRE(result == GDBWIRE_OK);
+    REQUIRE(mi_command);
+    gdbwire_mi_command_free(mi_command);
+}
+
+TEST_CASE_METHOD_N(GdbwireBasicTest, interpreter_exec/error.mi)
+{
+    std::string mi = get_file_contents(sourceTestPath());
+    enum gdbwire_result result;
+    struct gdbwire_mi_command *mi_command = 0;
+
+    result = gdbwire_interpreter_exec(mi.c_str(),
+        GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE, &mi_command);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!mi_command);
+}
+
+TEST_CASE_METHOD_N(GdbwireBasicTest, interpreter_exec/empty_error)
+{
+    std::string mi = "";
+    enum gdbwire_result result;
+    struct gdbwire_mi_command *mi_command = 0;
+
+    result = gdbwire_interpreter_exec(mi.c_str(),
+        GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE, &mi_command);
+    REQUIRE(result == GDBWIRE_LOGIC);
+    REQUIRE(!mi_command);
+}
+
+TEST_CASE_METHOD_N(GdbwireBasicTest, interpreter_exec/command_and_stream.mi)
+{
+    std::string mi = get_file_contents(sourceTestPath());
+    enum gdbwire_result result;
+    struct gdbwire_mi_command *mi_command = 0;
+
+    result = gdbwire_interpreter_exec(mi.c_str(),
+        GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE, &mi_command);
+    REQUIRE(result == GDBWIRE_LOGIC);
+    REQUIRE(!mi_command);
+}
+
+TEST_CASE_METHOD_N(GdbwireBasicTest, interpreter_exec/command_and_prompt.mi)
+{
+    std::string mi = get_file_contents(sourceTestPath());
+    enum gdbwire_result result;
+    struct gdbwire_mi_command *mi_command = 0;
+
+    result = gdbwire_interpreter_exec(mi.c_str(),
+        GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE, &mi_command);
+    REQUIRE(result == GDBWIRE_LOGIC);
+    REQUIRE(!mi_command);
 }
