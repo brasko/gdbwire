@@ -114,6 +114,16 @@ struct gdbwire_mi_breakpoint {
     char *type;
 
     /**
+     * The type of the catchpoint or NULL if not a catch point.
+     *
+     * This field is only valid when the breakpoint is a catchpoint.
+     * Unfortuntely, gdb says the "type" of the breakpoint in the type field
+     * is "breakpoint" not "catchpoint". So if this field is non-NULL, it is
+     * safe to assume that this breakpoint represents at catch point.
+     */
+    char *catch_type;
+
+    /**
      * The breakpoint disposition.
      *
      * For multiple location breakpoints, this will be

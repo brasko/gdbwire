@@ -144,6 +144,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/one_bkpt.mi)
     REQUIRE(!breakpoint->from_multi);
     REQUIRE(breakpoint->type);
     REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(!breakpoint->catch_type);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
     REQUIRE(breakpoint->enabled);
     REQUIRE(breakpoint->address);
@@ -190,6 +191,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/multi_bkpt.mi)
     REQUIRE(!breakpoint->from_multi);
     REQUIRE(breakpoint->type);
     REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(!breakpoint->catch_type);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
     REQUIRE(breakpoint->enabled);
     REQUIRE(breakpoint->address);
@@ -213,6 +215,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/multi_bkpt.mi)
     REQUIRE(!breakpoint->multi);
     REQUIRE(breakpoint->from_multi);
     REQUIRE(!breakpoint->type);
+    REQUIRE(!breakpoint->catch_type);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_UNKNOWN);
     REQUIRE(breakpoint->enabled);
     REQUIRE(breakpoint->address);
@@ -240,6 +243,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/multi_bkpt.mi)
     REQUIRE(!breakpoint->multi);
     REQUIRE(breakpoint->from_multi);
     REQUIRE(!breakpoint->type);
+    REQUIRE(!breakpoint->catch_type);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_UNKNOWN);
     REQUIRE(breakpoint->enabled);
     REQUIRE(breakpoint->address);
@@ -289,6 +293,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/two_bkpts.mi)
     REQUIRE(breakpoint->type);
     REQUIRE(breakpoint->type == typeBreakpoint);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
+    REQUIRE(!breakpoint->catch_type);
     REQUIRE(breakpoint->enabled);
     REQUIRE(breakpoint->address);
     REQUIRE(breakpoint->address == std::string("0x0000000000400501"));
@@ -314,6 +319,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/two_bkpts.mi)
     REQUIRE(!breakpoint->from_multi);
     REQUIRE(breakpoint->type);
     REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(!breakpoint->catch_type);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
     REQUIRE(breakpoint->enabled);
     REQUIRE(breakpoint->address);
@@ -501,6 +507,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/watchpoint.mi)
     REQUIRE(!breakpoint->from_multi);
     REQUIRE(breakpoint->type);
     REQUIRE(breakpoint->type == std::string("hw watchpoint"));
+    REQUIRE(!breakpoint->catch_type);
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
     REQUIRE(breakpoint->enabled);
     REQUIRE(!breakpoint->address);
@@ -544,6 +551,8 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/catchpoint.mi)
     REQUIRE(!breakpoint->from_multi);
     REQUIRE(breakpoint->type);
     REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(breakpoint->catch_type);
+    REQUIRE(breakpoint->catch_type == std::string("throw"));
     REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
     REQUIRE(breakpoint->enabled);
     REQUIRE(breakpoint->address);

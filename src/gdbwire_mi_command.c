@@ -40,6 +40,7 @@ gdbwire_mi_breakpoints_free(struct gdbwire_mi_breakpoint *breakpoints)
         free(cur->file);
         free(cur->func_name);
         free(cur->address);
+        free(cur->catch_type);
         free(cur->type);
         free(cur->number);
 
@@ -108,6 +109,7 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
     char *number = 0;
     int multi = 0;
     int from_multi = 0;
+    char *catch_type = 0;
     int pending = 0;
     int enabled = 0;
     char *address = 0;
@@ -139,6 +141,8 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
                 multi = strcmp(mi_result->variant.cstring, "<MULTIPLE>") == 0;
                 pending = strcmp(mi_result->variant.cstring, "<PENDING>") == 0;
                 address = mi_result->variant.cstring;
+            } else if (strcmp(mi_result->variable, "catch-type") == 0) {
+                catch_type = mi_result->variant.cstring;
             } else if (strcmp(mi_result->variable, "type") == 0) {
                 type = mi_result->variant.cstring;
             } else if (strcmp(mi_result->variable, "disp") == 0) {
@@ -186,6 +190,7 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
     breakpoint->from_multi = from_multi;
     breakpoint->number = strdup(number);
     breakpoint->type = (type)?strdup(type):0;
+    breakpoint->catch_type = (catch_type)?strdup(catch_type):0;
     breakpoint->disposition = disp_kind;
     breakpoint->enabled = enabled;
     breakpoint->address = (address)?strdup(address):0;
@@ -201,6 +206,7 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
     /* Handle the out of memory situation */
     if (!breakpoint->number ||
         (type && !breakpoint->type) ||
+        (catch_type && !breakpoint->catch_type) ||
         (address && !breakpoint->address) ||
         (func_name && !breakpoint->func_name) ||
         (file && !breakpoint->file) ||
