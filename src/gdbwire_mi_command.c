@@ -367,9 +367,7 @@ file_list_exec_source_file(
     struct gdbwire_mi_result *mi_result;
     struct gdbwire_mi_command *mi_command = 0;
 
-    char *line, *file, *fullname, *macro_info;
-    int macro_info_exists = 0;
-    int fullname_exists = 0;
+    char *line = 0, *file = 0, *fullname = 0, *macro_info = 0;
 
     *out = 0;
 
@@ -378,39 +376,25 @@ file_list_exec_source_file(
 
     mi_result = result_record->result;
 
-    GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
-    GDBWIRE_ASSERT(strcmp(mi_result->variable, "line") == 0);
-    line = mi_result->variant.cstring;
+    while (mi_result) {
+        if (mi_result->kind == GDBWIRE_MI_CSTRING) {
+            if (strcmp(mi_result->variable, "line") == 0) {
+                line = mi_result->variant.cstring;
+            } else if (strcmp(mi_result->variable, "file") == 0) {
+                file = mi_result->variant.cstring;
+            } else if (strcmp(mi_result->variable, "fullname") == 0) {
+                fullname = mi_result->variant.cstring;
+            } else if (strcmp(mi_result->variable, "macro-info") == 0) {
+                macro_info = mi_result->variant.cstring;
+                GDBWIRE_ASSERT(strlen(macro_info) == 1);
+                GDBWIRE_ASSERT(macro_info[0] == '0' || macro_info[0] == '1');
+            }
+        }
 
-    GDBWIRE_ASSERT(mi_result->next);
-    mi_result = mi_result->next;
-
-    GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
-    GDBWIRE_ASSERT(strcmp(mi_result->variable, "file") == 0);
-    file = mi_result->variant.cstring;
-
-    if (mi_result->next) {
         mi_result = mi_result->next;
-
-        GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
-        GDBWIRE_ASSERT(strcmp(mi_result->variable, "fullname") == 0);
-        fullname = mi_result->variant.cstring;
-        fullname_exists = 1;
     }
 
-    if (mi_result->next) {
-        GDBWIRE_ASSERT(mi_result->next);
-        mi_result = mi_result->next;
-
-        GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
-        GDBWIRE_ASSERT(strcmp(mi_result->variable, "macro-info") == 0);
-        macro_info = mi_result->variant.cstring;
-        GDBWIRE_ASSERT(strlen(macro_info) == 1);
-        GDBWIRE_ASSERT(macro_info[0] == '0' || macro_info[0] == '1');
-        macro_info_exists = 1;
-    }
-
-    GDBWIRE_ASSERT(!mi_result->next);
+    GDBWIRE_ASSERT(line && file);
 
     mi_command = calloc(1, sizeof(struct gdbwire_mi_command));
     if (!mi_command) {
@@ -425,15 +409,15 @@ file_list_exec_source_file(
         return GDBWIRE_NOMEM;
     }
     mi_command->variant.file_list_exec_source_file.fullname =
-        (fullname_exists)?strdup(fullname):0;
-    if (fullname_exists &&
+        (fullname)?strdup(fullname):0;
+    if (fullname &&
         !mi_command->variant.file_list_exec_source_file.fullname) {
         gdbwire_mi_command_free(mi_command);
         return GDBWIRE_NOMEM;
     }
     mi_command->variant.file_list_exec_source_file.macro_info_exists =
-        macro_info_exists;
-    if (macro_info_exists) {
+        macro_info != 0;
+    if (macro_info) {
         mi_command->variant.file_list_exec_source_file.macro_info =
             atoi(macro_info);
     }

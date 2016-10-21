@@ -614,6 +614,30 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/basic.mi)
 /**
  * The file list exec source file command.
  */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/extra_field.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    std::string file = "test.cpp", fullname = "/home/foo/test.cpp";
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE);
+    REQUIRE(com->variant.file_list_exec_source_file.line == 33);
+    REQUIRE(com->variant.file_list_exec_source_file.file == file);
+    REQUIRE(com->variant.file_list_exec_source_file.fullname == fullname);
+    REQUIRE(com->variant.file_list_exec_source_file.macro_info_exists);
+    REQUIRE(!com->variant.file_list_exec_source_file.macro_info);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The file list exec source file command.
+ */
 TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/no_fullname.mi)
 {
     gdbwire_result result;
@@ -684,38 +708,6 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/fail_file.mi
         result_record, &com);
     REQUIRE(result == GDBWIRE_ASSERT);
     REQUIRE(!com);
-}
-
-/**
- * The file list exec source file command.
- */
-TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/fail_fullname.mi)
-{
-    gdbwire_result result;
-    gdbwire_mi_command *com = 0;
-
-    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE,
-        result_record, &com);
-    REQUIRE(result == GDBWIRE_ASSERT);
-    REQUIRE(!com);
-
-    gdbwire_mi_command_free(com);
-}
-
-/**
- * The file list exec source file command.
- */
-TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/fail_macro_info.mi)
-{
-    gdbwire_result result;
-    gdbwire_mi_command *com = 0;
-
-    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE,
-        result_record, &com);
-    REQUIRE(result == GDBWIRE_ASSERT);
-    REQUIRE(!com);
-
-    gdbwire_mi_command_free(com);
 }
 
 /**
