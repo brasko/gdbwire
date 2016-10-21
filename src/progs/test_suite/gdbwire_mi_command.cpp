@@ -1,4 +1,7 @@
-#include <stdio.h>
+#include <string>
+#include <fstream>
+#include <streambuf>
+
 #include "catch.hpp"
 #include "fixture.h"
 #include "gdbwire_mi_command.h"
@@ -71,19 +74,11 @@ namespace {
          */
         gdbwire_mi_output *parse(gdbwire_mi_parser *parser,
             const std::string &input) {
-            FILE *fd;
-            int c;
-
-            fd = fopen(input.c_str(), "r");
-            REQUIRE(fd);
-
-            while ((c = fgetc(fd)) != EOF) {
-                char ch = c;
-                REQUIRE(gdbwire_mi_parser_push_data(
-                    parser, &ch, 1) == GDBWIRE_OK);
-            }
-            fclose(fd);
-
+            std::ifstream in(input.c_str());
+            std::string str((std::istreambuf_iterator<char>(in)),
+                             std::istreambuf_iterator<char>());
+            REQUIRE(gdbwire_mi_parser_push_data(
+                    parser, str.data(), str.size()) == GDBWIRE_OK);
             return parserCallback.m_output;
         }
 
@@ -1019,4 +1014,21 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/2_pair_fail
         result_record, &com);
     REQUIRE(result == GDBWIRE_ASSERT);
     REQUIRE(!com);
+}
+
+/**
+ * The file list exec source files command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/large.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_source_file *files;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+    REQUIRE(com);
+
+    gdbwire_mi_command_free(com);
 }
