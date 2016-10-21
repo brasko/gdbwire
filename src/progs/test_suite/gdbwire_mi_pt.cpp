@@ -411,7 +411,7 @@ TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/console/characters.mi)
     std::string expected =
         "$1 = "
         "\"\\000\\001\\002\\003\\004\\005\\006\\a"
-        "\\b\\t\n\\v\\f\r\\016\\017"
+        "\\b\t\n\\v\\f\r\\016\\017"
         "\\020\\021\\022\\023\\024\\025\\026\\027"
         "\\030\\031\\032\\033\\034\\035\\036\\037"
         " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"

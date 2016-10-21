@@ -45,6 +45,7 @@ void gdbwire_mi_error(yyscan_t yyscanner,
  *   \\ -> \
  *   \n -> new line
  *   \r -> carriage return
+ *   \t -> tab
  *
  * See gdbwire_mi_grammar.txt (GDB/MI Clarifications) for more information.
  *
@@ -77,6 +78,10 @@ static char *gdbwire_mi_unescape_cstring(char *str)
                     break;
                 case 'r':
                     result[r++] = '\r';
+                    ++s;
+                    break;
+                case 't':
+                    result[r++] = '\t';
                     ++s;
                     break;
                 case '"':
