@@ -620,6 +620,68 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, stack_info_frame/basic.mi)
 }
 
 /**
+ * The -stack-info-frame command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, stack_info_frame/extra_field.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_stack_frame *frame;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_STACK_INFO_FRAME,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_STACK_INFO_FRAME);
+    REQUIRE(com->variant.stack_info_frame.frame);
+    frame = com->variant.stack_info_frame.frame;
+
+    REQUIRE(frame->level == 0);
+    REQUIRE(frame->address);
+    REQUIRE(frame->address == std::string("0x0000000000400501"));
+    REQUIRE(frame->func);
+    REQUIRE(frame->func == std::string("main"));
+    REQUIRE(frame->file);
+    REQUIRE(frame->file == std::string("main.cpp"));
+    REQUIRE(frame->fullname);
+    REQUIRE(frame->fullname == std::string("/home/foo/main.cpp"));
+    REQUIRE(frame->line == 10);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The -stack-info-frame command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, stack_info_frame/no_level.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_stack_frame *frame;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_STACK_INFO_FRAME,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!com);
+}
+
+/**
+ * The -stack-info-frame command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, stack_info_frame/no_address.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_stack_frame *frame;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_STACK_INFO_FRAME,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_ASSERT);
+    REQUIRE(!com);
+}
+
+/**
  * The file list exec source file command.
  */
 TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_file/basic.mi)
