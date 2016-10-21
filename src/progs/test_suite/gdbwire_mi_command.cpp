@@ -615,6 +615,7 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, stack_info_frame/basic.mi)
     REQUIRE(frame->fullname);
     REQUIRE(frame->fullname == std::string("/home/foo/main.cpp"));
     REQUIRE(frame->line == 10);
+    REQUIRE(!frame->from);
 
     gdbwire_mi_command_free(com);
 }
@@ -647,6 +648,68 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, stack_info_frame/extra_field.mi)
     REQUIRE(frame->fullname);
     REQUIRE(frame->fullname == std::string("/home/foo/main.cpp"));
     REQUIRE(frame->line == 10);
+    REQUIRE(!frame->from);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The -stack-info-frame command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, stack_info_frame/minimal.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_stack_frame *frame;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_STACK_INFO_FRAME,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_STACK_INFO_FRAME);
+    REQUIRE(com->variant.stack_info_frame.frame);
+    frame = com->variant.stack_info_frame.frame;
+
+    REQUIRE(frame->level == 2);
+    REQUIRE(frame->address);
+    REQUIRE(frame->address == std::string("0x0000000000400501"));
+    REQUIRE(!frame->func);
+    REQUIRE(!frame->file);
+    REQUIRE(!frame->fullname);
+    REQUIRE(frame->line == 0);
+    REQUIRE(!frame->from);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The -stack-info-frame command.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, stack_info_frame/from_field.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_stack_frame *frame;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_STACK_INFO_FRAME,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_STACK_INFO_FRAME);
+    REQUIRE(com->variant.stack_info_frame.frame);
+    frame = com->variant.stack_info_frame.frame;
+
+    REQUIRE(frame->level == 2);
+    REQUIRE(frame->address);
+    REQUIRE(frame->address == std::string("0x0000000000400501"));
+    REQUIRE(!frame->func);
+    REQUIRE(!frame->file);
+    REQUIRE(!frame->fullname);
+    REQUIRE(frame->line == 0);
+    REQUIRE(frame->from);
+    REQUIRE(frame->from == std::string("From!"));
 
     gdbwire_mi_command_free(com);
 }
