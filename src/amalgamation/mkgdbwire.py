@@ -42,6 +42,7 @@ abs_build_path = sys.argv[3]
 
 # These are the header files used by gdbwire.
 header_files = [
+    'gdbwire_sys.h',
     'gdbwire_string.h',
     'gdbwire_assert.h',
     'gdbwire_result.h',
@@ -55,6 +56,8 @@ header_files = [
 
 # These are the soruce files used by gdbwire
 source_files = [
+    'gdbwire_sys.c',
+
     'gdbwire_string.c',
 
     'gdbwire_logger.c',

@@ -5,6 +5,8 @@
 %option noyywrap
 %option nounput
 %option noinput
+/* Avoids the use of fileno, which is POSIX and not compatible with c11 */
+%option never-interactive
 
 DIGIT       [0-9]
 L       [a-zA-Z_]

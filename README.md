@@ -9,6 +9,7 @@ GDBWIRE communicates with GDB using the GDB/MI interface. It has several
 core features that make it unique.
 
 - Portable - Written in C and runs on Linux, Windows (mingw or cygwin) and Mac
+- Standard Compliant - Compliant for both c99 and c11
 - Efficient - Written using Bison and Flex
 - Asynchronous - Uses a Bison push parser which will not block your main loop
 - Reentrant - Supports the use of threads in your application code
@@ -83,7 +84,7 @@ make install
 
 I typically enable more error checking with the build tools like so,
 
-> YFLAGS="-Wno-deprecated" CFLAGS="-g -Wall -Werror -O0" CXXFLAGS="-g -Wall -Werror -O0" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples --disable-shared --enable-amalgamation
+> YFLAGS="-Wno-deprecated" CFLAGS="-g -O0 -std=c11 -Wall -Wextra -Wshadow -Werror -Wmissing-include-dirs -Wno-unused-parameter -Wno-sign-compare -pedantic" CXXFLAGS="-g -O0 -std=c++11 -Wall -Wextra -Werror -pedantic -Wno-unused-parameter" ../gdbwire/configure --prefix=$PWD/../prefix --enable-tests --enable-examples --disable-shared --enable-amalgamation
 
 If you like to have a silent build, and the libtool link lines are bothering
 you, you can set this environment variable to suppress libtools printing of

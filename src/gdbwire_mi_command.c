@@ -2,6 +2,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include "gdbwire_sys.h"
 #include "gdbwire_assert.h"
 #include "gdbwire_mi_command.h"
 
@@ -205,19 +206,19 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
 
     breakpoint->multi = multi;
     breakpoint->from_multi = from_multi;
-    breakpoint->number = strdup(number);
-    breakpoint->type = (type)?strdup(type):0;
-    breakpoint->catch_type = (catch_type)?strdup(catch_type):0;
+    breakpoint->number = gdbwire_strdup(number);
+    breakpoint->type = (type)?gdbwire_strdup(type):0;
+    breakpoint->catch_type = (catch_type)?gdbwire_strdup(catch_type):0;
     breakpoint->disposition = disp_kind;
     breakpoint->enabled = enabled;
-    breakpoint->address = (address)?strdup(address):0;
-    breakpoint->func_name = (func_name)?strdup(func_name):0;
-    breakpoint->file = (file)?strdup(file):0;
-    breakpoint->fullname = (fullname)?strdup(fullname):0;
+    breakpoint->address = (address)?gdbwire_strdup(address):0;
+    breakpoint->func_name = (func_name)?gdbwire_strdup(func_name):0;
+    breakpoint->file = (file)?gdbwire_strdup(file):0;
+    breakpoint->fullname = (fullname)?gdbwire_strdup(fullname):0;
     breakpoint->line = line;
     breakpoint->times = times;
     breakpoint->original_location =
-        (original_location)?strdup(original_location):0;
+        (original_location)?gdbwire_strdup(original_location):0;
     breakpoint->pending = pending;
 
     /* Handle the out of memory situation */
@@ -436,12 +437,12 @@ stack_info_frame(
     }
 
     frame->level = atoi(level);
-    frame->address = (address)?strdup(address):0;
-    frame->func = (func)?strdup(func):0;
-    frame->file = (file)?strdup(file):0;
-    frame->fullname = (fullname)?strdup(fullname):0;
+    frame->address = (address)?gdbwire_strdup(address):0;
+    frame->func = (func)?gdbwire_strdup(func):0;
+    frame->file = (file)?gdbwire_strdup(file):0;
+    frame->fullname = (fullname)?gdbwire_strdup(fullname):0;
     frame->line = (line)?atoi(line):0;
-    frame->from = (from)?strdup(from):0;
+    frame->from = (from)?gdbwire_strdup(from):0;
 
     /* Handle the out of memory situation */
     if ((address && !frame->address) ||
@@ -522,13 +523,13 @@ file_list_exec_source_file(
 
     mi_command->kind = GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILE;
     mi_command->variant.file_list_exec_source_file.line = atoi(line);
-    mi_command->variant.file_list_exec_source_file.file = strdup(file);
+    mi_command->variant.file_list_exec_source_file.file = gdbwire_strdup(file);
     if (!mi_command->variant.file_list_exec_source_file.file) {
         gdbwire_mi_command_free(mi_command);
         return GDBWIRE_NOMEM;
     }
     mi_command->variant.file_list_exec_source_file.fullname =
-        (fullname)?strdup(fullname):0;
+        (fullname)?gdbwire_strdup(fullname):0;
     if (fullname &&
         !mi_command->variant.file_list_exec_source_file.fullname) {
         gdbwire_mi_command_free(mi_command);
@@ -584,7 +585,7 @@ file_list_exec_source_files(
         GDBWIRE_ASSERT_GOTO(mi_result->kind == GDBWIRE_MI_TUPLE, result, err);
         tuple = mi_result->variant.result;
 
-        // file field
+        /* file field */
         GDBWIRE_ASSERT_GOTO(tuple->kind == GDBWIRE_MI_CSTRING, result, err);
         GDBWIRE_ASSERT_GOTO(strcmp(tuple->variable, "file") == 0, result, err);
         file = tuple->variant.cstring;
@@ -592,7 +593,7 @@ file_list_exec_source_files(
         if (tuple->next) {
             tuple = tuple->next;
 
-            // fullname field
+            /* fullname field */
             GDBWIRE_ASSERT_GOTO(tuple->kind == GDBWIRE_MI_CSTRING, result, err);
             GDBWIRE_ASSERT_GOTO(strcmp(tuple->variable, "fullname") == 0,
                 result, err);
@@ -601,15 +602,15 @@ file_list_exec_source_files(
 
         GDBWIRE_ASSERT(!tuple->next);
 
-        // Create the new 
+        /* Create the new */
         new_node = calloc(1, sizeof(struct gdbwire_mi_source_file));
         GDBWIRE_ASSERT_GOTO(new_node, result, err);
 
-        new_node->file = strdup(file);
-        new_node->fullname = (fullname)?strdup(fullname):0;
+        new_node->file = gdbwire_strdup(file);
+        new_node->fullname = (fullname)?gdbwire_strdup(fullname):0;
         new_node->next = 0;
 
-        // Append the node to the list
+        /* Append the node to the list */
         if (files) {
             cur_node->next = new_node;
             cur_node = cur_node->next;

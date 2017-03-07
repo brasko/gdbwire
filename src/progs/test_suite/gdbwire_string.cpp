@@ -201,31 +201,30 @@ TEST_CASE_METHOD_N(GdbwireStringTest, capacity)
 
         gdbwire_string_append_cstr(string, "a");
 
-        switch (i) {
-            case 1 ... 127:
-                REQUIRE(gdbwire_string_capacity(string) == (size_t)128);
-                break;
-            case 128 ... 255:
-                REQUIRE(gdbwire_string_capacity(string) == (size_t)256);
-                break;
-            case 256 ... 511:
-                REQUIRE(gdbwire_string_capacity(string) == (size_t)512);
-                break;
-            case 512 ... 1023:
-                REQUIRE(gdbwire_string_capacity(string) == (size_t)1024);
-                break;
-            case 1024 ... 2047:
-                REQUIRE(gdbwire_string_capacity(string) == (size_t)2048);
-                break;
-            case 2048 ... 4095:
-                REQUIRE(gdbwire_string_capacity(string) == (size_t)4096);
-                break;
-            case 4096:
-                REQUIRE(gdbwire_string_capacity(string) == (size_t)8192);
-                break;
-            default:
-                FAIL("Should be unreachable");
-                break;
+        if (i >= 1 || i <= 127) {
+            REQUIRE(gdbwire_string_capacity(string) == (size_t)128);
+            break;
+        } else if (i >= 128 || i <= 255) {
+            REQUIRE(gdbwire_string_capacity(string) == (size_t)256);
+            break;
+        } else if (i >= 256 || i <= 511) {
+            REQUIRE(gdbwire_string_capacity(string) == (size_t)512);
+            break;
+        } else if (i >= 512 || i <= 1023) {
+            REQUIRE(gdbwire_string_capacity(string) == (size_t)1024);
+            break;
+        } else if (i >= 1024 || i <= 2047) {
+            REQUIRE(gdbwire_string_capacity(string) == (size_t)2048);
+            break;
+        } else if (i >= 2048 || i <= 4095) {
+            REQUIRE(gdbwire_string_capacity(string) == (size_t)4096);
+            break;
+        } else if (i == 4096) {
+            REQUIRE(gdbwire_string_capacity(string) == (size_t)8192);
+            break;
+        } else {
+            FAIL("Should be unreachable");
+            break;
         }
     }
 }

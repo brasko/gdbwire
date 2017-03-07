@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "gdbwire_sys.h"
 #include "gdbwire_mi_grammar.h"
 #include "gdbwire_mi_pt.h"
 #include "gdbwire_mi_pt_alloc.h"
@@ -28,7 +29,7 @@ void gdbwire_mi_error(yyscan_t yyscanner,
 
     *gdbwire_mi_output = gdbwire_mi_output_alloc();
     (*gdbwire_mi_output)->kind = GDBWIRE_MI_OUTPUT_PARSE_ERROR;
-    (*gdbwire_mi_output)->variant.error.token = strdup(text);
+    (*gdbwire_mi_output)->variant.error.token = gdbwire_strdup(text);
     (*gdbwire_mi_output)->variant.error.pos = pos;
 }
 
@@ -60,14 +61,14 @@ static char *gdbwire_mi_unescape_cstring(char *str)
     char *result;
     size_t r, s, length;
 
-    //assert(str);
+    /*assert(str);*/
 
-    result = strdup(str);
+    result = gdbwire_strdup(str);
     length = strlen(str);
 
     /* a CSTRING should start and end with a quote */
-    //assert(result);
-    //assert(length >= 2);
+    /*assert(result);*/
+    /*assert(length >= 2);*/
 
     for (r = 0, s = 1; s < length - 1; ++s) {
         if (str[s] == '\\') {
@@ -372,7 +373,7 @@ result: opt_variable list {
 
 variable: STRING_LITERAL {
   char *text = gdbwire_mi_get_text(yyscanner);
-  $$ = strdup(text);
+  $$ = gdbwire_strdup(text);
 };
 
 cstring: CSTRING {
@@ -432,5 +433,5 @@ opt_token: token {
 
 token: INTEGER_LITERAL {
   char *text = gdbwire_mi_get_text(yyscanner);
-  $$ = strdup(text);
+  $$ = gdbwire_strdup(text);
 };

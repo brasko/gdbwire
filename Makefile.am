@@ -30,6 +30,8 @@ libgdbwire_la_SOURCES= \
     src/gdbwire_mi_pt.c \
     src/gdbwire_mi_pt_alloc.h \
     src/gdbwire_mi_pt_alloc.c \
+    src/gdbwire_sys.h \
+    src/gdbwire_sys.c \
     src/gdbwire.h \
     src/gdbwire.c \
     src/gdbwire_assert.h \

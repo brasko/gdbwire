@@ -62,10 +62,12 @@ gdbwire_string_clear(struct gdbwire_string *string)
 static int
 gdbwire_string_increase_capacity(struct gdbwire_string *string)
 {
-    // The algorithm chosen to increase the capacity is arbitrary.
-    // It starts at 128 bytes. It then doubles it's size in bytes like this,
-    //   128, 256, 512, 1024, 2048, 4096
-    // After it reaches 4096 it then grows by 4096 bytes at a time.
+    /**
+     * The algorithm chosen to increase the capacity is arbitrary.
+     * It starts at 128 bytes. It then doubles it's size in bytes like this,
+     *   128, 256, 512, 1024, 2048, 4096
+     * After it reaches 4096 it then grows by 4096 bytes at a time.
+     */
     if (string->capacity == 0) {
         string->capacity = 128;
     } else if (string->capacity < 4096) {
@@ -74,7 +76,7 @@ gdbwire_string_increase_capacity(struct gdbwire_string *string)
         string->capacity += 4096;
     }
 
-    // At this point string->capacity is set to the new size, so realloc
+    /* At this point string->capacity is set to the new size, so realloc */
     string->data = (char*)realloc(string->data, string->capacity);
 
     return (string->data) ? 0 : -1;
@@ -179,23 +181,26 @@ gdbwire_string_erase(struct gdbwire_string *string, size_t pos, size_t count)
         size_t data_size = gdbwire_string_size(string);
         char *data = gdbwire_string_data(string);
 
-        // The position index must be smaller than the data size to be valid
+        /* The position index must be smaller than the data size to be valid */
         if (pos < data_size) {
             size_t from_pos = pos + count;
 
-            // Check to see if anything needs to be copied.
-            // If not, just null terminate the position to be erased
-            // Null terminating the string ensures the c string and the data
-            // string approach are both safe. In the data mode, the nul
-            // character is unneeded.
+            /**
+             * Check to see if anything needs to be copied.
+             * If not, just null terminate the position to be erased
+             * Null terminating the string ensures the c string and the data
+             * string approach are both safe. In the data mode, the nul
+             * character is unneeded.
+             */
             if (from_pos >= data_size) {
                 data[pos] = 0;
                 count_erased = data_size - pos;
-            // If so, move characters from the from position to the to position
+            /* If so, move characters from the from position
+               to the to position */
             } else {
                 char *to_cur = &data[pos], *from_cur = &data[from_pos];
 
-                // shift everything after the erase request to the left
+                /* shift everything after the erase request to the left */
                 for (; from_pos < data_size; ++from_pos, ++to_cur, ++from_cur) {
                     *to_cur = *from_cur;
                 }

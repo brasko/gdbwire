@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "gdbwire_sys.h"
 #include "gdbwire_assert.h"
 #include "gdbwire_mi_grammar.h"
 #include "gdbwire_mi_parser.h"
@@ -178,12 +179,12 @@ gdbwire_mi_parser_parse_line(struct gdbwire_mi_parser *parser,
      * is done.
      */
 
-    // Check mi_status, will be 1 on parse error, and YYPUSH_MORE on success
+    /* Check mi_status, will be 1 on parse error, and YYPUSH_MORE on success */
     GDBWIRE_ASSERT(mi_status == 1 || mi_status == YYPUSH_MORE);
 
     /* Each GDB/MI line should produce an output command */
     GDBWIRE_ASSERT(output);
-    output->line = strdup(line);
+    output->line = gdbwire_strdup(line);
 
     callbacks.gdbwire_mi_output_callback(callbacks.context, output);
 
@@ -219,8 +220,10 @@ gdbwire_mi_parser_get_next_line(struct gdbwire_string *buffer,
     size_t size = gdbwire_string_size(buffer);
     size_t pos = gdbwire_string_find_first_of(buffer, "\r\n");
 
-    // Search to see if a newline has been reached in gdb/mi.
-    // If a line of data has been recieved, process it.
+    /**
+     * Search to see if a newline has been reached in gdb/mi.
+     * If a line of data has been recieved, process it.
+     */
     if (pos != size) {
         int status;
 

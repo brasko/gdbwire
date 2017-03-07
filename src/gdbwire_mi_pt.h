@@ -18,9 +18,9 @@ extern "C" {
  * a token of size 1.
  */
 struct gdbwire_mi_position {
-    /// The starting column position of the token
+    /* The starting column position of the token */
     int start_column;
-    /// The ending column position of the token
+    /* The ending column position of the token */
     int end_column;
 };
 
@@ -159,7 +159,7 @@ enum gdbwire_mi_result_class {
      */
     GDBWIRE_MI_EXIT,
 
-    /// An unsupported result class
+    /* An unsupported result class */
     GDBWIRE_MI_UNSUPPORTED
 };
 
@@ -517,7 +517,7 @@ enum gdbwire_mi_async_class {
      */
     GDBWIRE_MI_ASYNC_MEMORY_CHANGED,
 
-    /// An unsupported async class
+    /* An unsupported async class */
     GDBWIRE_MI_ASYNC_UNSUPPORTED
 };
 

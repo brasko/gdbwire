@@ -8,7 +8,7 @@ extern "C" {
 #include "gdbwire_result.h"
 #include "gdbwire_mi_pt.h"
 
-/// The opaque GDB/MI parser context
+/* The opaque GDB/MI parser context */
 struct gdbwire_mi_parser;
 
 /**
