@@ -15,6 +15,9 @@ IDENTIFIER {L}+{T}*
 
 %{
 
+/* flex 2.6.0 produces a sign-compare warning */
+#pragma GCC diagnostic ignored "-Wsign-compare"
+
 #include <stdio.h>
 #include "gdbwire_mi_grammar.h"
 #include "gdbwire_mi_pt.h"

@@ -107,7 +107,7 @@ gdbwire_string_append_data(struct gdbwire_string *string, const char *data,
         size_t size)
 {
     int result = (string && data) ? 0 : -1;
-    int data_index = 0;
+    size_t data_index = 0;
 
     for (; string && data && data_index < size; ++data_index, ++string->size) {
         if (string->size >= string->capacity) {
