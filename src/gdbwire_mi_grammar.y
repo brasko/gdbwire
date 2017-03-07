@@ -3,7 +3,13 @@
 %define api.push_pull "push"
 %defines
 %code requires {
-    typedef void *yyscan_t;
+
+/* An opaque pointer. */
+#ifndef YY_TYPEDEF_YY_SCANNER_T
+#define YY_TYPEDEF_YY_SCANNER_T
+typedef void *yyscan_t;
+#endif
+
     struct gdbwire_mi_output;
 }
 %parse-param {yyscan_t yyscanner}

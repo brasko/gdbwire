@@ -9,8 +9,15 @@
 #include "gdbwire_string.h"
 
 /* flex prototypes used in this unit */
+#ifndef YY_TYPEDEF_YY_SCANNER_T
+#define YY_TYPEDEF_YY_SCANNER_T
 typedef void *yyscan_t;
+#endif
+
+#ifndef YY_TYPEDEF_YY_BUFFER_STATE
+#define YY_TYPEDEF_YY_BUFFER_STATE
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
+#endif
 
 /* Lexer set/destroy buffer to parse */
 extern YY_BUFFER_STATE gdbwire_mi__scan_string(
