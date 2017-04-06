@@ -92,8 +92,12 @@ static char *gdbwire_mi_unescape_cstring(char *str)
                     ++s;
                     break;
                 case '"':
+                    result[r++] = '\"';
+                    ++s;
                     break;
                 case '\\':
+                    result[r++] = '\\';
+                    ++s;
                     break;
                 default:
                     result[r++] = str[s];

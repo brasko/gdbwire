@@ -404,18 +404,17 @@ TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/console/manylines.mi)
  * The MI output converts the char value 0 to \\000 and 1 to \\001, etc.
  * So it essentially escapes the backslashes. In C, I have to escape them
  * again to compare the values.
- * 
  */
 TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/console/characters.mi)
 {
     std::string expected =
         "$1 = "
         "\"\\000\\001\\002\\003\\004\\005\\006\\a"
-        "\\b\t\n\\v\\f\r\\016\\017"
+        "\\b\\t\\n\\v\\f\\r\\016\\017"
         "\\020\\021\\022\\023\\024\\025\\026\\027"
         "\\030\\031\\032\\033\\034\\035\\036\\037"
-        " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\\177"
+        " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\\177"
         "\\200\\201\\202\\203\\204\\205\\206\\207"
         "\\210\\211\\212\\213\\214\\215\\216\\217"
         "\\220\\221\\222\\223\\224\\225\\226\\227"
@@ -432,6 +431,20 @@ TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/console/characters.mi)
         "\\350\\351\\352\\353\\354\\355\\356\\357"
         "\\360\\361\\362\\363\\364\\365\\366\\367"
         "\\370\\371\\372\\373\\374\\375\\376\\377\"";
+    struct gdbwire_mi_oob_record *oob;
+    struct gdbwire_mi_stream_record *stream;
+
+    oob = CHECK_OUTPUT_OOB_RECORD(output);
+    stream = CHECK_OOB_RECORD_STREAM(oob);
+    CHECK_STREAM_RECORD(stream, GDBWIRE_MI_CONSOLE, expected);
+
+    CHECK_OUTPUT_AT_FINAL_PROMPT(output->next);
+}
+
+TEST_CASE_METHOD_N(GdbwireMiPtTest, oob_record/stream/console/escape1.mi)
+{
+    std::string expected =
+        "5\t    printf(\"Hello World!\\n\");\n";
     struct gdbwire_mi_oob_record *oob;
     struct gdbwire_mi_stream_record *stream;
 
