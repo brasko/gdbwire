@@ -24,15 +24,15 @@ core features that make it unique.
 ### Low Level Interface
 
 GDBWIRE currently provides an example of the low level interface described
-above in the [gdbmi example](src/progs/examples/gdbmi_example.c) program.
+above in the [gdbwire_mi example](src/progs/examples/gdbwire_mi_example.c) program.
 
 This program is particularly useful when run from the command line, from the
 build directory, as follows,
->   gdb -i=mi <gdb arguments> | examples/gdbmi
+>   gdb -i=mi <gdb arguments> | examples/gdbwire_mi
 
 This allows a user to interact with gdb in arbitrary ways from the 
-command line. At the same time, the user can determine if the gdbmi
-parser is able to handle the gdbmi output created by gdb. If the GDBWIRE
+command line. At the same time, the user can determine if the gdbwire_mi
+parser is able to handle the gdbwire_mi output created by gdb. If the GDBWIRE
 parser fails, it will output the GDB/MI line that it could not handle.
 
 ### High Level Interface
