@@ -123,6 +123,31 @@ def copy_file(out, available_hdr, filename):
                 out.write(line)
     comment(out, "End of " + name)
 
+def write_copyright(fd, package_version, rev):
+    fd.write(
+"""/**
+ * Copyright (C) 2013 Robert Rossi <bob@brasko.net>
+ *
+ * This file is an amalgamation of the source files from GDBWIRE.
+ *
+ * It was created using gdbwire %(ver)s and git revision %(rev)s.
+ *
+ * GDBWIRE is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * GDBWIRE is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GDBWIRE.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+""" % { 'ver': package_version, 'rev': rev })
+
 def write_gdbwire_source(filename, package_version, rev):
     available_hdr = {}
     for hdr in header_files:
@@ -130,14 +155,8 @@ def write_gdbwire_source(filename, package_version, rev):
 
     # Binary flag forces the output to use unix line endings, even on Windows
     out = open(filename, "wb")
-    out.write(
-"""/**
- * This file is an amalgamation of C source files from gdbwire.
- *
- * It was created using gdbwire %(ver)s and git revision %(rev)s.
- */
 
-""" % { 'ver': package_version, 'rev': rev })
+    write_copyright(out, package_version, rev)
 
     for file in source_files:
       copy_file(out, available_hdr, 'tsrc/' + file)
@@ -149,14 +168,8 @@ def write_gdbwire_header(filename, package_version, rev):
 
     # Binary flag forces the output to use unix line endings, even on Windows
     out = open(filename, "wb")
-    out.write(
-"""/**
- * This file is an amalgamation of the header files from gdbwire.
- *
- * It was created using gdbwire %(ver)s and git revision %(rev)s.
- */
-
-""" % { 'ver': package_version, 'rev': rev })
+    
+    write_copyright(out, package_version, rev)
 
     for file in header_files:
       copy_file(out, available_hdr, 'tsrc/' + file)
