@@ -27,6 +27,53 @@ typedef void *yyscan_t;
 char *gdbwire_mi_get_text(yyscan_t yyscanner);
 struct gdbwire_mi_position gdbwire_mi_get_extra(yyscan_t yyscanner);
 
+/**
+ * Used only in the parser to build a gdbwire_mi_result list.
+ *
+ * The grammar wants to build a list of gdbwire_mi_result pointers.
+ * However, the gdbwire_mi_result is a traditional linked list and
+ * standard append functionality (using next to get to end of list) is slow.
+ *
+ * This structure allows us to keep around the last result in the list
+ * for fast insertion.
+ */
+struct gdbwire_mi_result_list {
+    /** The gdbwire_mi_result list that is being built */
+    struct gdbwire_mi_result *head;
+    /** The pointer to the last result in the list for fast insertion. */
+    struct gdbwire_mi_result **tail;
+};
+
+/** 
+ * Allocate a gdbwire_mi_result_list data structure.
+ *
+ * @return
+ * The gdbwire_mi_result_list. Use free() to release the memory.
+ */
+struct gdbwire_mi_result_list *gdbwire_mi_result_list_alloc(void)
+{
+    struct gdbwire_mi_result_list *result;
+    result = calloc(1, sizeof(struct gdbwire_mi_result_list));
+    result->tail = &result->head;
+    return result;
+}
+
+/**
+ * Append an item to this list.
+ *
+ * @param list
+ * The list to append to.
+ *
+ * @param result
+ * The result to append to the end of the list.
+ */
+void gdbwire_mi_result_list_push_back(struct gdbwire_mi_result_list *list,
+        struct gdbwire_mi_result *result)
+{
+    *list->tail = result;
+    list->tail = &result->next;
+}
+
 void gdbwire_mi_error(yyscan_t yyscanner,
     struct gdbwire_mi_output **gdbwire_mi_output, const char *s)
 { 
@@ -140,6 +187,7 @@ static char *gdbwire_mi_unescape_cstring(char *str)
   struct gdbwire_mi_result_record *u_result_record;
   int u_result_class;
   int u_async_record_kind;
+  struct gdbwire_mi_result_list *u_result_list;
   struct gdbwire_mi_result *u_result;
   char *u_token;
   struct gdbwire_mi_async_record *u_async_record;
@@ -159,7 +207,7 @@ static char *gdbwire_mi_unescape_cstring(char *str)
 %type <u_result_class> result_class
 %type <u_async_record_kind> async_record_class
 %type <u_variable> opt_variable variable
-%type <u_result> result_list
+%type <u_result_list> result_list
 %type <u_result> result
 %type <u_token> opt_token token
 %type <u_async_record> async_record
@@ -188,7 +236,7 @@ static char *gdbwire_mi_unescape_cstring(char *str)
  * token
  */
 %destructor { gdbwire_mi_output_free($$); } output_variant
-%destructor { gdbwire_mi_result_free($$); } result_list
+%destructor { gdbwire_mi_result_free($$->head); free($$); } result_list
 %destructor { gdbwire_mi_result_free($$); } result
 %destructor { free($$); } opt_variable
 %destructor { free($$); } variable
@@ -235,11 +283,19 @@ output_variant: OPEN_PAREN variable {
       free($2);
     }
 
-result_record: opt_token CARROT result_class result_list {
+result_record: opt_token CARROT result_class {
   $$ = gdbwire_mi_result_record_alloc();
   $$->token = $1;
   $$->result_class = $3;
-  $$->result = $4;
+  $$->result = NULL;
+};
+
+result_record: opt_token CARROT result_class COMMA result_list {
+  $$ = gdbwire_mi_result_record_alloc();
+  $$->token = $1;
+  $$->result_class = $3;
+  $$->result = $5->head;
+  free($5);
 };
 
 oob_record: async_record {
@@ -254,12 +310,21 @@ oob_record: stream_record {
   $$->variant.stream_record = $1;
 };
 
-async_record: opt_token async_record_class async_class result_list {
+async_record: opt_token async_record_class async_class {
   $$ = gdbwire_mi_async_record_alloc();
   $$->token = $1;
   $$->kind = $2;
   $$->async_class = $3;
-  $$->result = $4;
+  $$->result = NULL;
+};
+
+async_record: opt_token async_record_class async_class COMMA result_list {
+  $$ = gdbwire_mi_async_record_alloc();
+  $$->token = $1;
+  $$->kind = $2;
+  $$->async_class = $3;
+  $$->result = $5->head;
+  free($5);
 };
 
 async_record_class: MULT_OP {
@@ -352,12 +417,14 @@ opt_variable: variable EQUAL_SIGN {
     $$ = $1;
 }
 
-result_list: {
-  $$ = NULL;
+result_list: result {
+  $$ = gdbwire_mi_result_list_alloc();
+  gdbwire_mi_result_list_push_back($$, $1);
 };
 
 result_list: result_list COMMA result {
-  $$ = append_gdbwire_mi_result ($1, $3);
+  gdbwire_mi_result_list_push_back($1, $3);
+  $$ = $1;
 };
 
 result: opt_variable cstring {
@@ -395,24 +462,18 @@ tuple: OPEN_BRACE CLOSED_BRACE {
   $$ = NULL;
 };
 
-tuple: OPEN_BRACE result result_list CLOSED_BRACE {
-    if ($3) {
-        $$ = append_gdbwire_mi_result($2, $3);
-    } else {
-        $$ = $2;
-    }
+tuple: OPEN_BRACE result_list CLOSED_BRACE {
+  $$ = $2->head;
+  free($2);
 };
 
 list: OPEN_BRACKET CLOSED_BRACKET {
   $$ = NULL;
 };
 
-list: OPEN_BRACKET result result_list CLOSED_BRACKET {
-    if ($3) {
-        $$ = append_gdbwire_mi_result($2, $3);
-    } else {
-        $$ = $2;
-    }
+list: OPEN_BRACKET result_list CLOSED_BRACKET {
+  $$ = $2->head;
+  free($2);
 };
 
 stream_record: stream_record_class cstring {
