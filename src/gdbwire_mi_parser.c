@@ -40,7 +40,7 @@ struct gdbwire_mi_parser {
     /* The GDB/MI lexer state */
     yyscan_t mils;
     /* The GDB/MI push parser state */
-    gdbwire_mi_pstate *mips;
+    gdbwire_mi_pstate *mipst;
     /* The client parser callbacks */
     struct gdbwire_mi_parser_callbacks callbacks;
 };
@@ -71,8 +71,8 @@ gdbwire_mi_parser_create(struct gdbwire_mi_parser_callbacks callbacks)
     }
 
     /* Create a new push parser state instance */
-    parser->mips = gdbwire_mi_pstate_new();
-    if (!parser->mips) {
+    parser->mipst = gdbwire_mi_pstate_new();
+    if (!parser->mipst) {
         gdbwire_mi_lex_destroy(parser->mils);
         gdbwire_string_destroy(parser->buffer);
         free(parser);
@@ -81,7 +81,7 @@ gdbwire_mi_parser_create(struct gdbwire_mi_parser_callbacks callbacks)
 
     /* Ensure that the callbacks are non null */
     if (!callbacks.gdbwire_mi_output_callback) {
-        gdbwire_mi_pstate_delete(parser->mips);
+        gdbwire_mi_pstate_delete(parser->mipst);
         gdbwire_mi_lex_destroy(parser->mils);
         gdbwire_string_destroy(parser->buffer);
         free(parser);
@@ -109,9 +109,9 @@ void gdbwire_mi_parser_destroy(struct gdbwire_mi_parser *parser)
         }
 
         /* Free the push parser instance */
-        if (parser->mips) {
-            gdbwire_mi_pstate_delete(parser->mips);
-            parser->mips = NULL;
+        if (parser->mipst) {
+            gdbwire_mi_pstate_delete(parser->mipst);
+            parser->mipst = NULL;
         }
 
         free(parser);
@@ -162,7 +162,7 @@ gdbwire_mi_parser_parse_line(struct gdbwire_mi_parser *parser,
         pattern = gdbwire_mi_lex(parser->mils);
         if (pattern == 0)
             break;
-        mi_status = gdbwire_mi_push_parse(parser->mips, pattern, NULL,
+        mi_status = gdbwire_mi_push_parse(parser->mipst, pattern, NULL,
             parser->mils, &output);
     } while (mi_status == YYPUSH_MORE);
 
