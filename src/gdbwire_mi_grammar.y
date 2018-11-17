@@ -130,12 +130,28 @@ static char *gdbwire_mi_unescape_cstring(char *str)
                     result[r++] = '\n';
                     ++s;
                     break;
-                case 'r':
-                    result[r++] = '\r';
+                case 'b':
+                    result[r++] = '\b';
                     ++s;
                     break;
                 case 't':
                     result[r++] = '\t';
+                    ++s;
+                    break;
+                case 'f':
+                    result[r++] = '\f';
+                    ++s;
+                    break;
+                case 'r':
+                    result[r++] = '\r';
+                    ++s;
+                    break;
+                case 'e':
+                    result[r++] = '\033';
+                    ++s;
+                    break;
+                case 'a':
+                    result[r++] = '\007';
                     ++s;
                     break;
                 case '"':

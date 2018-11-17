@@ -156,14 +156,7 @@ GDB/MI Clarifications
 
   The special characters \n, \b, \t, \f, \r, \033 and \007 are printed
   by gdb as \\n, \\b, \\t, \\f, \\r, \\e and \\a correspondingly.
-
-  Currently, the conversions gdbwire makes is as follows,
-    \" -> "
-    \\ -> \
-    \n -> new line
-    \r -> carriage return
-  We could also translate \b, \t, \f, \e, \a and all octal characters.
-  I'm not sure this is necessary at the moment.
+  gdbwire translates all of these.
 
   In order to provide the gdbwire user with the intended information, I had
   to write an unescape c-string function which undoes the escaping added
