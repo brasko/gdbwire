@@ -62,6 +62,20 @@ void gdbwire_string_destroy(struct gdbwire_string *string);
 void gdbwire_string_clear(struct gdbwire_string *string);
 
 /**
+ * Append a character to the string instance.
+ *
+ * @param string
+ * The string instance to append the character to.
+ *
+ * @param c
+ * The character to append to the string instance.
+ *
+ * @return
+ * 0 on success or -1 on failure.
+ */
+int gdbwire_string_append_char(struct gdbwire_string *string, char c);
+
+/**
  * Append a c string to the string instance.
  *
  * @param string

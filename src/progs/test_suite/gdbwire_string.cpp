@@ -38,6 +38,30 @@ TEST_CASE_METHOD_N(GdbwireStringTest, validateInitialState)
     validate(string, 0, 128, "");
 }
 
+TEST_CASE_METHOD_N(GdbwireStringTest, append_char/null_instance)
+{
+    REQUIRE(gdbwire_string_append_char(NULL, 'a') == -1);
+}
+
+TEST_CASE_METHOD_N(GdbwireStringTest, append_char/null_character)
+{
+    char nul = 0;
+    std::string expected(1, nul);
+    REQUIRE(gdbwire_string_append_char(string, nul) == 0);
+    validate(string, 1, 128, expected);
+}
+
+TEST_CASE_METHOD_N(GdbwireStringTest, append_char/standard)
+{
+    // Append a character and check the state
+    REQUIRE(gdbwire_string_append_char(string, 'a') == 0);
+    validate(string, 1, 128, "a");
+
+    // Append another a character and check the state
+    REQUIRE(gdbwire_string_append_char(string, 'a') == 0);
+    validate(string, 2, 128, "aa");
+}
+
 TEST_CASE_METHOD_N(GdbwireStringTest, append_cstr/null_value)
 {
     REQUIRE(gdbwire_string_append_cstr(string, NULL) == -1);

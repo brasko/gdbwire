@@ -83,6 +83,12 @@ gdbwire_string_increase_capacity(struct gdbwire_string *string)
 }
 
 int
+gdbwire_string_append_char(struct gdbwire_string *string, char c)
+{
+    return gdbwire_string_append_data(string, &c, 1);
+}
+
+int
 gdbwire_string_append_cstr(struct gdbwire_string *string, const char *cstr)
 {
     int result;
