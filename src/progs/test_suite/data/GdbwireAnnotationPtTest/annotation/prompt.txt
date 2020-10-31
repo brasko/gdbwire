@@ -1,0 +1,7 @@
+
+pre-prompt
+(gdb)
+prompt
+b identity
+
+post-prompt

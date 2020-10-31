@@ -1,0 +1,11 @@
+[0] cancel
+[1] all
+[2] o.adb:identity(float)
+[3] o.adb:identity(int)
+
+pre-instance-choice
+> 
+instance-choice
+2
+
+post-instance-choice

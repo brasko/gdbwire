@@ -1,0 +1,9 @@
+
+post-prompt
+
+error-begin
+No source file named file1.c.
+
+error
+
+pre-query

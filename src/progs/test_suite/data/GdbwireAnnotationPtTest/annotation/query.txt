@@ -1,0 +1,11 @@
+
+pre-query
+A debugging session is active.
+
+    Inferior 1 [process 15150] will be killed.
+
+Quit anyway? (y or n) 
+query
+y
+
+post-query

@@ -1,0 +1,7 @@
+
+error-begin
+./fake: No such file or directory.
+
+error
+
+pre-prompt

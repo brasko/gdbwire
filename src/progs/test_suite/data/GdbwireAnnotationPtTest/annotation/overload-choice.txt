@@ -1,0 +1,11 @@
+[0] cancel
+[1] all
+[2] o.cpp:identity(float)
+[3] o.cpp:identity(int)
+
+pre-overload-choice
+> 
+overload-choice
+2
+
+post-overload-choice

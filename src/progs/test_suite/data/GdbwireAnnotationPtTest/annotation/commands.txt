@@ -1,0 +1,14 @@
+
+pre-commands
+>
+commands
+print argc
+
+post-commands
+
+pre-commands
+>
+commands
+end
+
+post-commands
