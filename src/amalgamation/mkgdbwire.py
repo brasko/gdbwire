@@ -47,6 +47,9 @@ header_files = [
     'gdbwire_assert.h',
     'gdbwire_result.h',
     'gdbwire_logger.h',
+    'gdbwire_annotation_pt.h',
+    'gdbwire_annotation_pt_alloc.h',
+    'gdbwire_annotation_parser.h',
     'gdbwire_mi_pt.h',
     'gdbwire_mi_pt_alloc.h',
     'gdbwire_mi_parser.h',
@@ -61,6 +64,8 @@ source_files = [
     'gdbwire_string.c',
 
     'gdbwire_logger.c',
+    'gdbwire_annotation_parser.c',
+    'gdbwire_annotation_pt_alloc.c',
     'gdbwire_mi_parser.c',
     'gdbwire_mi_pt_alloc.c',
     'gdbwire_mi_pt.c',
@@ -73,7 +78,10 @@ source_files = [
 ]
 
 def comment(out, text):
-    end_stars = '*' * (70 - len(text))
+    end_stars_number = (70-len(text))
+    if end_stars_number <= 0:
+        end_stars_number = 1
+    end_stars = '*' * end_stars_number
     out.write('/***** ' + text + ' ' + end_stars + '/\n')
 
 # include and line directive regular expressions
