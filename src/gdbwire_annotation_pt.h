@@ -182,7 +182,7 @@ enum gdbwire_annotation_kind {
  * The GDB/Annotation output command.
  */
 struct gdbwire_annotation_output {
-    /// The kind of annotation this output represents
+    /** The kind of annotation this output represents */
     enum gdbwire_annotation_output_kind kind;
 
     union {

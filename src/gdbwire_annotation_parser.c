@@ -187,7 +187,7 @@ gdbwire_annotation_parser_send_callback(
             gdbwire_string_data(parser->annotation_text),
             gdbwire_string_size(parser->annotation_text));
 
-    // Send any console output before the annotation is sent
+    /* Send any console output before the annotation is sent */
     gdbwire_send_console_output_if_available(parser);
 
     parser->callbacks.gdbwire_annotation_output_callback(
@@ -327,7 +327,7 @@ gdbwire_annotation_parser_process_char(
 {
     gdbwire_string_append_char(parser->console_output, c);
 
-    // Arbitrary, but send a line at a time for now
+    /* Arbitrary, but send a line at a time for now */
     if (c == '\n') {
         gdbwire_send_console_output_if_available(parser);
     }
@@ -359,7 +359,8 @@ gdbwire_annotation_parser_parse(
                 }  else {
                     gdbwire_annotation_parser_process_char(parser, '\n');
                     if (str[i] == '\n') {
-                        // Transition to GDBWIRE_ANNOTATION_NEW_LINE; do nothing
+                        /* Transition to GDBWIRE_ANNOTATION_NEW_LINE;
+                         * do nothing */
                     } else {
                         gdbwire_annotation_parser_process_char(parser, str[i]);
                         parser->state = GDBWIRE_ANNOTATION_GDB_DATA;
@@ -407,7 +408,7 @@ gdbwire_annotation_parser_push_data(struct gdbwire_annotation_parser *parser,
 
     GDBWIRE_ASSERT(parser && data);
 
-    // TODO: Handle error? was never handled before
+    /* TODO: Handle error? was never handled before */
     gdbwire_annotation_parser_parse(parser, data, size);
 
     return result;
