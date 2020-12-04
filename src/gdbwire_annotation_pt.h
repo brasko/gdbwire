@@ -187,7 +187,26 @@ struct gdbwire_annotation_output {
 
     union {
         /** When kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT */
-        char *console_output;
+        struct {
+            /**
+             * The last annotation provided by gdb before this console output.
+             *
+             * This allows the front end to handle console output from
+             * different annotations in unique ways.
+             * 
+             * For instance, if gdb just sent the annotation
+             * GDBWIRE_ANNOTATION_PRE_PROMPT, then the text until
+             * GDBWIRE_ANNOTATION_PROMPT would represent the new prompt.
+             *
+             * This value will be set to GDBWIRE_ANNOTATION_UNKNOWN
+             * before the first annotation is recieved and after an unknown
+             * annotation is parsed.
+             */
+            enum gdbwire_annotation_kind last;
+
+            /** The console output text */
+            char *text;
+        } console_output;
 
         /** When kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION */
         struct {

@@ -113,8 +113,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, console_output/basic.txt)
     gdbwire_annotation_output *o = output.front();
     REQUIRE(output.size() == 1);
     REQUIRE(o->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(o->variant.console_output);
-    REQUIRE(expected == o->variant.console_output);
+    REQUIRE(o->variant.console_output.text);
+    REQUIRE(expected == o->variant.console_output.text);
+    REQUIRE(o->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 }
 
 /**
@@ -153,8 +154,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, console_output/characters.txt)
     gdbwire_annotation_output *o = output.front();
     REQUIRE(output.size() == 1);
     REQUIRE(o->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(o->variant.console_output);
-    REQUIRE(expected == o->variant.console_output);
+    REQUIRE(o->variant.console_output.text);
+    REQUIRE(expected == o->variant.console_output.text);
+    REQUIRE(o->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 }
 
 /// Test the breakpoints-invalid annotations
@@ -240,7 +242,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/commands.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string(">") == (*o)->variant.console_output);
+    REQUIRE(std::string(">") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last ==
+            GDBWIRE_ANNOTATION_PRE_COMMANDS);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -249,7 +253,8 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/commands.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("print argc\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("print argc\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_COMMANDS);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -263,7 +268,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/commands.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string(">") == (*o)->variant.console_output);
+    REQUIRE(std::string(">") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last ==
+            GDBWIRE_ANNOTATION_PRE_COMMANDS);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -272,7 +279,8 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/commands.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("end\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("end\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_COMMANDS);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -310,21 +318,25 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/overload-choice.txt)
 
     // the choices are printed as console output
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("[0] cancel\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("[0] cancel\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("[1] all\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("[1] all\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
     REQUIRE(std::string("[2] o.cpp:identity(float)\n") ==
-        (*o)->variant.console_output);
+        (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
     REQUIRE(std::string("[3] o.cpp:identity(int)\n") ==
-        (*o)->variant.console_output);
+        (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 
     // the overload-choice prompt
     ++o;
@@ -336,7 +348,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/overload-choice.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("> ") == (*o)->variant.console_output);
+    REQUIRE(std::string("> ") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last ==
+        GDBWIRE_ANNOTATION_PRE_OVERLOAD_CHOICE);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -346,7 +360,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/overload-choice.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("2\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("2\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last ==
+        GDBWIRE_ANNOTATION_OVERLOAD_CHOICE);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -378,21 +394,25 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/instance-choice.txt)
 
     // the choices are printed as console output
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("[0] cancel\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("[0] cancel\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("[1] all\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("[1] all\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
     REQUIRE(std::string("[2] o.adb:identity(float)\n") ==
-        (*o)->variant.console_output);
+        (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
     REQUIRE(std::string("[3] o.adb:identity(int)\n") ==
-        (*o)->variant.console_output);
+        (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_UNKNOWN);
 
     // the instance-choice prompt
     ++o;
@@ -404,7 +424,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/instance-choice.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("> ") == (*o)->variant.console_output);
+    REQUIRE(std::string("> ") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last ==
+        GDBWIRE_ANNOTATION_PRE_INSTANCE_CHOICE);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -414,7 +436,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/instance-choice.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("2\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("2\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last ==
+        GDBWIRE_ANNOTATION_INSTANCE_CHOICE);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -441,51 +465,51 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/query.txt)
 
     // the query-choice prompt
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
-    REQUIRE((*o)->variant.annotation.kind ==
-        GDBWIRE_ANNOTATION_PRE_QUERY);
+    REQUIRE((*o)->variant.annotation.kind == GDBWIRE_ANNOTATION_PRE_QUERY);
     REQUIRE(std::string("pre-query") == (*o)->variant.annotation.text);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
     REQUIRE(std::string("A debugging session is active.\n") ==
-            (*o)->variant.console_output);
+            (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_PRE_QUERY);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("\n") ==
-            (*o)->variant.console_output);
+    REQUIRE(std::string("\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_PRE_QUERY);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
     REQUIRE(std::string("    Inferior 1 [process 15150] will be killed.\n") ==
-            (*o)->variant.console_output);
+            (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_PRE_QUERY);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("\n") ==
-            (*o)->variant.console_output);
+    REQUIRE(std::string("\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_PRE_QUERY);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
     REQUIRE(std::string("Quit anyway? (y or n) ") ==
-            (*o)->variant.console_output);
+            (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_PRE_QUERY);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
-    REQUIRE((*o)->variant.annotation.kind ==
-        GDBWIRE_ANNOTATION_QUERY);
+    REQUIRE((*o)->variant.annotation.kind == GDBWIRE_ANNOTATION_QUERY);
     REQUIRE(std::string("query") == (*o)->variant.annotation.text);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("y\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("y\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_QUERY);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
-    REQUIRE((*o)->variant.annotation.kind ==
-        GDBWIRE_ANNOTATION_POST_QUERY);
-    REQUIRE(std::string("post-query") ==
-       (*o)->variant.annotation.text);
+    REQUIRE((*o)->variant.annotation.kind == GDBWIRE_ANNOTATION_POST_QUERY);
+    REQUIRE(std::string("post-query") == (*o)->variant.annotation.text);
 
     ++o;
     REQUIRE(o == output.end());
@@ -508,7 +532,8 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/prompt.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("(gdb)") == (*o)->variant.console_output);
+    REQUIRE(std::string("(gdb)") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_PRE_PROMPT);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -517,7 +542,8 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/prompt.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("b identity\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("b identity\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last == GDBWIRE_ANNOTATION_PROMPT);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -552,7 +578,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/error-begin.txt)
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
     REQUIRE(std::string("./fake: No such file or directory.\n") == 
-            (*o)->variant.console_output);
+            (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last ==
+        GDBWIRE_ANNOTATION_ERROR_BEGIN);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -594,7 +622,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/error.txt)
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
     REQUIRE(std::string("No source file named file1.c.\n") ==
-            (*o)->variant.console_output);
+            (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last ==
+        GDBWIRE_ANNOTATION_ERROR_BEGIN);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);
@@ -635,7 +665,9 @@ TEST_CASE_METHOD_N(GdbwireAnnotationPtTest, annotation/quit.txt)
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT);
-    REQUIRE(std::string("Quit\n") == (*o)->variant.console_output);
+    REQUIRE(std::string("Quit\n") == (*o)->variant.console_output.text);
+    REQUIRE((*o)->variant.console_output.last ==
+        GDBWIRE_ANNOTATION_ERROR_BEGIN);
 
     ++o;
     REQUIRE((*o)->kind == GDBWIRE_ANNOTATION_OUTPUT_ANNOTATION);

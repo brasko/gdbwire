@@ -77,6 +77,8 @@ struct gdbwire_annotation_parser {
     struct gdbwire_annotation_parser_callbacks callbacks;
     /* The annotation parser state */
     enum gdbwire_annotation_parser_state state;
+    /* The last annotation kind discovered */
+    enum gdbwire_annotation_kind last_annotation_kind;
     /* The current annotation text being collected */
     struct gdbwire_string *annotation_text;
     /* The console output from GDB */
@@ -107,6 +109,7 @@ gdbwire_annotation_parser_create(
 
     parser->callbacks = callbacks;
     parser->state = GDBWIRE_ANNOTATION_GDB_DATA;
+    parser->last_annotation_kind = GDBWIRE_ANNOTATION_UNKNOWN;
 
     parser->annotation_text = gdbwire_string_create();
     if (!parser->annotation_text) {
@@ -155,9 +158,11 @@ gdbwire_send_console_output_if_available(
                 gdbwire_annotation_output_alloc();
         output->kind = GDBWIRE_ANNOTATION_OUTPUT_CONSOLE_OUTPUT;
         gdbwire_string_append_char(parser->console_output, 0);
-        output->variant.console_output = gdbwire_strndup(
+        output->variant.console_output.text = gdbwire_strndup(
                 gdbwire_string_data(parser->console_output),
                 gdbwire_string_size(parser->console_output));
+        output->variant.console_output.last =
+                parser->last_annotation_kind;
         parser->callbacks.gdbwire_annotation_output_callback(
             parser->callbacks.context, output);
 
@@ -187,6 +192,9 @@ gdbwire_annotation_parser_send_callback(
 
     parser->callbacks.gdbwire_annotation_output_callback(
         parser->callbacks.context, output);
+
+    /* Set the last annotation kind, so future console output have the state */
+    parser->last_annotation_kind = kind;
 }
 
 /**
