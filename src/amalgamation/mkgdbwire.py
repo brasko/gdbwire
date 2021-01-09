@@ -153,8 +153,7 @@ def write_gdbwire_source(filename, package_version, rev):
     for hdr in header_files:
         available_hdr[hdr] = True
 
-    # Binary flag forces the output to use unix line endings, even on Windows
-    out = open(filename, "wb")
+    out = open(filename, "w")
 
     write_copyright(out, package_version, rev)
 
@@ -166,8 +165,7 @@ def write_gdbwire_header(filename, package_version, rev):
     for hdr in header_files:
         available_hdr[hdr] = True
 
-    # Binary flag forces the output to use unix line endings, even on Windows
-    out = open(filename, "wb")
+    out = open(filename, "w")
     
     write_copyright(out, package_version, rev)
 
