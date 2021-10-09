@@ -582,25 +582,34 @@ file_list_exec_source_files(
     while (mi_result) {
         struct gdbwire_mi_result *tuple;
         char *file = 0, *fullname = 0;
+        enum gdbwire_mi_debug_fully_read_kind debug_fully_read =
+            GDBWIRE_MI_DEBUG_FULLY_READ_UNKNOWN;
         GDBWIRE_ASSERT_GOTO(mi_result->kind == GDBWIRE_MI_TUPLE, result, err);
         tuple = mi_result->variant.result;
 
-        /* file field */
-        GDBWIRE_ASSERT_GOTO(tuple->kind == GDBWIRE_MI_CSTRING, result, err);
-        GDBWIRE_ASSERT_GOTO(strcmp(tuple->variable, "file") == 0, result, err);
-        file = tuple->variant.cstring;
-
-        if (tuple->next) {
-            tuple = tuple->next;
-
-            /* fullname field */
+        while (tuple) {
+            /* file field */
             GDBWIRE_ASSERT_GOTO(tuple->kind == GDBWIRE_MI_CSTRING, result, err);
-            GDBWIRE_ASSERT_GOTO(strcmp(tuple->variable, "fullname") == 0,
-                result, err);
-            fullname = tuple->variant.cstring;
+
+            if (strcmp(tuple->variable, "file") == 0) {
+                file = tuple->variant.cstring;
+            } else if (strcmp(tuple->variable, "fullname") == 0) {
+                fullname = tuple->variant.cstring;
+            } else if (strcmp(tuple->variable, "debug-fully-read") == 0) {
+                if (strcmp(tuple->variant.cstring, "false") == 0) {
+                    debug_fully_read =
+                        GDBWIRE_MI_DEBUG_FULLY_READ_FALSE;
+                } else if (strcmp(tuple->variant.cstring, "true") == 0) {
+                    debug_fully_read =
+                        GDBWIRE_MI_DEBUG_FULLY_READ_TRUE;
+                }
+            }
+
+            tuple = tuple->next;
         }
 
-        GDBWIRE_ASSERT(!tuple->next);
+        // file is required, but fullname and debug_fully_read is not
+        GDBWIRE_ASSERT_GOTO(file, result, err);
 
         /* Create the new */
         new_node = calloc(1, sizeof(struct gdbwire_mi_source_file));
@@ -608,6 +617,7 @@ file_list_exec_source_files(
 
         new_node->file = gdbwire_strdup(file);
         new_node->fullname = (fullname)?gdbwire_strdup(fullname):0;
+        new_node->debug_fully_read = debug_fully_read;
         new_node->next = 0;
 
         /* Append the node to the list */

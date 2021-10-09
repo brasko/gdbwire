@@ -973,6 +973,52 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/no_full.mi)
 
 /**
  * The file list exec source files command.
+ * Ensure that additional fields are allowable like, debug-fully-read,
+ * introduced in gdb 11.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest,
+        file_list_exec_source_files/file_full_debug_fully_read.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_source_file *files;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES,
+        result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_FILE_LIST_EXEC_SOURCE_FILES);
+    REQUIRE(com->variant.file_list_exec_source_files.files);
+
+    files = com->variant.file_list_exec_source_files.files;
+
+    // debug_fully_read true
+    REQUIRE(files->file == std::string("dir/a.cxx"));
+    REQUIRE(files->fullname == std::string("/tmp/dir/a.cxx"));
+    REQUIRE(files->debug_fully_read == GDBWIRE_MI_DEBUG_FULLY_READ_FALSE);
+
+    // debug_fully_read false
+    REQUIRE(files->next);
+    files = files->next;
+    REQUIRE(files->file == std::string("a.c"));
+    REQUIRE(files->fullname == std::string("/tmp/a.c"));
+    REQUIRE(files->debug_fully_read == GDBWIRE_MI_DEBUG_FULLY_READ_TRUE);
+
+    // debug_fully_read unknown
+    REQUIRE(files->next);
+    files = files->next;
+    REQUIRE(files->file == std::string("b.c"));
+    REQUIRE(files->fullname == std::string("/tmp/b.c"));
+    REQUIRE(files->debug_fully_read == GDBWIRE_MI_DEBUG_FULLY_READ_UNKNOWN);
+
+    REQUIRE(!files->next);
+
+    gdbwire_mi_command_free(com);
+}
+
+/**
+ * The file list exec source files command.
  */
 TEST_CASE_METHOD_N(GdbwireMiCommandTest, file_list_exec_source_files/1_pair_fail_file.mi)
 {
