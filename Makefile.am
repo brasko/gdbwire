@@ -102,7 +102,7 @@ src/amalgamation/gdbwire.c: \
 	src/amalgamation/mkgdbwire.py
 	mkdir -p src/amalgamation && \
 	cd src/amalgamation && \
-	python \
+	python3 \
 		"@GDBWIRE_ABS_TOP_SRCDIR@/src/amalgamation/mkgdbwire.py" \
 		"@PACKAGE_VERSION@" \
 		"@GDBWIRE_ABS_TOP_SRCDIR@" \

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # This script creates the amalgamation files, gdbwire.h and gdbwire.c.
 #
@@ -14,7 +14,7 @@
 # After the "tsrc" directory has been created and populated, the build
 # system runs the script:
 #
-#      python mkgdbwire.py package_version abs_source_path abs_build_path
+#      python3 mkgdbwire.py package_version abs_source_path abs_build_path
 #
 # The amalgamated gdbwire code will be written into gdbwire.h and gdbwire.c.
 
