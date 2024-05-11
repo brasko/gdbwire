@@ -139,6 +139,7 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
     unsigned long line = 0;
     unsigned long times = 0;
     char *original_location = 0;
+    struct gdbwire_mi_breakpoint *multi_breakpoints = 0;
 
     GDBWIRE_ASSERT(mi_result);
     GDBWIRE_ASSERT(bkpt);
@@ -146,49 +147,83 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
     *bkpt = 0;
 
     while (mi_result) {
-        if (mi_result->kind == GDBWIRE_MI_CSTRING) {
-            if (strcmp(mi_result->variable, "number") == 0) {
-                number = mi_result->variant.cstring;
+        GDBWIRE_ASSERT(mi_result->variable);
+        if (strcmp(mi_result->variable, "number") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            number = mi_result->variant.cstring;
 
-                if (strstr(number, ".") != NULL) {
-                    from_multi = 1;
-                }
-            } else if (strcmp(mi_result->variable, "enabled") == 0) {
-                enabled = mi_result->variant.cstring[0] == 'y';
-            } else if (strcmp(mi_result->variable, "addr") == 0) {
-                multi = strcmp(mi_result->variant.cstring, "<MULTIPLE>") == 0;
-                pending = strcmp(mi_result->variant.cstring, "<PENDING>") == 0;
-                address = mi_result->variant.cstring;
-            } else if (strcmp(mi_result->variable, "catch-type") == 0) {
-                catch_type = mi_result->variant.cstring;
-            } else if (strcmp(mi_result->variable, "type") == 0) {
-                type = mi_result->variant.cstring;
-            } else if (strcmp(mi_result->variable, "disp") == 0) {
-                if (strcmp(mi_result->variant.cstring, "del") == 0) {
-                    disp_kind = GDBWIRE_MI_BP_DISP_DELETE;
-                } else if (strcmp(mi_result->variant.cstring, "dstp") == 0) {
-                    disp_kind = GDBWIRE_MI_BP_DISP_DELETE_NEXT_STOP;
-                } else if (strcmp(mi_result->variant.cstring, "dis") == 0) {
-                    disp_kind = GDBWIRE_MI_BP_DISP_DISABLE;
-                } else if (strcmp(mi_result->variant.cstring, "keep") == 0) {
-                    disp_kind = GDBWIRE_MI_BP_DISP_KEEP;
+            if (strstr(number, ".") != NULL) {
+                from_multi = 1;
+            }
+        } else if (strcmp(mi_result->variable, "enabled") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            enabled = mi_result->variant.cstring[0] == 'y';
+        } else if (strcmp(mi_result->variable, "addr") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            multi = strcmp(mi_result->variant.cstring, "<MULTIPLE>") == 0;
+            pending = strcmp(mi_result->variant.cstring, "<PENDING>") == 0;
+            address = mi_result->variant.cstring;
+        } else if (strcmp(mi_result->variable, "catch-type") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            catch_type = mi_result->variant.cstring;
+        } else if (strcmp(mi_result->variable, "type") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            type = mi_result->variant.cstring;
+        } else if (strcmp(mi_result->variable, "disp") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            if (strcmp(mi_result->variant.cstring, "del") == 0) {
+                disp_kind = GDBWIRE_MI_BP_DISP_DELETE;
+            } else if (strcmp(mi_result->variant.cstring, "dstp") == 0) {
+                disp_kind = GDBWIRE_MI_BP_DISP_DELETE_NEXT_STOP;
+            } else if (strcmp(mi_result->variant.cstring, "dis") == 0) {
+                disp_kind = GDBWIRE_MI_BP_DISP_DISABLE;
+            } else if (strcmp(mi_result->variant.cstring, "keep") == 0) {
+                disp_kind = GDBWIRE_MI_BP_DISP_KEEP;
+            } else {
+                return GDBWIRE_LOGIC;
+            }
+        } else if (strcmp(mi_result->variable, "func") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            func_name = mi_result->variant.cstring;
+        } else if (strcmp(mi_result->variable, "file") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            file = mi_result->variant.cstring;
+        } else if (strcmp(mi_result->variable, "fullname") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            fullname = mi_result->variant.cstring;
+        } else if (strcmp(mi_result->variable, "line") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            GDBWIRE_ASSERT(gdbwire_string_to_ulong(
+                    mi_result->variant.cstring, &line) == GDBWIRE_OK);
+        } else if (strcmp(mi_result->variable, "times") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            GDBWIRE_ASSERT(gdbwire_string_to_ulong(
+                    mi_result->variant.cstring, &times) == GDBWIRE_OK);
+        } else if (strcmp(mi_result->variable, "original-location") == 0) {
+            GDBWIRE_ASSERT(mi_result->kind == GDBWIRE_MI_CSTRING);
+            original_location = mi_result->variant.cstring;
+        } else if (strcmp(mi_result->variable, "locations") == 0) {
+            struct gdbwire_mi_result *loc_result = mi_result;
+            GDBWIRE_ASSERT(loc_result->kind == GDBWIRE_MI_LIST);
+
+            loc_result = loc_result->variant.result;
+            while (loc_result) {
+                GDBWIRE_ASSERT(loc_result->kind == GDBWIRE_MI_TUPLE);
+                struct gdbwire_mi_breakpoint *new_bkpt = 0;
+                result = break_info_for_breakpoint(
+                        loc_result->variant.result, &new_bkpt);
+
+                /* Append breakpoint to the multiple location breakpoints */
+                if (multi_breakpoints) {
+                    struct gdbwire_mi_breakpoint *cur = multi_breakpoints;
+                    while (cur->next) {
+                        cur = cur->next;
+                    }
+                    cur->next = new_bkpt;
                 } else {
-                    return GDBWIRE_LOGIC;
+                    multi_breakpoints = new_bkpt;
                 }
-            } else if (strcmp(mi_result->variable, "func") == 0) {
-                func_name = mi_result->variant.cstring;
-            } else if (strcmp(mi_result->variable, "file") == 0) {
-                file = mi_result->variant.cstring;
-            } else if (strcmp(mi_result->variable, "fullname") == 0) {
-                fullname = mi_result->variant.cstring;
-            } else if (strcmp(mi_result->variable, "line") == 0) {
-                GDBWIRE_ASSERT(gdbwire_string_to_ulong(
-                        mi_result->variant.cstring, &line) == GDBWIRE_OK);
-            } else if (strcmp(mi_result->variable, "times") == 0) {
-                GDBWIRE_ASSERT(gdbwire_string_to_ulong(
-                        mi_result->variant.cstring, &times) == GDBWIRE_OK);
-            } else if (strcmp(mi_result->variable, "original-location") == 0) {
-                original_location = mi_result->variant.cstring;
+                loc_result = loc_result->next;
             }
         }
 
@@ -220,6 +255,15 @@ break_info_for_breakpoint(struct gdbwire_mi_result *mi_result,
     breakpoint->original_location =
         (original_location)?gdbwire_strdup(original_location):0;
     breakpoint->pending = pending;
+    breakpoint->multi_breakpoints = multi_breakpoints;
+
+    if (breakpoint->multi_breakpoints) {
+        struct gdbwire_mi_breakpoint *cur = breakpoint->multi_breakpoints;
+        while (cur) {
+            cur->multi_breakpoint = breakpoint;
+            cur = cur->next;
+        }
+    }
 
     /* Handle the out of memory situation */
     if (!breakpoint->number ||
@@ -294,6 +338,26 @@ break_info(
     GDBWIRE_ASSERT(!mi_result->next);
     mi_result = mi_result->variant.result;
 
+    // In GDB version 9, the output of -break-insert changed
+    // 
+    // Look at commit b4be1b0648608a2578bbed39841c8ee411773edd
+    // in GDB for details.
+    // 
+    // Prior to the change, we have mi2 -break-info output:
+    //   ^done,bkpt={...,addr="<MULTIPLE>",...},{number="1.1",...},{number="1.2",...}
+    // After the change, we have mi3 -break-info output:
+    //   ^done,bkpt={...,addr="<MULTIPLE>",locations=[{number="1.1",...},{number="1.2",...}]}
+    // 
+    //
+    // For both mi2 and mi3, this loop will iterate over all the
+    // breakpoints, ie. bkpt={...}
+    //
+    // In mi2 mode, break_info_for_breakpoint will return a single
+    // breakpoint and associated MULTIPLE breakpoints are found by looking
+    // at subsequent breakpoints and attaching them in this loop.
+    //
+    // In mi3 mode, break_info_for_breakpoint will return a single
+    // breakpoint with all MULTIPLE breakpoints already attached.
     while (mi_result) {
         struct gdbwire_mi_breakpoint *bkpt;
         GDBWIRE_ASSERT_GOTO(

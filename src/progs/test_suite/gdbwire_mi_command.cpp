@@ -263,6 +263,120 @@ TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/multi_bkpt.mi)
 }
 
 /**
+ * In gdb 9 i see the following in NEWS
+ *
+ * ** The output of information about multi-location breakpoints (which is
+ *    syntactically incorrect in MI 2) has changed in MI 3.  This affects
+ *    the following commands and events:
+ *
+ *    - -break-insert
+ *    - -break-info
+ *    - =breakpoint-created
+ *    - =breakpoint-modified
+ *
+ *     The -fix-multi-location-breakpoint-output command can be used to enable
+ *     this behavior with previous MI versions.
+ *
+ * This test ensures that gdbwire can handle this variation of mi
+ * breakpoint commands.
+ */
+TEST_CASE_METHOD_N(GdbwireMiCommandTest, break_info/multi_bkpt_gdb9.mi)
+{
+    gdbwire_result result;
+    gdbwire_mi_command *com = 0;
+    gdbwire_mi_breakpoint *breakpoint;
+
+    result = gdbwire_get_mi_command(GDBWIRE_MI_BREAK_INFO, result_record, &com);
+    REQUIRE(result == GDBWIRE_OK);
+
+    REQUIRE(com);
+    REQUIRE(com->kind == GDBWIRE_MI_BREAK_INFO);
+    REQUIRE(com->variant.break_info.breakpoints);
+
+    breakpoint = com->variant.break_info.breakpoints;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("1"));
+    REQUIRE(breakpoint->multi);
+    REQUIRE(!breakpoint->from_multi);
+    REQUIRE(breakpoint->type);
+    REQUIRE(breakpoint->type == typeBreakpoint);
+    REQUIRE(!breakpoint->catch_type);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_KEEP);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("<MULTIPLE>"));
+    REQUIRE(!breakpoint->func_name);
+    REQUIRE(!breakpoint->file);
+    REQUIRE(!breakpoint->fullname);
+    REQUIRE(breakpoint->line == 0);
+    REQUIRE(breakpoint->times == 0);
+    REQUIRE(breakpoint->original_location);
+    REQUIRE(breakpoint->original_location == std::string("main.cpp:6"));
+    REQUIRE(!breakpoint->pending);
+    REQUIRE(breakpoint->multi_breakpoints);
+    REQUIRE(!breakpoint->multi_breakpoint);
+    REQUIRE(!breakpoint->next);
+
+    /* Multi breakpoint first child */
+    breakpoint = breakpoint->multi_breakpoints;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("1.1"));
+    REQUIRE(!breakpoint->multi);
+    REQUIRE(breakpoint->from_multi);
+    REQUIRE(!breakpoint->type);
+    REQUIRE(!breakpoint->catch_type);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_UNKNOWN);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("0x00000000000011c2"));
+    REQUIRE(breakpoint->func_name);
+    REQUIRE(breakpoint->func_name == std::string("S<int>::sum(int, int)"));
+    REQUIRE(breakpoint->file);
+    REQUIRE(breakpoint->file == std::string("main.cpp"));
+    REQUIRE(breakpoint->fullname);
+    REQUIRE(breakpoint->fullname == std::string("/home/foo/main.cpp"));
+    REQUIRE(breakpoint->line == 6);
+    REQUIRE(breakpoint->times == 0);
+    REQUIRE(!breakpoint->original_location);
+    REQUIRE(!breakpoint->pending);
+    REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(breakpoint->multi_breakpoint);
+    REQUIRE(breakpoint->multi_breakpoint->number);
+    REQUIRE(breakpoint->multi_breakpoint->number == std::string("1"));
+    REQUIRE(breakpoint->next);
+
+    /* Multi breakpoint second child */
+    breakpoint = breakpoint->next;
+    REQUIRE(breakpoint->number);
+    REQUIRE(breakpoint->number == std::string("1.2"));
+    REQUIRE(!breakpoint->multi);
+    REQUIRE(breakpoint->from_multi);
+    REQUIRE(!breakpoint->type);
+    REQUIRE(!breakpoint->catch_type);
+    REQUIRE(breakpoint->disposition == GDBWIRE_MI_BP_DISP_UNKNOWN);
+    REQUIRE(breakpoint->enabled);
+    REQUIRE(breakpoint->address);
+    REQUIRE(breakpoint->address == std::string("0x00000000000011e4"));
+    REQUIRE(breakpoint->func_name);
+    REQUIRE(breakpoint->func_name == std::string("S<float>::sum(int, int)"));
+    REQUIRE(breakpoint->file);
+    REQUIRE(breakpoint->file == std::string("main.cpp"));
+    REQUIRE(breakpoint->fullname);
+    REQUIRE(breakpoint->fullname == std::string("/home/foo/main.cpp"));
+    REQUIRE(breakpoint->line == 6);
+    REQUIRE(breakpoint->times == 0);
+    REQUIRE(!breakpoint->original_location);
+    REQUIRE(!breakpoint->pending);
+    REQUIRE(!breakpoint->multi_breakpoints);
+    REQUIRE(breakpoint->multi_breakpoint);
+    REQUIRE(breakpoint->multi_breakpoint->number);
+    REQUIRE(breakpoint->multi_breakpoint->number == std::string("1"));
+    REQUIRE(!breakpoint->next);
+    
+    gdbwire_mi_command_free(com);
+}
+
+/**
  * The -break-info command.
  *
  * Two normal breakpoints.
